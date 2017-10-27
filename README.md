@@ -6,7 +6,9 @@ This is a .NET Standard 2.0 client library for working with memcached
 - More useful methods: Add, Replace, Exists
 - Fully async
 
-FYI:
+Available on Nuget https://www.nuget.org/packages/VIEApps.Enyim.Caching
+
+Information:
 - Migrated from [EnyimMemcachedCore](https://github.com/cnblogs/EnyimMemcachedCore)
 - Original [EnyimMemcached](https://github.com/enyim/EnyimMemcached) on .NET Framework 3.5
 
