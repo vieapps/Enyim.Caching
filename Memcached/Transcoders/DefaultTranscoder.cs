@@ -313,21 +313,19 @@ namespace Enyim.Caching.Memcached
 
 		public virtual ArraySegment<byte> SerializeObject(object value)
 		{
-			if (value.GetType().IsSerializable)
-				using (var stream = new MemoryStream())
-				{
+			using (var stream = new MemoryStream())
+			{
+				if (value.GetType().IsSerializable)
 					(new BinaryFormatter()).Serialize(stream, value);
-					return new ArraySegment<byte>(stream.GetBuffer(), 0, (int)stream.Length);
-				}
-			else
-				using (var stream = new MemoryStream())
-				{
+
+				else
 					using (var writer = new BsonDataWriter(stream))
 					{
 						(new JsonSerializer()).Serialize(writer, value);
-						return new ArraySegment<byte>(stream.ToArray(), 0, (int)stream.Length);
 					}
-				}
+
+				return new ArraySegment<byte>(stream.GetBuffer(), 0, (int)stream.Length);
+			}
 		}
 		#endregion
 
@@ -404,9 +402,9 @@ namespace Enyim.Caching.Memcached
 
 		public virtual object DeserializeObject(ArraySegment<byte> value)
 		{
-			using (var ms = new MemoryStream(value.Array, value.Offset, value.Count))
+			using (var stream = new MemoryStream(value.Array, value.Offset, value.Count))
 			{
-				return new BinaryFormatter().Deserialize(ms);
+				return new BinaryFormatter().Deserialize(stream);
 			}
 		}
 		#endregion

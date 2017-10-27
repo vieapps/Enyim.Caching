@@ -29,8 +29,6 @@ namespace Enyim
 		public TigerHash()
 		{
 			this.internalDataBuffer = new byte[BLOCKSIZE];
-			//this.HashSizeValue = 3 * 8 * 8;
-
 			this.Initialize();
 		}
 

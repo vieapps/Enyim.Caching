@@ -12,18 +12,20 @@ namespace Enyim
 	/// <remarks>Does not support block based hashing.</remarks>
 	internal class HashkitOneAtATime : HashAlgorithm, IUIntHashAlgorithm
 	{
-		public HashkitOneAtATime()
-		{
-		}
-	
+		public HashkitOneAtATime() { }
 
 		public override void Initialize() { }
 
 		protected override void HashCore(byte[] array, int ibStart, int cbSize)
 		{
-			if (array == null) throw new ArgumentNullException("array");
-			if (ibStart < 0 || ibStart > array.Length) throw new ArgumentOutOfRangeException("ibStart");
-			if (ibStart + cbSize > array.Length) throw new ArgumentOutOfRangeException("cbSize");
+			if (array == null)
+				throw new ArgumentNullException("array");
+
+			if (ibStart < 0 || ibStart > array.Length)
+				throw new ArgumentOutOfRangeException("ibStart");
+
+			if (ibStart + cbSize > array.Length)
+				throw new ArgumentOutOfRangeException("cbSize");
 
 			HashkitOneAtATime.UnsafeHashCore(array, ibStart, cbSize);
 		}
@@ -64,6 +66,7 @@ namespace Enyim
 			return hash;
 		}
 		#endregion
+
 		#region [ IUIntHash                    ]
 
 		uint IUIntHashAlgorithm.ComputeHash(byte[] data)
@@ -76,6 +79,7 @@ namespace Enyim
 		}
 
 		#endregion
+
 	}
 }
 

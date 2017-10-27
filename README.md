@@ -6,15 +6,16 @@ This is a .NET Standard 2.0 client library for working with memcached
 - Serialize/Deserialize objects in binary format
 - More useful methods: Add, Replace, Exists
 - Fully async
-
-Available on Nuget https://www.nuget.org/packages/VIEApps.Enyim.Caching
-
-Information:
+### Nuget
+https://www.nuget.org/packages/VIEApps.Enyim.Caching
+### Information
 - Migrated from [EnyimMemcachedCore](https://github.com/cnblogs/EnyimMemcachedCore)
 - Original [EnyimMemcached](https://github.com/enyim/EnyimMemcached) on .NET Framework 3.5
-
+### Usage
+- Add services.AddEnyimMemcached(...) and app.UseEnyimMemcached() in Startup
+- Add IMemcachedClient into constructor
 ## Configure with the appsettings.json file
-### The appsettings.json Without Authentication
+### The appsettings.json without authentication
 ```json
 {
   "EnyimMemcached": {
@@ -27,7 +28,7 @@ Information:
   }
 }
 ```
-#### The appsettings.json With Authentication
+#### The appsettings.json with authentication
 ```json
 {
   "EnyimMemcached": {
@@ -82,7 +83,7 @@ public class TabNavService
 
     public async Task<IEnumerable<TabNav>> GetAll()
     {
-		var cacheKey = "aboutus_tabnavs_all";
+				var cacheKey = "aboutus_tabnavs_all";
         var result = await _memcachedClient.GetAsync<IEnumerable<TabNav>>(cacheKey);
         if (!result.Success)
         {
@@ -143,7 +144,7 @@ public class CreativeService
 }
 ```
 ## Configure with the app.config file
-### The app.config Without Authentication
+### The app.config without authentication
 ```xml
 <?xml version="1.0" encoding="utf-8"?>
 <configuration>
@@ -158,7 +159,7 @@ public class CreativeService
 	</memcached>
 </configuration>
 ```
-### The app.config With Authentication
+### The app.config with authentication
 ```xml
 <?xml version="1.0" encoding="utf-8"?>
 <configuration>
@@ -174,7 +175,7 @@ public class CreativeService
 	</memcached>
 </configuration>
 ```
-## Example usage (.NET Core/.NET Framework 4.71) with the app.config file
+## Example usage (.NET Core 2.0/.NET Framework 4.7.1) with the app.config file
 ```cs
 public class CreativeService
 {

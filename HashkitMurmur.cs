@@ -9,11 +9,8 @@ namespace Enyim
 	/// <remarks>Does not support block based hashing.</remarks>
 	internal class HashkitMurmur : HashAlgorithm, IUIntHashAlgorithm
 	{
-		public HashkitMurmur()
-		{
-			
-		}
-	
+		public HashkitMurmur() { }
+
 		public override void Initialize() { }
 
 		protected override void HashCore(byte[] array, int ibStart, int cbSize)
@@ -99,6 +96,7 @@ namespace Enyim
 			return hash;
 		}
 		#endregion
+
 		#region [ IUIntHash                    ]
 
 		uint IUIntHashAlgorithm.ComputeHash(byte[] data)
@@ -111,6 +109,7 @@ namespace Enyim
 		}
 
 		#endregion
+
 	}
 }
 

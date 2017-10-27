@@ -1,47 +1,45 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <Description>Enyim.Caching is a Memcached client library for .NET Core.
-Usage: 
-- Add services.AddEnyimMemcached(...) and app.UseEnyimMemcached() in Startup
-- Add IMemcachedClient into constructor</Description>
-    <VersionPrefix>2.0.3</VersionPrefix>
-    <Authors>VIEApps.net</Authors>
-    <TargetFramework>netstandard2.0</TargetFramework>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <AssemblyName>Enyim.Caching</AssemblyName>
-    <PackageId>VIEApps.Enyim.Caching</PackageId>
-    <PackageTags>memcached;cache;enyim;enyimmemcached;enyim.memcached;enyim.caching</PackageTags>
-    <PackageProjectUrl>https://github.com/vieapps/Enyim.Caching</PackageProjectUrl>
-    <RepositoryType>git</RepositoryType>
-    <RepositoryUrl>https://github.com/vieapps/Enyim.Caching</RepositoryUrl>
-    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
-    <Company>VIEApps.net</Company>
-    <Version>1.0.0.1</Version>
-    <AssemblyVersion>1.0.0.1</AssemblyVersion>
-    <FileVersion>1.0.0.1</FileVersion>
-  </PropertyGroup>
+	<PropertyGroup>
+		<TargetFramework>netstandard2.0</TargetFramework>
+		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+		<AssemblyName>Enyim.Caching</AssemblyName>
+		<GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+		<PackageId>VIEApps.Enyim.Caching</PackageId>
+		<Description>This is a .NET Standard 2.0 client library for working with memcached</Description>
+		<Authors>VIEApps.net</Authors>
+		<Company>VIEApps.net</Company>
+		<Copyright>Copyright © 2010 Attila Kiskó, 2017 VIEApps.net</Copyright>
+		<PackageTags>memcached;cache;distributed cace;enyim;enyimmemcached;enyim.memcached;enyim.caching;vieapps;vieapps.components</PackageTags>
+		<PackageProjectUrl>https://github.com/vieapps/Enyim.Caching</PackageProjectUrl>
+		<RepositoryType>git</RepositoryType>
+		<RepositoryUrl>https://github.com/vieapps/Enyim.Caching</RepositoryUrl>
+		<Version>1.0.0.1</Version>
+		<AssemblyVersion>1.0.0.1</AssemblyVersion>
+		<FileVersion>1.0.0.1</FileVersion>
+	</PropertyGroup>
 
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <WarningLevel>3</WarningLevel>
-    <DocumentationFile>bin\Debug\netstandard2.0\Enyim.Caching.xml</DocumentationFile>
-  </PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+		<WarningLevel>3</WarningLevel>
+		<DocumentationFile>bin\Debug\netstandard2.0\Enyim.Caching.xml</DocumentationFile>
+	</PropertyGroup>
 
-  <ItemGroup>
-    <None Remove=".gitattributes" />
-    <None Remove=".gitignore" />
-  </ItemGroup>
+	<ItemGroup>
+		<None Remove=".DS_Store" />
+		<None Remove=".gitattributes" />
+		<None Remove=".gitignore" />
+	</ItemGroup>
 
-  <ItemGroup>
-    <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="2.0.0" />
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="2.0.0" />
-    <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="2.0.0" />
-    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="2.0.0" />
-    <PackageReference Include="Newtonsoft.Json" Version="10.0.3" />
-    <PackageReference Include="Microsoft.Extensions.Options" Version="2.0.0" />
-    <PackageReference Include="Microsoft.Extensions.Caching.Abstractions" Version="2.0.0" />
-    <PackageReference Include="Microsoft.AspNetCore.Http.Abstractions" Version="2.0.0" />
-    <PackageReference Include="Newtonsoft.Json.Bson" Version="1.0.1" />
-    <PackageReference Include="System.Configuration.ConfigurationManager" Version="4.4.0" />
-  </ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="2.0.0" />
+		<PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="2.0.0" />
+		<PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="2.0.0" />
+		<PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="2.0.0" />
+		<PackageReference Include="Microsoft.Extensions.Options" Version="2.0.0" />
+		<PackageReference Include="Microsoft.Extensions.Caching.Abstractions" Version="2.0.0" />
+		<PackageReference Include="Microsoft.AspNetCore.Http.Abstractions" Version="2.0.0" />
+		<PackageReference Include="Newtonsoft.Json" Version="10.0.3" />
+		<PackageReference Include="Newtonsoft.Json.Bson" Version="1.0.1" />
+		<PackageReference Include="System.Configuration.ConfigurationManager" Version="4.4.0" />
+	</ItemGroup>
 </Project>

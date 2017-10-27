@@ -4,7 +4,6 @@ using System.Linq;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Configuration;
 
 using Enyim.Caching.Configuration;
 using Enyim.Caching.Memcached;
@@ -82,9 +81,7 @@ namespace Enyim.Caching
 			this.pool = configuration.CreatePool();
 			this.pool.NodeFailed += (node) =>
 			{
-				var func = this.NodeFailed;
-				if (func != null)
-					func(node);
+				this.NodeFailed?.Invoke(node);
 			};
 			this.pool.Start();
 
@@ -321,7 +318,7 @@ namespace Enyim.Caching
 				}
 				catch (Exception e)
 				{
-					this._logger.LogError(new EventId(), e, $"{nameof(PerformStoreAsync)} for '{key}' key");
+					this._logger.LogError(new EventId(), e, $"{nameof(this.PerformStoreAsync)} for '{key}' key");
 
 					result.Fail("PerformStore failed", e);
 					return result;
@@ -1098,9 +1095,9 @@ namespace Enyim.Caching
 
 		#region Exists
 		/// <summary>
-		/// Determines whether a key is exists or not
+		/// Determines whether an item that associated with the key is exists or not
 		/// </summary>
-		/// <param name="key">The string that presents key of cached item need to check</param>
+		/// <param name="key">The key</param>
 		/// <returns>Returns a boolean value indicating if the object that associates with the key is cached or not</returns>
 		public bool Exists(string key)
 		{
@@ -1113,9 +1110,9 @@ namespace Enyim.Caching
 		}
 
 		/// <summary>
-		/// Determines whether a key is exists or not
+		/// Determines whether an item that associated with the key is exists or not
 		/// </summary>
-		/// <param name="key">The string that presents key of cached item need to check</param>
+		/// <param name="key">The key</param>
 		/// <returns>Returns a boolean value indicating if the object that associates with the key is cached or not</returns>
 		public async Task<bool> ExistsAsync(string key)
 		{
@@ -1159,6 +1156,20 @@ namespace Enyim.Caching
 				var command = this.pool.OperationFactory.Flush();
 				node.Execute(command);
 			}
+		}
+
+		/// <summary>
+		/// Removes all data from the cache. Note: this will invalidate all data on all servers in the pool.
+		/// </summary>
+		public Task FlushAllAsync()
+		{
+			var tasks = new List<Task>();
+			foreach (var node in this.pool.GetWorkingNodes())
+			{
+				var command = this.pool.OperationFactory.Flush();
+				tasks.Add(node.ExecuteAsync(command));
+			}
+			return Task.WhenAll(tasks);
 		}
 		#endregion
 
@@ -1228,6 +1239,7 @@ namespace Enyim.Caching
 				{
 					this.pool.Dispose();
 				}
+				catch { }
 				finally
 				{
 					this.pool = null;
@@ -1245,14 +1257,16 @@ namespace Enyim.Caching
 			{
 				if (Thread.CurrentThread.GetApartmentState() == ApartmentState.MTA)
 					WaitHandle.WaitAll(waitHandles);
+
 				else
-					for (var i = 0; i < waitHandles.Length; i++)
-						waitHandles[i].WaitOne();
+					for (var index = 0; index < waitHandles.Length; index++)
+						waitHandles[index].WaitOne();
 			}
+			catch { }
 			finally
 			{
-				for (var i = 0; i < waitHandles.Length; i++)
-					waitHandles[i].Dispose();
+				for (var index = 0; index < waitHandles.Length; index++)
+					waitHandles[index].Dispose();
 			}
 		}
 		#endregion

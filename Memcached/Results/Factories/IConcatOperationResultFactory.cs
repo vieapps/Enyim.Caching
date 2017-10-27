@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-
-namespace Enyim.Caching.Memcached.Results.Factories
+﻿namespace Enyim.Caching.Memcached.Results.Factories
 {
 	public interface IConcatOperationResultFactory
 	{

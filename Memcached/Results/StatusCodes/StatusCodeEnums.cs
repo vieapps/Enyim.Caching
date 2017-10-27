@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-
-namespace Enyim.Caching.Memcached.Results.StatusCodes
+﻿namespace Enyim.Caching.Memcached.Results.StatusCodes
 {
 	public enum StatusCodeEnums
 	{

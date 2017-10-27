@@ -29,16 +29,14 @@ namespace Enyim.Reflection
 		/// <returns>The newly created instance.</returns>
 		public static object Create(Type type)
 		{
-			Func<object> f;
-
-			if (!factoryCache.TryGetValue(type, out f))
+			if (!factoryCache.TryGetValue(type, out Func<object> func))
 				lock (factoryCache)
-					if (!factoryCache.TryGetValue(type, out f))
+					if (!factoryCache.TryGetValue(type, out func))
 					{
-						factoryCache[type] = f = Expression.Lambda<Func<object>>(Expression.New(type)).Compile();
+						factoryCache[type] = func = Expression.Lambda<Func<object>>(Expression.New(type)).Compile();
 					}
 
-			return f();
+			return func();
 		}
 
 		private static class TypeFactory<T>

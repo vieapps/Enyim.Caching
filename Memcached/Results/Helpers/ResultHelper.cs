@@ -1,8 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Text;
-using Enyim.Caching.Memcached.Results.Factories;
 
 namespace Enyim.Caching.Memcached.Results.Helpers
 {
@@ -17,9 +14,7 @@ namespace Enyim.Caching.Memcached.Results.Helpers
 			{
 				try
 				{
-					return message +
-						(! string.IsNullOrEmpty(message) ? ": " : "") +
-						Encoding.UTF8.GetString(data.Array, data.Offset, data.Count);
+					return message + (!string.IsNullOrEmpty(message) ? ": " : "") + Encoding.UTF8.GetString(data.Array, data.Offset, data.Count);
 				}
 				catch (Exception ex)
 				{

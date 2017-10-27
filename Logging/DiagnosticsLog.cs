@@ -1,6 +1,6 @@
 ﻿using System;
-using System.Threading;
 using System.IO;
+using System.Threading;
 
 namespace Enyim.Caching
 {
@@ -35,7 +35,7 @@ namespace Enyim.Caching
 	{
 		ILog ILogFactory.GetLogger(string name)
 		{
-			return new TextWriterLog(name,  Console.Out);
+			return new TextWriterLog(name, Console.Out);
 		}
 
 		ILog ILogFactory.GetLogger(Type type)

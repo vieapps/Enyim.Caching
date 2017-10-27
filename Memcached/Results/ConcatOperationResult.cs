@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-
-namespace Enyim.Caching.Memcached.Results
+﻿namespace Enyim.Caching.Memcached.Results
 {
 	public class ConcatOperationResult : OperationResultBase, IConcatOperationResult
 	{
