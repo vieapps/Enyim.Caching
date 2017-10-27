@@ -1,241 +1,237 @@
 using System;
 using System.Text;
-using System.Diagnostics;
 using System.Threading.Tasks;
 
 namespace Enyim.Caching.Memcached.Protocol.Binary
 {
-    public class BinaryResponse
-    {
-        private static readonly Enyim.Caching.ILog log = Enyim.Caching.LogManager.GetLogger(typeof(BinaryResponse));
+	public class BinaryResponse
+	{
+		private static readonly Enyim.Caching.ILog log = Enyim.Caching.LogManager.GetLogger(typeof(BinaryResponse));
 
-        private const byte MAGIC_VALUE = 0x81;
-        private const int HeaderLength = 24;
+		private const byte MAGIC_VALUE = 0x81;
+		private const int HeaderLength = 24;
 
-        private const int HEADER_OPCODE = 1;
-        private const int HEADER_KEY = 2; // 2-3
-        private const int HEADER_EXTRA = 4;
-        private const int HEADER_DATATYPE = 5;
-        private const int HEADER_STATUS = 6; // 6-7
-        private const int HEADER_BODY = 8; // 8-11
-        private const int HEADER_OPAQUE = 12; // 12-15
-        private const int HEADER_CAS = 16; // 16-23
+		private const int HEADER_OPCODE = 1;
+		private const int HEADER_KEY = 2; // 2-3
+		private const int HEADER_EXTRA = 4;
+		private const int HEADER_DATATYPE = 5;
+		private const int HEADER_STATUS = 6; // 6-7
+		private const int HEADER_BODY = 8; // 8-11
+		private const int HEADER_OPAQUE = 12; // 12-15
+		private const int HEADER_CAS = 16; // 16-23
 
-        public byte Opcode;
-        public int KeyLength;
-        public byte DataType;
-        public int StatusCode;
+		public byte Opcode;
+		public int KeyLength;
+		public byte DataType;
+		public int StatusCode;
 
-        public int CorrelationId;
-        public ulong CAS;
+		public int CorrelationId;
+		public ulong CAS;
 
-        public ArraySegment<byte> Extra;
-        public ArraySegment<byte> Data;
+		public ArraySegment<byte> Extra;
+		public ArraySegment<byte> Data;
 
-        private string responseMessage;
+		private string responseMessage;
 
-        public BinaryResponse()
-        {
-            this.StatusCode = -1;
-        }
+		public BinaryResponse()
+		{
+			this.StatusCode = -1;
+		}
 
-        public string GetStatusMessage()
-        {
-            return this.Data.Array == null
-                    ? null
-                    : (this.responseMessage
-                        ?? (this.responseMessage = Encoding.ASCII.GetString(this.Data.Array, this.Data.Offset, this.Data.Count)));
-        }
+		public string GetStatusMessage()
+		{
+			return this.Data.Array == null
+				? null
+				: (this.responseMessage ?? (this.responseMessage = Encoding.ASCII.GetString(this.Data.Array, this.Data.Offset, this.Data.Count)));
+		}
 
-        public unsafe bool Read(PooledSocket socket)
-        {
-            this.StatusCode = -1;
+		public unsafe bool Read(PooledSocket socket)
+		{
+			this.StatusCode = -1;
 
-            if (!socket.IsAlive)
-                return false;
+			if (!socket.IsAlive)
+				return false;
 
-            var header = new byte[HeaderLength];
-            socket.Read(header, 0, header.Length);
+			var header = new byte[HeaderLength];
+			socket.Read(header, 0, header.Length);
 
-            int dataLength, extraLength;
+			this.DeserializeHeader(header, out int dataLength, out int extraLength);
 
-            DeserializeHeader(header, out dataLength, out extraLength);
+			if (dataLength > 0)
+			{
+				var data = new byte[dataLength];
+				socket.Read(data, 0, dataLength);
 
-            if (dataLength > 0)
-            {
-                var data = new byte[dataLength];
-                socket.Read(data, 0, dataLength);                
+				this.Extra = new ArraySegment<byte>(data, 0, extraLength);
+				this.Data = new ArraySegment<byte>(data, extraLength, data.Length - extraLength);
+			}
 
-                this.Extra = new ArraySegment<byte>(data, 0, extraLength);
-                this.Data = new ArraySegment<byte>(data, extraLength, data.Length - extraLength);
-            }
+			return this.StatusCode == 0;
+		}
 
-            return this.StatusCode == 0;
-        }
+		public async Task<bool> ReadAsync(PooledSocket socket)
+		{
+			this.StatusCode = -1;
 
-        public async Task<bool> ReadAsync(PooledSocket socket)
-        {
-            this.StatusCode = -1;
+			if (!socket.IsAlive) return false;
 
-            if (!socket.IsAlive) return false;
+			var header = await socket.ReadBytesAsync(HeaderLength);
+			this.DeserializeHeader(header, out int dataLength, out int extraLength);
 
-            var header = await socket.ReadBytesAsync(HeaderLength);
+			if (dataLength > 0)
+			{
+				var data = await socket.ReadBytesAsync(dataLength);
 
-            int dataLength, extraLength;
+				this.Extra = new ArraySegment<byte>(data, 0, extraLength);
+				this.Data = new ArraySegment<byte>(data, extraLength, data.Length - extraLength);
+			}
 
-            DeserializeHeader(header, out dataLength, out extraLength);
+			return this.StatusCode == 0;
+		}
 
-            if (dataLength > 0)
-            {
-                var data = await socket.ReadBytesAsync(dataLength);
+		/// <summary>
+		/// Reads the response from the socket asynchronously.
+		/// </summary>
+		/// <param name="socket">The socket to read from.</param>
+		/// <param name="next">The delegate whihc will continue processing the response. This is only called if the read completes asynchronoulsy.</param>
+		/// <param name="ioPending">Set totrue if the read is still pending when ReadASync returns. In this case 'next' will be called when the read is finished.</param>
+		/// <returns>
+		/// If the socket is already dead, ReadAsync returns false, next is not called, ioPending = false
+		/// If the read completes synchronously (e.g. data is received from the buffer), it returns true/false depending on the StatusCode, and ioPending is set to true, 'next' will not be called.
+		/// It returns true if it has to read from the socket, so the operation will complate asynchronously at a later time. ioPending will be true, and 'next' will be called to handle the data
+		/// </returns>
+		public bool ReadAsync(PooledSocket socket, Action<bool> next, out bool ioPending)
+		{
+			this.StatusCode = -1;
+			this.currentSocket = socket;
+			this.next = next;
 
-                this.Extra = new ArraySegment<byte>(data, 0, extraLength);
-                this.Data = new ArraySegment<byte>(data, extraLength, data.Length - extraLength);
-            }
+			var asyncEvent = new AsyncIOArgs
+			{
+				Count = HeaderLength,
+				Next = this.DoDecodeHeaderAsync
+			};
 
-            return this.StatusCode == 0;
-        }
+			this.shouldCallNext = true;
 
-        /// <summary>
-        /// Reads the response from the socket asynchronously.
-        /// </summary>
-        /// <param name="socket">The socket to read from.</param>
-        /// <param name="next">The delegate whihc will continue processing the response. This is only called if the read completes asynchronoulsy.</param>
-        /// <param name="ioPending">Set totrue if the read is still pending when ReadASync returns. In this case 'next' will be called when the read is finished.</param>
-        /// <returns>
-        /// If the socket is already dead, ReadAsync returns false, next is not called, ioPending = false
-        /// If the read completes synchronously (e.g. data is received from the buffer), it returns true/false depending on the StatusCode, and ioPending is set to true, 'next' will not be called.
-        /// It returns true if it has to read from the socket, so the operation will complate asynchronously at a later time. ioPending will be true, and 'next' will be called to handle the data
-        /// </returns>
-        public bool ReadAsync(PooledSocket socket, Action<bool> next, out bool ioPending)
-        {
-            this.StatusCode = -1;
-            this.currentSocket = socket;
-            this.next = next;
+			if (socket.ReceiveAsync(asyncEvent))
+			{
+				ioPending = true;
+				return true;
+			}
 
-            var asyncEvent = new AsyncIOArgs();
+			ioPending = false;
+			this.shouldCallNext = false;
 
-            asyncEvent.Count = HeaderLength;
-            asyncEvent.Next = this.DoDecodeHeaderAsync;
+			return asyncEvent.Fail
+				? false
+				: this.DoDecodeHeader(asyncEvent, out ioPending);
+		}
 
-            this.shouldCallNext = true;
+		private PooledSocket currentSocket;
+		private int dataLength;
+		private int extraLength;
+		private bool shouldCallNext;
+		private Action<bool> next;
 
-            if (socket.ReceiveAsync(asyncEvent))
-            {
-                ioPending = true;
-                return true;
-            }
+		private void DoDecodeHeaderAsync(AsyncIOArgs asyncEvent)
+		{
+			this.shouldCallNext = true;
 
-            ioPending = false;
-            this.shouldCallNext = false;
+			this.DoDecodeHeader(asyncEvent, out bool tmp);
+		}
 
-            return asyncEvent.Fail
-                    ? false
-                    : this.DoDecodeHeader(asyncEvent, out ioPending);
-        }
+		private bool DoDecodeHeader(AsyncIOArgs asyncEvent, out bool pendingIO)
+		{
+			pendingIO = false;
 
-        private PooledSocket currentSocket;
-        private int dataLength;
-        private int extraLength;
-        private bool shouldCallNext;
-        private Action<bool> next;
+			if (asyncEvent.Fail)
+			{
+				if (this.shouldCallNext)
+					this.next(false);
 
-        private void DoDecodeHeaderAsync(AsyncIOArgs asyncEvent)
-        {
-            this.shouldCallNext = true;
-            bool tmp;
+				return false;
+			}
 
-            this.DoDecodeHeader(asyncEvent, out tmp);
-        }
+			this.DeserializeHeader(asyncEvent.Result, out this.dataLength, out this.extraLength);
+			var retval = this.StatusCode == 0;
 
-        private bool DoDecodeHeader(AsyncIOArgs asyncEvent, out bool pendingIO)
-        {
-            pendingIO = false;
+			if (this.dataLength == 0)
+			{
+				if (this.shouldCallNext) this.next(retval);
+			}
+			else
+			{
+				asyncEvent.Count = this.dataLength;
+				asyncEvent.Next = this.DoDecodeBodyAsync;
 
-            if (asyncEvent.Fail)
-            {
-                if (this.shouldCallNext) this.next(false);
+				if (this.currentSocket.ReceiveAsync(asyncEvent))
+				{
+					pendingIO = true;
+				}
+				else
+				{
+					if (asyncEvent.Fail)
+						return false;
 
-                return false;
-            }
+					this.DoDecodeBody(asyncEvent);
+				}
+			}
 
-            this.DeserializeHeader(asyncEvent.Result, out this.dataLength, out this.extraLength);
-            var retval = this.StatusCode == 0;
+			return retval;
+		}
 
-            if (this.dataLength == 0)
-            {
-                if (this.shouldCallNext) this.next(retval);
-            }
-            else
-            {
-                asyncEvent.Count = this.dataLength;
-                asyncEvent.Next = this.DoDecodeBodyAsync;
+		private void DoDecodeBodyAsync(AsyncIOArgs asyncEvent)
+		{
+			this.shouldCallNext = true;
+			DoDecodeBody(asyncEvent);
+		}
 
-                if (this.currentSocket.ReceiveAsync(asyncEvent))
-                {
-                    pendingIO = true;
-                }
-                else
-                {
-                    if (asyncEvent.Fail) return false;
+		private void DoDecodeBody(AsyncIOArgs asyncEvent)
+		{
+			if (asyncEvent.Fail)
+			{
+				if (this.shouldCallNext)
+					this.next(false);
 
-                    this.DoDecodeBody(asyncEvent);
-                }
-            }
+				return;
+			}
 
-            return retval;
-        }
+			this.Extra = new ArraySegment<byte>(asyncEvent.Result, 0, this.extraLength);
+			this.Data = new ArraySegment<byte>(asyncEvent.Result, this.extraLength, this.dataLength - this.extraLength);
 
-        private void DoDecodeBodyAsync(AsyncIOArgs asyncEvent)
-        {
-            this.shouldCallNext = true;
-            DoDecodeBody(asyncEvent);
-        }
+			if (this.shouldCallNext) this.next(true);
+		}
 
-        private void DoDecodeBody(AsyncIOArgs asyncEvent)
-        {
-            if (asyncEvent.Fail)
-            {
-                if (this.shouldCallNext) this.next(false);
+		private unsafe void DeserializeHeader(byte[] header, out int dataLength, out int extraLength)
+		{
+			fixed (byte* buffer = header)
+			{
+				if (buffer[0] != MAGIC_VALUE)
+					throw new InvalidOperationException("Expected magic value " + MAGIC_VALUE + ", received: " + buffer[0]);
 
-                return;
-            }
+				this.DataType = buffer[HEADER_DATATYPE];
+				this.Opcode = buffer[HEADER_OPCODE];
+				this.StatusCode = BinaryConverter.DecodeUInt16(buffer, HEADER_STATUS);
 
-            this.Extra = new ArraySegment<byte>(asyncEvent.Result, 0, this.extraLength);
-            this.Data = new ArraySegment<byte>(asyncEvent.Result, this.extraLength, this.dataLength - this.extraLength);
+				this.KeyLength = BinaryConverter.DecodeUInt16(buffer, HEADER_KEY);
+				this.CorrelationId = BinaryConverter.DecodeInt32(buffer, HEADER_OPAQUE);
+				this.CAS = BinaryConverter.DecodeUInt64(buffer, HEADER_CAS);
 
-            if (this.shouldCallNext) this.next(true);
-        }
+				dataLength = BinaryConverter.DecodeInt32(buffer, HEADER_BODY);
+				extraLength = buffer[HEADER_EXTRA];
+			}
+		}
 
-        private unsafe void DeserializeHeader(byte[] header, out int dataLength, out int extraLength)
-        {
-            fixed (byte* buffer = header)
-            {
-                if (buffer[0] != MAGIC_VALUE)
-                    throw new InvalidOperationException("Expected magic value " + MAGIC_VALUE + ", received: " + buffer[0]);
-
-                this.DataType = buffer[HEADER_DATATYPE];
-                this.Opcode = buffer[HEADER_OPCODE];
-                this.StatusCode = BinaryConverter.DecodeUInt16(buffer, HEADER_STATUS);
-
-                this.KeyLength = BinaryConverter.DecodeUInt16(buffer, HEADER_KEY);
-                this.CorrelationId = BinaryConverter.DecodeInt32(buffer, HEADER_OPAQUE);
-                this.CAS = BinaryConverter.DecodeUInt64(buffer, HEADER_CAS);
-
-                dataLength = BinaryConverter.DecodeInt32(buffer, HEADER_BODY);
-                extraLength = buffer[HEADER_EXTRA];
-            }
-        }
-
-        private void LogExecutionTime(string title, DateTime startTime, int thresholdMs)
-        {
-            var duration = (DateTime.Now - startTime).TotalMilliseconds;
-            if (duration > thresholdMs)
-            {
-                log.WarnFormat("MemcachedBinaryResponse-{0}: {1}ms", title, duration);
-            }
-        }
-    }
+		private void LogExecutionTime(string title, DateTime startTime, int thresholdMs)
+		{
+			var duration = (DateTime.Now - startTime).TotalMilliseconds;
+			if (duration > thresholdMs)
+			{
+				log.WarnFormat("MemcachedBinaryResponse-{0}: {1}ms", title, duration);
+			}
+		}
+	}
 }
 
 #region [ License information          ]

@@ -1,7 +1,7 @@
 using System;
 using System.Linq;
 using System.Collections.Generic;
-using System.Text;
+
 using Enyim.Caching.Memcached.Results;
 using Enyim.Caching.Memcached.Results.Extensions;
 
@@ -61,14 +61,14 @@ namespace Enyim.Caching.Memcached.Protocol.Text
 			get { return this.result; }
 		}
 
-        protected internal override System.Threading.Tasks.Task<IOperationResult> ReadResponseAsync(PooledSocket socket)
-        {
-            throw new NotImplementedException();
-        }
-
-		protected internal override bool ReadResponseAsync(PooledSocket socket, System.Action<bool> next)
+		protected internal override System.Threading.Tasks.Task<IOperationResult> ReadResponseAsync(PooledSocket socket)
 		{
-			throw new System.NotSupportedException();
+			throw new NotImplementedException();
+		}
+
+		protected internal override bool ReadResponseAsync(PooledSocket socket, Action<bool> next)
+		{
+			throw new NotSupportedException();
 		}
 	}
 }

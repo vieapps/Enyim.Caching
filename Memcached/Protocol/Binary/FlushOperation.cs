@@ -1,5 +1,3 @@
-using System;
-using System.Collections.Generic;
 using Enyim.Caching.Memcached.Results;
 using Enyim.Caching.Memcached.Results.Extensions;
 

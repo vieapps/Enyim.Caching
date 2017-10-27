@@ -1,11 +1,8 @@
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
 using System.Net;
-using System.Threading;
-using Enyim.Caching.Configuration;
-using Enyim.Collections;
 using System.Security;
+
+using Enyim.Caching.Configuration;
+
 using Microsoft.Extensions.Logging;
 
 namespace Enyim.Caching.Memcached.Protocol.Binary
@@ -22,7 +19,7 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 		public BinaryNode(EndPoint endpoint, ISocketPoolConfiguration config, ISaslAuthenticationProvider authenticationProvider, ILogger logger) : base(endpoint, config, logger)
 		{
 			this.authenticationProvider = authenticationProvider;
-			_logger = logger;
+			this._logger = logger;
 		}
 
 		/// <summary>
@@ -34,7 +31,7 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 
 			if (this.authenticationProvider != null && !this.Auth(retval))
 			{
-				_logger.LogError("Authentication failed: " + this.EndPoint);
+				this._logger.LogError("Authentication failed: " + this.EndPoint);
 
 				throw new SecurityException("auth failed: " + this.EndPoint);
 			}
@@ -63,7 +60,7 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 				}
 				else
 				{
-					_logger.LogWarning("Authentication failed, return code: 0x{0:x}", currentStep.StatusCode);
+					this._logger.LogWarning("Authentication failed, return code: 0x{0:x}", currentStep.StatusCode);
 
 					// invalid credentials or other error
 					return false;

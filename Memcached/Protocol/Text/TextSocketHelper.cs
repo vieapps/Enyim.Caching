@@ -61,8 +61,6 @@ namespace Enyim.Caching.Memcached.Protocol.Text
 			MemoryStream ms = new MemoryStream(50);
 
 			bool gotR = false;
-			//byte[] buffer = new byte[1];
-
 			int data;
 
 			while (true)

@@ -1,7 +1,8 @@
 using System;
 using System.Globalization;
-using System.Text;
 using System.Collections.Generic;
+using System.Threading.Tasks;
+
 using Enyim.Caching.Memcached.Results;
 using Enyim.Caching.Memcached.Results.Extensions;
 
@@ -28,10 +29,10 @@ namespace Enyim.Caching.Memcached.Protocol.Text
 		protected internal override IList<ArraySegment<byte>> GetBuffer()
 		{
 			var command = (this.mode == MutationMode.Increment ? "incr " : "decr ")
-							+ this.Key
-							+ " "
-							+ this.delta.ToString(CultureInfo.InvariantCulture)
-							+ TextSocketHelper.CommandTerminator;
+				+ this.Key
+				+ " "
+				+ this.delta.ToString(CultureInfo.InvariantCulture)
+				+ TextSocketHelper.CommandTerminator;
 
 			return TextSocketHelper.GetCommandBuffer(command);
 		}
@@ -45,8 +46,7 @@ namespace Enyim.Caching.Memcached.Protocol.Text
 			if (String.Compare(response, "NOT_FOUND", StringComparison.Ordinal) == 0)
 				return result.Fail("Failed to read response.  Item not found");
 
-			result.Success = 
-				UInt64.TryParse(response, NumberStyles.AllowLeadingWhite | NumberStyles.AllowTrailingWhite, CultureInfo.InvariantCulture, out this.result);
+			result.Success = UInt64.TryParse(response, NumberStyles.AllowLeadingWhite | NumberStyles.AllowTrailingWhite, CultureInfo.InvariantCulture, out this.result);
 			return result;
 		}
 
@@ -60,14 +60,14 @@ namespace Enyim.Caching.Memcached.Protocol.Text
 			get { return this.result; }
 		}
 
-        protected internal override System.Threading.Tasks.Task<IOperationResult> ReadResponseAsync(PooledSocket socket)
-        {
-            throw new NotImplementedException();
-        }
-
-		protected internal override bool ReadResponseAsync(PooledSocket socket, System.Action<bool> next)
+		protected internal override Task<IOperationResult> ReadResponseAsync(PooledSocket socket)
 		{
-			throw new System.NotSupportedException();
+			throw new NotImplementedException();
+		}
+
+		protected internal override bool ReadResponseAsync(PooledSocket socket, Action<bool> next)
+		{
+			throw new NotSupportedException();
 		}
 	}
 }

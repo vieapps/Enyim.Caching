@@ -1,6 +1,6 @@
-using System;
 using System.Collections.Generic;
 using System.Net;
+
 using Enyim.Caching.Memcached;
 
 namespace Enyim.Caching.Configuration

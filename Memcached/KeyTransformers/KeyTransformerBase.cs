@@ -1,4 +1,3 @@
-
 namespace Enyim.Caching.Memcached
 {
 	public abstract class KeyTransformerBase : IMemcachedKeyTransformer

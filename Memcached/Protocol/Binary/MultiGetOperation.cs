@@ -1,8 +1,7 @@
 using System;
-using System.Linq;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.Threading;
+using System.Threading.Tasks;
+
 using Enyim.Caching.Memcached.Results;
 using Enyim.Caching.Memcached.Results.Extensions;
 
@@ -69,13 +68,12 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 			return buffers;
 		}
 
-
 		private PooledSocket currentSocket;
 		private BinaryResponse asyncReader;
 		private bool? asyncLoopState;
 		private Action<bool> afterAsyncRead;
 
-		protected internal override System.Threading.Tasks.Task<IOperationResult> ReadResponseAsync(PooledSocket socket)
+		protected internal override Task<IOperationResult> ReadResponseAsync(PooledSocket socket)
 		{
 			throw new NotImplementedException();
 		}
@@ -95,16 +93,15 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 
 		private bool DoReadAsync()
 		{
-			bool ioPending;
-
 			var reader = this.asyncReader;
 
 			while (this.asyncLoopState == null)
 			{
-				var readSuccess = reader.ReadAsync(this.currentSocket, this.EndReadAsync, out ioPending);
+				var readSuccess = reader.ReadAsync(this.currentSocket, this.EndReadAsync, out bool ioPending);
 				this.StatusCode = reader.StatusCode;
 
-				if (ioPending) return readSuccess;
+				if (ioPending)
+					return readSuccess;
 
 				if (!readSuccess)
 					this.asyncLoopState = false;
@@ -133,10 +130,9 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 
 		private void StoreResult(BinaryResponse reader)
 		{
-			string key;
 
 			// find the key to the response
-			if (!this.idToKey.TryGetValue(reader.CorrelationId, out key))
+			if (!this.idToKey.TryGetValue(reader.CorrelationId, out string key))
 			{
 				// we're not supposed to get here tho
 				log.WarnFormat("Found response with CorrelationId {0}, but no key is matching it.", reader.CorrelationId);
@@ -169,10 +165,9 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 				if (response.CorrelationId == this.noopId)
 					return result.Pass();
 
-				string key;
 
 				// find the key to the response
-				if (!this.idToKey.TryGetValue(response.CorrelationId, out key))
+				if (!this.idToKey.TryGetValue(response.CorrelationId, out string key))
 				{
 					// we're not supposed to get here tho
 					log.WarnFormat("Found response with CorrelationId {0}, but no key is matching it.", response.CorrelationId);

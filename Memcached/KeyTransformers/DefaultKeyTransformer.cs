@@ -4,7 +4,7 @@ namespace Enyim.Caching.Memcached
 {
 	public class DefaultKeyTransformer : KeyTransformerBase
 	{
-		static readonly char[] ForbiddenChars = { 
+		static readonly char[] ForbiddenChars = {
 			'\u0000', '\u0001', '\u0002', '\u0003',
 			'\u0004', '\u0005', '\u0006', '\u0007',
 			'\u0008', '\u0009', '\u000a', '\u000b',

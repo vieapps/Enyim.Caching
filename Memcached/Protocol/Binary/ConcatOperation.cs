@@ -1,6 +1,5 @@
 using System;
-using System.Collections.Generic;
-using System.Text;
+
 using Enyim.Caching.Memcached.Results;
 
 namespace Enyim.Caching.Memcached.Protocol.Binary
@@ -13,8 +12,7 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 		private ArraySegment<byte> data;
 		private ConcatenationMode mode;
 
-		public ConcatOperation(ConcatenationMode mode, string key, ArraySegment<byte> data)
-			: base(key)
+		public ConcatOperation(ConcatenationMode mode, string key, ArraySegment<byte> data) : base(key)
 		{
 			this.data = data;
 			this.mode = mode;

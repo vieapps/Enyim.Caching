@@ -1,49 +1,53 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+
 using Enyim.Caching.Memcached.Results;
 
 namespace Enyim.Caching.Memcached.Protocol
 {
-    /// <summary>
-    /// Base class for implementing operations.
-    /// </summary>
-    public abstract class Operation : IOperation
-    {
-        protected Operation() { }
+	/// <summary>
+	/// Base class for implementing operations.
+	/// </summary>
+	public abstract class Operation : IOperation
+	{
+		protected Operation() { }
 
-        internal protected abstract IList<ArraySegment<byte>> GetBuffer();
-        internal protected abstract IOperationResult ReadResponse(PooledSocket socket);
-        internal protected abstract Task<IOperationResult> ReadResponseAsync(PooledSocket socket);
-        internal protected abstract bool ReadResponseAsync(PooledSocket socket, Action<bool> next);
+		internal protected abstract IList<ArraySegment<byte>> GetBuffer();
 
-        IList<ArraySegment<byte>> IOperation.GetBuffer()
-        {
-            return this.GetBuffer();
-        }
+		internal protected abstract IOperationResult ReadResponse(PooledSocket socket);
 
-        IOperationResult IOperation.ReadResponse(PooledSocket socket)
-        {
-            return this.ReadResponse(socket);
-        }
+		internal protected abstract Task<IOperationResult> ReadResponseAsync(PooledSocket socket);
 
-        async Task<IOperationResult> IOperation.ReadResponseAsync(PooledSocket socket)
-        {
-            return await this.ReadResponseAsync(socket);
-        }
+		internal protected abstract bool ReadResponseAsync(PooledSocket socket, Action<bool> next);
 
-        bool IOperation.ReadResponseAsync(PooledSocket socket, Action<bool> next)
-        {
-            return this.ReadResponseAsync(socket, next);
-        }
+		IList<ArraySegment<byte>> IOperation.GetBuffer()
+		{
+			return this.GetBuffer();
+		}
 
-        int IOperation.StatusCode
-        {
-            get { return this.StatusCode; }
-        }
+		IOperationResult IOperation.ReadResponse(PooledSocket socket)
+		{
+			return this.ReadResponse(socket);
+		}
 
-        public int StatusCode { get; protected set; }
-    }
+		async Task<IOperationResult> IOperation.ReadResponseAsync(PooledSocket socket)
+		{
+			return await this.ReadResponseAsync(socket);
+		}
+
+		bool IOperation.ReadResponseAsync(PooledSocket socket, Action<bool> next)
+		{
+			return this.ReadResponseAsync(socket, next);
+		}
+
+		int IOperation.StatusCode
+		{
+			get { return this.StatusCode; }
+		}
+
+		public int StatusCode { get; protected set; }
+	}
 }
 
 #region [ License information          ]

@@ -1,12 +1,6 @@
 //#define DEBUG_IO
 using System;
-using System.Linq;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
-using System.Net;
 using System.Net.Sockets;
-using System.Text;
 using System.Threading;
 
 namespace Enyim.Caching.Memcached
@@ -148,8 +142,7 @@ namespace Enyim.Caching.Memcached
 				this.readInProgressEvent.Set();
 
 				var read = this.readEvent.BytesTransferred;
-				if (this.readEvent.SocketError != SocketError.Success
-					|| read == 0)
+				if (this.readEvent.SocketError != SocketError.Success || read == 0)
 				{
 					this.AbortReadAndTryPublishError(true);//new IOException("Remote end has been closed"));
 

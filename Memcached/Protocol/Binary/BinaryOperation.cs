@@ -3,25 +3,25 @@ using System.Collections.Generic;
 
 namespace Enyim.Caching.Memcached.Protocol.Binary
 {
-    public abstract class BinaryOperation : Operation
-    {
-        protected abstract BinaryRequest Build();
+	public abstract class BinaryOperation : Operation
+	{
+		protected abstract BinaryRequest Build();
 
-        protected internal override IList<ArraySegment<byte>> GetBuffer()
-        {
-            return this.Build().CreateBuffer();
-        }
+		protected internal override IList<ArraySegment<byte>> GetBuffer()
+		{
+			return this.Build().CreateBuffer();
+		}
 
-        protected internal override System.Threading.Tasks.Task<Results.IOperationResult> ReadResponseAsync(PooledSocket socket)
-        {
-            throw new NotImplementedException();
-        }
+		protected internal override System.Threading.Tasks.Task<Results.IOperationResult> ReadResponseAsync(PooledSocket socket)
+		{
+			throw new NotImplementedException();
+		}
 
-        protected internal override bool ReadResponseAsync(PooledSocket socket, System.Action<bool> next)
-        {
-            throw new System.NotSupportedException();
-        }       
-    }
+		protected internal override bool ReadResponseAsync(PooledSocket socket, Action<bool> next)
+		{
+			throw new NotSupportedException();
+		}
+	}
 }
 
 #region [ License information          ]

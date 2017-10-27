@@ -1,5 +1,3 @@
-using System;
-using System.Diagnostics;
 using System.Collections.Generic;
 
 namespace Enyim.Caching.Memcached.Protocol
@@ -14,9 +12,10 @@ namespace Enyim.Caching.Memcached.Protocol
 			this.Keys = keys;
 		}
 
-		//Input
+		// input
 		public IList<string> Keys { get; private set; }
-		// Output
+
+		// output
 		public Dictionary<string, ulong> Cas { get; protected set; }
 
 		IList<string> IMultiItemOperation.Keys { get { return this.Keys; } }

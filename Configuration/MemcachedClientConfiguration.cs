@@ -41,9 +41,9 @@ namespace Enyim.Caching.Configuration
 			foreach (var server in options.Servers)
 			{
 				if (IPAddress.TryParse(server.Address, out IPAddress address))
-					Servers.Add(new IPEndPoint(address, server.Port));
+					this.Servers.Add(new IPEndPoint(address, server.Port));
 				else
-					Servers.Add(new DnsEndPoint(server.Address, server.Port));
+					this.Servers.Add(new DnsEndPoint(server.Address, server.Port));
 			}
 			this.SocketPool = options.SocketPool;
 			this.Protocol = options.Protocol;
@@ -62,17 +62,17 @@ namespace Enyim.Caching.Configuration
 						foreach (var parameter in options.Authentication.Parameters)
 						{
 							this.Authentication.Parameters[parameter.Key] = parameter.Value;
-							_logger.LogDebug($"Authentication {parameter.Key} is '{parameter.Value}'.");
+							this._logger.LogDebug($"Authentication {parameter.Key} is '{parameter.Value}'.");
 						}
 					}
 					else
 					{
-						_logger.LogError($"Unable to load authentication type {options.Authentication.Type}.");
+						this._logger.LogError($"Unable to load authentication type {options.Authentication.Type}.");
 					}
 				}
 				catch (Exception ex)
 				{
-					_logger.LogError(new EventId(), ex, $"Unable to load authentication type {options.Authentication.Type}.");
+					this._logger.LogError(new EventId(), ex, $"Unable to load authentication type {options.Authentication.Type}.");
 				}
 			}
 
@@ -84,7 +84,7 @@ namespace Enyim.Caching.Configuration
 					if (keyTransformerType != null)
 					{
 						this.KeyTransformer = Activator.CreateInstance(keyTransformerType) as IMemcachedKeyTransformer;
-						_logger.LogDebug($"Use '{options.KeyTransformer}' KeyTransformer");
+						this._logger.LogDebug($"Use '{options.KeyTransformer}' KeyTransformer");
 					}
 				}
 				catch (Exception ex)
@@ -165,12 +165,12 @@ namespace Enyim.Caching.Configuration
 						}
 						else
 						{
-							_logger.LogError($"Unable to load authentication type {(info["type"] as JValue).Value as string}.");
+							this._logger.LogError($"Unable to load authentication type {(info["type"] as JValue).Value as string}.");
 						}
 					}
 					catch (Exception ex)
 					{
-						_logger.LogError(new EventId(), ex, $"Unable to load authentication type {(info["type"] as JValue).Value as string}.");
+						this._logger.LogError(new EventId(), ex, $"Unable to load authentication type {(info["type"] as JValue).Value as string}.");
 					}
 			}
 		}

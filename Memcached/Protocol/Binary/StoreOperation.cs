@@ -1,5 +1,5 @@
 using System;
-using System.Text;
+
 using Enyim.Caching.Memcached.Results;
 using Enyim.Caching.Memcached.Results.Helpers;
 using Enyim.Caching.Memcached.Results.Extensions;
@@ -12,8 +12,7 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 		private CacheItem value;
 		private uint expires;
 
-		public StoreOperation(StoreMode mode, string key, CacheItem value, uint expires) :
-			base(key)
+		public StoreOperation(StoreMode mode, string key, CacheItem value, uint expires) : base(key)
 		{
 			this.mode = mode;
 			this.value = value;
@@ -68,9 +67,9 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 			get { return this.mode; }
 		}
 
-		protected internal override bool ReadResponseAsync(PooledSocket socket, System.Action<bool> next)
+		protected internal override bool ReadResponseAsync(PooledSocket socket, Action<bool> next)
 		{
-			throw new System.NotSupportedException();
+			throw new NotSupportedException();
 		}
 	}
 }

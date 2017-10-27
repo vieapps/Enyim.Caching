@@ -1,6 +1,6 @@
 using System;
-using System.Security.Cryptography;
 using System.Text;
+using System.Security.Cryptography;
 
 namespace Enyim.Caching.Memcached
 {
@@ -11,7 +11,7 @@ namespace Enyim.Caching.Memcached
 	{
 		public override string Transform(string key)
 		{
-            var sh = SHA1.Create();
+			var sh = SHA1.Create();
 			byte[] data = sh.ComputeHash(Encoding.Unicode.GetBytes(key));
 
 			return Convert.ToBase64String(data);

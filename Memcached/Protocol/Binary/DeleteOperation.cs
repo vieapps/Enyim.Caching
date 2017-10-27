@@ -1,5 +1,3 @@
-using System.Collections.Generic;
-using System.Text;
 using Enyim.Caching.Memcached.Results;
 using Enyim.Caching.Memcached.Results.Extensions;
 using Enyim.Caching.Memcached.Results.Helpers;
@@ -25,13 +23,6 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 		protected override IOperationResult ProcessResponse(BinaryResponse response)
 		{
 			var result = new BinaryOperationResult();
-#if EVEN_MORE_LOGGING
-			if (log.IsDebugEnabled)
-				if (response.StatusCode == 0)
-					log.DebugFormat("Delete succeeded for key '{0}'.", this.Key);
-				else
-					log.DebugFormat("Delete failed for key '{0}'. Reason: {1}", this.Key, Encoding.ASCII.GetString(response.Data.Array, response.Data.Offset, response.Data.Count));
-#endif
 			if (response.StatusCode == 0)
 			{
 				return result.Pass();

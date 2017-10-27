@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-
-namespace Enyim.Caching.Memcached
+﻿namespace Enyim.Caching.Memcached
 {
 	/// <summary>
 	/// Fails a node immediately when an error occures. This is the default policy.

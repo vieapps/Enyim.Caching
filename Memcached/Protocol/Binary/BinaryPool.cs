@@ -1,11 +1,6 @@
 using System;
-using System.Collections.Generic;
-using System.Diagnostics;
 using System.Net;
-using System.Threading;
-using System.Security;
 
-using Enyim.Collections;
 using Enyim.Caching.Configuration;
 
 using Microsoft.Extensions.Logging;
@@ -25,34 +20,33 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 		{
 			this.authenticationProvider = GetProvider(configuration);
 			this.configuration = configuration;
-			_logger = logger;
+			this._logger = logger;
 		}
 
 		protected override IMemcachedNode CreateNode(EndPoint endpoint)
 		{
-			return new BinaryNode(endpoint, this.configuration.SocketPool, this.authenticationProvider, _logger);
+			return new BinaryNode(endpoint, this.configuration.SocketPool, this.authenticationProvider, this._logger);
 		}
 
 		private static ISaslAuthenticationProvider GetProvider(IMemcachedClientConfiguration configuration)
 		{
 			// create&initialize the authenticator, if any
 			// we'll use this single instance everywhere, so it must be thread safe
-			IAuthenticationConfiguration auth = configuration.Authentication;
-			if (auth != null)
+			if (configuration.Authentication != null)
 			{
-				Type t = auth.Type;
-				var provider = (t == null) ? null : Enyim.Reflection.FastActivator.Create(t) as ISaslAuthenticationProvider;
+				var provider = configuration.Authentication.Type == null
+					? null
+					: Reflection.FastActivator.Create(configuration.Authentication.Type) as ISaslAuthenticationProvider;
 
 				if (provider != null)
 				{
-					provider.Initialize(auth.Parameters);
+					provider.Initialize(configuration.Authentication.Parameters);
 					return provider;
 				}
 			}
 
 			return null;
 		}
-
 	}
 }
 

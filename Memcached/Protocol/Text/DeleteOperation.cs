@@ -1,6 +1,6 @@
 using System;
+
 using Enyim.Caching.Memcached.Results;
-using Enyim.Caching.Memcached.Results.Extensions;
 
 namespace Enyim.Caching.Memcached.Protocol.Text
 {
@@ -23,10 +23,10 @@ namespace Enyim.Caching.Memcached.Protocol.Text
 			};
 		}
 
-        protected internal override System.Threading.Tasks.Task<IOperationResult> ReadResponseAsync(PooledSocket socket)
-        {
-            throw new NotImplementedException();
-        }
+		protected internal override System.Threading.Tasks.Task<IOperationResult> ReadResponseAsync(PooledSocket socket)
+		{
+			throw new NotImplementedException();
+		}
 
 		protected internal override bool ReadResponseAsync(PooledSocket socket, System.Action<bool> next)
 		{

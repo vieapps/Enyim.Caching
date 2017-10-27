@@ -1,16 +1,10 @@
-using System;
-using System.Globalization;
-using System.Text;
-using System.Collections.Generic;
-
 namespace Enyim.Caching.Memcached.Protocol.Text
 {
 	public class StoreOperation : StoreOperationBase, IStoreOperation
 	{
 		private StoreMode mode;
 
-		internal StoreOperation(StoreMode mode, string key, CacheItem value, uint expires)
-			: base((StoreCommand)mode, key, value, expires, 0)
+		internal StoreOperation(StoreMode mode, string key, CacheItem value, uint expires) : base((StoreCommand)mode, key, value, expires, 0)
 		{
 			this.mode = mode;
 		}
