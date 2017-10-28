@@ -1,7 +1,7 @@
 using System;
 using System.Linq;
-using System.Collections.Generic;
 using System.Net;
+using System.Collections.Generic;
 
 namespace Enyim.Caching.Memcached
 {
@@ -17,16 +17,18 @@ namespace Enyim.Caching.Memcached
 		/// Defines a value which indicates that the statstics should be retrieved for all servers in the pool.
 		/// </summary>
 		public static readonly EndPoint All = new IPEndPoint(IPAddress.Any, 0);
+
 		#region [ readonly int[] Optable       ]
 		// defines which values can be summed and which not
-		private static readonly int[] Optable = 
+		private static readonly int[] Optable =
 		{
 			0, 0, 0, 1, 1, 1, 1, 1,
 			1, 1, 1, 1, 1, 1, 1, 1
 		};
 		#endregion
+
 		#region [ readonly string[] StatKeys   ]
-		private static readonly string[] StatKeys = 
+		private static readonly string[] StatKeys =
 		{
 			"uptime",
 			"time",
@@ -66,31 +68,25 @@ namespace Enyim.Caching.Memcached
 			if (server.Address != IPAddress.Any)
 			{
 				// error check
-				string tmp = GetRaw(server, item);
+				string tmp = this.GetRaw(server, item);
 				if (String.IsNullOrEmpty(tmp))
 					throw new ArgumentException("Item was not found: " + item);
 
-				long value;
-				// return the value
-				if (Int64.TryParse(tmp, out value))
+				if (Int64.TryParse(tmp, out long value))
 					return value;
 
 				throw new ArgumentException("Invalid value string was returned: " + tmp);
 			}
 
 			// check if we can sum the value for all servers
-			if ((Optable[(int)item] & OpAllowsSum) != OpAllowsSum)
+			if ((ServerStats.Optable[(int)item] & ServerStats.OpAllowsSum) != ServerStats.OpAllowsSum)
 				throw new ArgumentException("The " + item + " values cannot be summarized");
 
-			long retval = 0;
-
 			// sum & return
+			long result = 0;
 			foreach (IPEndPoint ep in this.results.Keys)
-			{
-				retval += this.GetValue(ep, item);
-			}
-
-			return retval;
+				result += this.GetValue(ep, item);
+			return result;
 		}
 
 		/// <summary>
@@ -100,7 +96,7 @@ namespace Enyim.Caching.Memcached
 		/// <returns>The version of memcached</returns>
 		public Version GetVersion(IPEndPoint server)
 		{
-			string version = GetRaw(server, StatItem.Version);
+			string version = this.GetRaw(server, StatItem.Version);
 			if (String.IsNullOrEmpty(version))
 				throw new ArgumentException("No version found for the server " + server);
 
@@ -114,12 +110,11 @@ namespace Enyim.Caching.Memcached
 		/// <returns>A value indicating how long the server is running</returns>
 		public TimeSpan GetUptime(IPEndPoint server)
 		{
-			string uptime = GetRaw(server, StatItem.Uptime);
+			string uptime = this.GetRaw(server, StatItem.Uptime);
 			if (String.IsNullOrEmpty(uptime))
 				throw new ArgumentException("No uptime found for the server " + server);
 
-			long value;
-			if (!Int64.TryParse(uptime, out value))
+			if (!Int64.TryParse(uptime, out long value))
 				throw new ArgumentException("Invalid uptime string was returned: " + uptime);
 
 			return TimeSpan.FromSeconds(value);
@@ -133,13 +128,10 @@ namespace Enyim.Caching.Memcached
 		/// <returns>The value of the stat item</returns>
 		public string GetRaw(IPEndPoint server, string key)
 		{
-			Dictionary<string, string> serverValues;
-			string retval;
-
-			if (this.results.TryGetValue(server, out serverValues))
+			if (this.results.TryGetValue(server, out Dictionary<string, string> serverValues))
 			{
-				if (serverValues.TryGetValue(key, out retval))
-					return retval;
+				if (serverValues.TryGetValue(key, out string result))
+					return result;
 
 				if (log.IsDebugEnabled)
 					log.DebugFormat("The stat item {0} does not exist for {1}", key, server);
@@ -161,17 +153,15 @@ namespace Enyim.Caching.Memcached
 		/// <returns>The value of the stat item</returns>
 		public string GetRaw(IPEndPoint server, StatItem item)
 		{
-			if ((int)item < StatKeys.Length && (int)item >= 0)
-				return GetRaw(server, StatKeys[(int)item]);
+			if ((int)item < ServerStats.StatKeys.Length && (int)item >= 0)
+				return this.GetRaw(server, ServerStats.StatKeys[(int)item]);
 
 			throw new ArgumentOutOfRangeException("item");
 		}
 
 		public IEnumerable<KeyValuePair<EndPoint, string>> GetRaw(string key)
 		{
-			string tmp;
-
-			return this.results.Select(kvp => new KeyValuePair<EndPoint, string>(kvp.Key, kvp.Value.TryGetValue(key, out tmp) ? tmp : null)).ToList();
+			return this.results.Select(kvp => new KeyValuePair<EndPoint, string>(kvp.Key, kvp.Value.TryGetValue(key, out string tmp) ? tmp : null)).ToList();
 		}
 	}
 }

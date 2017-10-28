@@ -1,6 +1,5 @@
 using System;
 using System.IO;
-using System.Text;
 
 using Newtonsoft.Json;
 using Newtonsoft.Json.Bson;
@@ -8,21 +7,16 @@ using Newtonsoft.Json.Bson;
 namespace Enyim.Caching.Memcached
 {
 	/// <summary>
-	/// Default <see cref="T:Enyim.Caching.Memcached.ITranscoder"/> implementation. Primitive types are manually serialized, the rest is serialized using Json.NET Bson.
+	/// Default <see cref="T:Enyim.Caching.Memcached.ITranscoder"/> implementation.
+	/// Primitive types are manually serialized, the rest is serialized using Json.NET Bson.
 	/// </summary>
 	public class DataContractTranscoder : DefaultTranscoder
 	{
-		public override object DeserializeObject(ArraySegment<byte> value)
-		{
-			using (var stream = new MemoryStream(value.Array, value.Offset, value.Count))
-			{
-				using (var reader = new BsonDataReader(stream))
-				{
-					return (new JsonSerializer()).Deserialize(reader);
-				}
-			}
-		}
-
+		/// <summary>
+		/// Serializes an object into array of bytes using BSON
+		/// </summary>
+		/// <param name="value"></param>
+		/// <returns></returns>
 		public override ArraySegment<byte> SerializeObject(object value)
 		{
 			using (var stream = new MemoryStream())
@@ -31,6 +25,22 @@ namespace Enyim.Caching.Memcached
 				{
 					(new JsonSerializer()).Serialize(writer, value);
 					return new ArraySegment<byte>(stream.ToArray(), 0, (int)stream.Length);
+				}
+			}
+		}
+
+		/// <summary>
+		/// Deserializes an object from array of bytes using BSON
+		/// </summary>
+		/// <param name="value"></param>
+		/// <returns></returns>
+		public override object DeserializeObject(ArraySegment<byte> value)
+		{
+			using (var stream = new MemoryStream(value.Array, value.Offset, value.Count))
+			{
+				using (var reader = new BsonDataReader(stream))
+				{
+					return (new JsonSerializer()).Deserialize(reader);
 				}
 			}
 		}

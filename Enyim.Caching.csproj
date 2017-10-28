@@ -4,20 +4,20 @@
 		<TargetFramework>netstandard2.0</TargetFramework>
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 		<AssemblyName>Enyim.Caching</AssemblyName>
-		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-		<PackageId>VIEApps.Enyim.Caching</PackageId>
-		<Description>.NET Standard 2.0 client library for working with memcached</Description>
+		<Description>The .NET Standard 2.0 memcached client library, fully async with binary serialization supported</Description>
 		<Authors>VIEApps.net</Authors>
 		<Company>VIEApps.net</Company>
 		<Product>VIEApps NGX</Product>
-		<Copyright>© 2010 Attila Kiskó, 2017 VIEApps.net</Copyright>
+		<Copyright>© 2010 Attila Kiskó, © 2017 VIEApps.net</Copyright>
+		<Version>1.1.0.0</Version>
+		<AssemblyVersion>1.1.0.0</AssemblyVersion>
+		<FileVersion>1.1.0.0</FileVersion>
+		<GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+		<PackageId>VIEApps.Enyim.Caching</PackageId>
 		<PackageTags>memcached;cache;enyim;enyimmemcached;enyim.memcached;enyim.caching;vieapps;vieapps.components</PackageTags>
 		<PackageProjectUrl>https://github.com/vieapps/Enyim.Caching</PackageProjectUrl>
-		<RepositoryType>git</RepositoryType>
 		<RepositoryUrl>https://github.com/vieapps/Enyim.Caching</RepositoryUrl>
-		<Version>1.0.0.1</Version>
-		<AssemblyVersion>1.0.0.1</AssemblyVersion>
-		<FileVersion>1.0.0.1</FileVersion>
+		<RepositoryType>git</RepositoryType>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -41,9 +41,9 @@
 		<PackageReference Include="Microsoft.Extensions.Caching.Abstractions" Version="2.0.0" />
 		<PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="2.0.0" />
 		<PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="2.0.0" />
+		<PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="2.0.0" />
 		<PackageReference Include="Microsoft.Extensions.Options" Version="2.0.0" />
 		<PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="2.0.0" />
-		<PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="2.0.0" />
 		<PackageReference Include="Newtonsoft.Json" Version="10.0.3" />
 		<PackageReference Include="Newtonsoft.Json.Bson" Version="1.0.1" />
 		<PackageReference Include="System.Configuration.ConfigurationManager" Version="4.4.0" />

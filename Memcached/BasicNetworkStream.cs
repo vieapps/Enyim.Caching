@@ -48,35 +48,32 @@ namespace Enyim.Caching.Memcached
 
 			public override IAsyncResult BeginRead(byte[] buffer, int offset, int count, AsyncCallback callback, object state)
 			{
-
-				var retval = this.socket.BeginReceive(buffer, offset, count, SocketFlags.None, out SocketError errorCode, callback, state);
+				var result = this.socket.BeginReceive(buffer, offset, count, SocketFlags.None, out SocketError errorCode, callback, state);
 
 				if (errorCode == SocketError.Success)
-					return retval;
+					return result;
 
-				throw new System.IO.IOException(String.Format("Failed to read from the socket '{0}'. Error: {1}", this.socket.RemoteEndPoint, errorCode));
+				throw new IOException(String.Format("Failed to read from the socket '{0}'. Error: {1}", this.socket.RemoteEndPoint, errorCode));
 			}
 
 			public override int EndRead(IAsyncResult asyncResult)
 			{
-
-				var retval = this.socket.EndReceive(asyncResult, out SocketError errorCode);
+				var result = this.socket.EndReceive(asyncResult, out SocketError errorCode);
 
 				// actually "0 bytes read" could mean an error as well
-				if (errorCode == SocketError.Success && retval > 0)
-					return retval;
+				if (errorCode == SocketError.Success && result > 0)
+					return result;
 
 				throw new IOException(String.Format("Failed to read from the socket '{0}'. Error: {1}", this.socket.RemoteEndPoint, errorCode));
 			}
 
 			public override int Read(byte[] buffer, int offset, int count)
 			{
-
-				int retval = this.socket.Receive(buffer, offset, count, SocketFlags.None, out SocketError errorCode);
+				int result = this.socket.Receive(buffer, offset, count, SocketFlags.None, out SocketError errorCode);
 
 				// actually "0 bytes read" could mean an error as well
-				if (errorCode == SocketError.Success && retval > 0)
-					return retval;
+				if (errorCode == SocketError.Success && result > 0)
+					return result;
 
 				throw new IOException(String.Format("Failed to read from the socket '{0}'. Error: {1}", this.socket.RemoteEndPoint, errorCode == SocketError.Success ? "?" : errorCode.ToString()));
 			}

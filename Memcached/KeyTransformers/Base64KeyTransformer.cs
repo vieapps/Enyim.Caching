@@ -10,7 +10,7 @@ namespace Enyim.Caching.Memcached
 	{
 		public override string Transform(string key)
 		{
-			return Convert.ToBase64String(Encoding.UTF8.GetBytes(key));//, Base64FormattingOptions.None);
+			return Convert.ToBase64String(Encoding.UTF8.GetBytes(key));
 		}
 	}
 }

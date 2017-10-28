@@ -9,53 +9,42 @@ using Newtonsoft.Json.Bson;
 namespace Enyim.Caching.Memcached
 {
 	/// <summary>
-	/// Default <see cref="T:Enyim.Caching.Memcached.ITranscoder"/> implementation. Primitive types are manually serialized, the rest is serialized using <see cref="T:System.Runtime.Serialization.Formatters.Binary.BinaryFormatter"/>.
+	/// Default <see cref="T:Enyim.Caching.Memcached.ITranscoder"/> implementation.
+	/// Primitive types are manually serialized, the rest is serialized using <see cref="T:System.Runtime.Serialization.Formatters.Binary.BinaryFormatter"/>.
 	/// </summary>
 	public class DefaultTranscoder : ITranscoder
 	{
-		public const uint RawDataFlag = 0xfa52;
-		private static readonly ArraySegment<byte> NullArray = new ArraySegment<byte>(new byte[0]);
 
-		CacheItem ITranscoder.Serialize(object value)
+		#region Helpers
+		internal const uint RawDataFlag = 0xfa52;
+		internal static readonly ArraySegment<byte> NullArray = new ArraySegment<byte>(new byte[0]);
+
+		public static uint TypeCodeToFlag(TypeCode code)
 		{
-			return this.Serialize(value);
+			return (uint)((int)code | 0x0100);
 		}
 
-		object ITranscoder.Deserialize(CacheItem item)
+		public static bool IsFlagHandled(uint flag)
 		{
-			return this.Deserialize(item);
+			return (flag & 0x100) == 0x100;
 		}
-
-		T ITranscoder.Deserialize<T>(CacheItem item)
-		{
-			if (item.Data == null || item.Data.Count == 0)
-				return default(T);
-
-			var @object = this.Deserialize(item);
-			return @object is T ? (T)@object : default(T);
-		}
+		#endregion
 
 		protected virtual CacheItem Serialize(object value)
 		{
-			// raw data is a special case when some1 passes in a buffer (byte[] or ArraySegment<byte>)
+			// ArraySegment<byte> is only passed in when a part of buffer is being serialized,
+			// usually from a MemoryStream (to avoid duplicating arrays, the byte[] returned by MemoryStream.GetBuffer is placed into an ArraySegment)
 			if (value is ArraySegment<byte>)
-			{
-				// ArraySegment<byte> is only passed in when a part of buffer is being 
-				// serialized, usually from a MemoryStream (To avoid duplicating arrays 
-				// the byte[] returned by MemoryStream.GetBuffer is placed into an ArraySegment.)
-				return new CacheItem(RawDataFlag, (ArraySegment<byte>)value);
-			}
+				return new CacheItem(DefaultTranscoder.RawDataFlag, (ArraySegment<byte>)value);
 
-			// - or we just received a byte[]. No further processing is needed.
+			// or we just received a byte[], means no further processing is needed
 			if (value is byte[])
-			{
-				return new CacheItem(RawDataFlag, new ArraySegment<byte>(value as byte[]));
-			}
+				return new CacheItem(DefaultTranscoder.RawDataFlag, new ArraySegment<byte>(value as byte[]));
 
-			ArraySegment<byte> data;
 			// TypeCode.DBNull is 2
 			TypeCode code = value == null ? (TypeCode)2 : Type.GetTypeCode(value.GetType());
 
+			ArraySegment<byte> data;
 			switch (code)
 			{
 				// TypeCode.DBNull
@@ -125,17 +114,12 @@ namespace Enyim.Caching.Memcached
 					break;
 			}
 
-			return new CacheItem(TypeCodeToFlag(code), data);
+			return new CacheItem(DefaultTranscoder.TypeCodeToFlag(code), data);
 		}
 
-		public static uint TypeCodeToFlag(TypeCode code)
+		CacheItem ITranscoder.Serialize(object value)
 		{
-			return (uint)((int)code | 0x0100);
-		}
-
-		public static bool IsFlagHandled(uint flag)
-		{
-			return (flag & 0x100) == 0x100;
+			return this.Serialize(value);
 		}
 
 		protected virtual object Deserialize(CacheItem item)
@@ -143,23 +127,19 @@ namespace Enyim.Caching.Memcached
 			if (item.Data.Array == null)
 				return null;
 
-			if (item.Flags == RawDataFlag)
+			if (item.Flags == DefaultTranscoder.RawDataFlag)
 			{
 				var tmp = item.Data;
-
 				if (tmp.Count == tmp.Array.Length)
 					return tmp.Array;
 
 				// we should never arrive here, but it's better to be safe than sorry
-				var retval = new byte[tmp.Count];
-
-				Array.Copy(tmp.Array, tmp.Offset, retval, 0, tmp.Count);
-
-				return retval;
+				var result = new byte[tmp.Count];
+				Array.Copy(tmp.Array, tmp.Offset, result, 0, tmp.Count);
+				return result;
 			}
 
 			var code = (TypeCode)(item.Flags & 0xff);
-
 			var data = item.Data;
 
 			switch (code)
@@ -235,10 +215,26 @@ namespace Enyim.Caching.Memcached
 			}
 		}
 
+		object ITranscoder.Deserialize(CacheItem item)
+		{
+			return this.Deserialize(item);
+		}
+
+		T ITranscoder.Deserialize<T>(CacheItem item)
+		{
+			if (item.Data == null || item.Data.Count == 0)
+				return default(T);
+
+			var @object = this.Deserialize(item);
+			return @object != null && @object is T
+				? (T)@object
+				: default(T);
+		}
+
 		#region [ Typed serialization          ]
 		protected virtual ArraySegment<byte> SerializeNull()
 		{
-			return NullArray;
+			return DefaultTranscoder.NullArray;
 		}
 
 		protected virtual ArraySegment<byte> SerializeString(string value)
@@ -311,19 +307,22 @@ namespace Enyim.Caching.Memcached
 			return new ArraySegment<byte>(BitConverter.GetBytes(value));
 		}
 
+		/// <summary>
+		/// Serializes an object into array of bytes
+		/// </summary>
+		/// <param name="value"></param>
+		/// <returns></returns>
 		public virtual ArraySegment<byte> SerializeObject(object value)
 		{
+			if (value == null)
+				return DefaultTranscoder.NullArray;
+
+			if (!value.GetType().IsSerializable)
+				throw new ArgumentException("The type '" + value.GetType().ToString() + "' must have Serializable attribute or implemented the ISerializable interface");
+
 			using (var stream = new MemoryStream())
 			{
-				if (value.GetType().IsSerializable)
-					(new BinaryFormatter()).Serialize(stream, value);
-
-				else
-					using (var writer = new BsonDataWriter(stream))
-					{
-						(new JsonSerializer()).Serialize(writer, value);
-					}
-
+				(new BinaryFormatter()).Serialize(stream, value);
 				return new ArraySegment<byte>(stream.GetBuffer(), 0, (int)stream.Length);
 			}
 		}
@@ -400,11 +399,19 @@ namespace Enyim.Caching.Memcached
 			return (SByte)data.Array[data.Offset];
 		}
 
+		/// <summary>
+		/// Deserializes an object from array of bytes
+		/// </summary>
+		/// <param name="value"></param>
+		/// <returns></returns>
 		public virtual object DeserializeObject(ArraySegment<byte> value)
 		{
+			if (value == null || value.Count < 1)
+				return null;
+
 			using (var stream = new MemoryStream(value.Array, value.Offset, value.Count))
 			{
-				return new BinaryFormatter().Deserialize(stream);
+				return (new BinaryFormatter()).Deserialize(stream);
 			}
 		}
 		#endregion

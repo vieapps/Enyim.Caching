@@ -1,11 +1,11 @@
 # Enyim.Caching
 
-The .NET Standard 2.0 client library for working with memcached
-- 100% compatible with EnyimMemcached 2.x
-- Ready with .NET Core 2.0 and .NET Framework 4.7.1 (and higher)
-- Serialize/Deserialize objects in binary format
-- More useful methods: Add, Replace, Exists
+The .NET Standard 2.0 memcached client library 
+- 100% compatible with EnyimMemcached 2.x library
 - Fully async
+- Object serialization/deserialization in binary format
+- Ready with .NET Core 2.0 and .NET Framework 4.7.1 (and higher) with more useful methods (Add, Replace, Exists)
+- Ready with ASP.NET Core 2.0 middleware (IDistributedCache)
 ### Nuget
 https://www.nuget.org/packages/VIEApps.Enyim.Caching
 ### Information

@@ -534,7 +534,7 @@ namespace Enyim.Caching.Memcached
 			catch (Exception ex)
 			{
 				this._logger.LogError(new EventId(this.GetHashCode(), nameof(MemcachedNode)), ex, $"Create {nameof(PooledSocket)}");
-				throw;
+				throw ex;
 			}
 		}
 

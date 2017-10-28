@@ -11,9 +11,7 @@ namespace Enyim.Caching.Memcached
 	{
 		public override string Transform(string key)
 		{
-			var sh = SHA1.Create();
-			byte[] data = sh.ComputeHash(Encoding.Unicode.GetBytes(key));
-
+			byte[] data = SHA1.Create().ComputeHash(Encoding.Unicode.GetBytes(key));
 			return Convert.ToBase64String(data);
 		}
 	}

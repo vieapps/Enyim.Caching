@@ -120,9 +120,7 @@ namespace Enyim.Caching
 		/// <returns>The retrieved item, or <value>null</value> if the key was not found.</returns>
 		public IGetOperationResult ExecuteGet(string key)
 		{
-			object tmp;
-
-			return this.ExecuteTryGet(key, out tmp);
+			return this.ExecuteTryGet(key, out object tmp);
 		}
 
 		/// <summary>
@@ -133,9 +131,7 @@ namespace Enyim.Caching
 		/// <returns>The <value>true</value> if the item was successfully retrieved.</returns>
 		public IGetOperationResult ExecuteTryGet(string key, out object value)
 		{
-			ulong cas = 0;
-
-			return this.PerformTryGet(key, out cas, out value);
+			return this.PerformTryGet(key, out ulong cas, out value);
 		}
 
 		/// <summary>
@@ -145,10 +141,8 @@ namespace Enyim.Caching
 		/// <returns>The retrieved item, or <value>default(T)</value> if the key was not found.</returns>
 		public IGetOperationResult<T> ExecuteGet<T>(string key)
 		{
-			object tmp;
 			var result = new DefaultGetOperationResultFactory<T>().Create();
-
-			var tryGetResult = ExecuteTryGet(key, out tmp);
+			var tryGetResult = this.ExecuteTryGet(key, out object tmp);
 			if (tryGetResult.Success)
 			{
 				if (tryGetResult.Value is T)
@@ -166,6 +160,7 @@ namespace Enyim.Caching
 				}
 				return result;
 			}
+
 			tryGetResult.Combine(result);
 			return result;
 		}
@@ -177,7 +172,7 @@ namespace Enyim.Caching
 		/// <returns>a Dictionary holding all items indexed by their key.</returns>
 		public IDictionary<string, IGetOperationResult> ExecuteGet(IEnumerable<string> keys)
 		{
-			return PerformMultiGet<IGetOperationResult>(keys, (mget, kvp) =>
+			return this.PerformMultiGet<IGetOperationResult>(keys, (mget, kvp) =>
 			{
 				var result = GetOperationResultFactory.Create();
 				result.Value = this.transcoder.Deserialize(kvp.Value);
@@ -385,9 +380,7 @@ namespace Enyim.Caching
 			ulong tmp = cas;
 			var result = PerformConcatenate(ConcatenationMode.Append, key, ref tmp, data);
 			if (result.Success)
-			{
 				result.Cas = tmp;
-			}
 			return result;
 		}
 
@@ -398,7 +391,6 @@ namespace Enyim.Caching
 		public IConcatOperationResult ExecutePrepend(string key, ArraySegment<byte> data)
 		{
 			ulong cas = 0;
-
 			return this.PerformConcatenate(ConcatenationMode.Prepend, key, ref cas, data);
 		}
 
@@ -413,11 +405,8 @@ namespace Enyim.Caching
 		{
 			ulong tmp = cas;
 			var result = PerformConcatenate(ConcatenationMode.Prepend, key, ref tmp, data);
-
 			if (result.Success)
-			{
 				result.Cas = tmp;
-			}
 			return result;
 		}
 		#endregion
@@ -430,57 +419,7 @@ namespace Enyim.Caching
 		/// <returns>true if the item was successfully removed from the cache; false otherwise.</returns>
 		public IRemoveOperationResult ExecuteRemove(string key)
 		{
-			//var hashedKey = this.keyTransformer.Transform(key);
-			var node = this.pool.Locate(key);
-			var result = RemoveOperationResultFactory.Create();
-
-			if (node != null)
-			{
-				var command = this.pool.OperationFactory.Delete(key, 0);
-				var commandResult = node.Execute(command);
-
-				if (commandResult.Success)
-				{
-					result.Pass();
-				}
-				else
-				{
-					result.InnerResult = commandResult;
-					result.Fail("Failed to remove item, see InnerResult or StatusCode for details");
-				}
-
-				return result;
-			}
-
-			result.Fail("Unable to locate node");
-			return result;
-		}
-
-		public async Task<IRemoveOperationResult> ExecuteRemoveAsync(string key)
-		{
-			var node = this.pool.Locate(key);
-			var result = RemoveOperationResultFactory.Create();
-
-			if (node != null)
-			{
-				var command = this.pool.OperationFactory.Delete(key, 0);
-				var commandResult = await node.ExecuteAsync(command);
-
-				if (commandResult.Success)
-				{
-					result.Pass();
-				}
-				else
-				{
-					result.InnerResult = commandResult;
-					result.Fail("Failed to remove item, see InnerResult or StatusCode for details");
-				}
-
-				return result;
-			}
-
-			result.Fail("Unable to locate memcached node");
-			return result;
+			return this.PerformRemove(key);
 		}
 		#endregion
 

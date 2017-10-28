@@ -71,13 +71,13 @@ namespace Enyim.Caching.Memcached
 			// 6. if at least one server is still down (Ping() == false), we restart the timer
 			// 7. if all servers are up, we set isRunning to false, so the timer is suspended
 			// 8. GOTO 2
+
 			lock (this.DeadSync)
 			{
 				if (this.isDisposed)
 				{
 					if (this._logger.IsEnabled(LogLevel.Warning))
 						this._logger.LogWarning("IsAlive timer was triggered but the pool is already disposed. Ignoring.");
-
 					return;
 				}
 
@@ -86,32 +86,31 @@ namespace Enyim.Caching.Memcached
 				var changed = false;
 				var deadCount = 0;
 
-				for (var i = 0; i < nodes.Length; i++)
+				for (var index = 0; index < nodes.Length; index++)
 				{
-					var n = nodes[i];
-					if (n.IsAlive)
+					var node = nodes[index];
+					if (node.IsAlive)
 					{
 						if (isDebug)
-							this._logger.LogDebug("Alive: {0}", n.EndPoint);
-
-						aliveList.Add(n);
+							this._logger.LogDebug("Alive: {0}", node.EndPoint);
+						aliveList.Add(node);
 					}
 					else
 					{
 						if (isDebug)
-							this._logger.LogDebug("Dead: {0}", n.EndPoint);
+							this._logger.LogDebug("Dead: {0}", node.EndPoint);
 
-						if (n.Ping())
+						if (node.Ping())
 						{
 							changed = true;
-							aliveList.Add(n);
-
-							if (isDebug) this._logger.LogDebug("Ping ok.");
+							aliveList.Add(node);
+							if (isDebug)
+								this._logger.LogDebug("Ping ok.");
 						}
 						else
 						{
-							if (isDebug) this._logger.LogDebug("Still dead.");
-
+							if (isDebug)
+								this._logger.LogDebug("Still dead.");
 							deadCount++;
 						}
 					}
@@ -130,13 +129,12 @@ namespace Enyim.Caching.Memcached
 				{
 					if (isDebug)
 						this._logger.LogDebug("deadCount == 0, stopping the timer.");
-
 					this.isTimerActive = false;
 				}
 				else
 				{
-					if (isDebug) this._logger.LogDebug("deadCount == {0}, starting the timer.", deadCount);
-
+					if (isDebug)
+						this._logger.LogDebug("deadCount == {0}, starting the timer.", deadCount);
 					this.resurrectTimer.Change(this.deadTimeoutMsec, Timeout.Infinite);
 				}
 			}
@@ -156,7 +154,6 @@ namespace Enyim.Caching.Memcached
 				{
 					if (this._logger.IsEnabled(LogLevel.Warning))
 						this._logger.LogWarning("Got a node fail but the pool is already disposed. Ignoring.");
-
 					return;
 				}
 
@@ -181,7 +178,8 @@ namespace Enyim.Caching.Memcached
 
 					this.isTimerActive = true;
 
-					if (isDebug) this._logger.LogDebug("Timer started.");
+					if (isDebug)
+						this._logger.LogDebug("Timer started.");
 				}
 			}
 		}
