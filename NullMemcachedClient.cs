@@ -12,16 +12,39 @@ namespace Enyim.Caching
 	{
 		public event Action<IMemcachedNode> NodeFailed;
 
-		public bool Append(string key, ArraySegment<byte> data)
+		#region Store
+		public bool Store(StoreMode mode, string key, object value)
 		{
-			return true;
+			return false;
 		}
 
-		public CasResult<bool> Append(string key, ulong cas, ArraySegment<byte> data)
+		public bool Store(StoreMode mode, string key, object value, TimeSpan validFor)
 		{
-			return new CasResult<bool>();
+			return false;
 		}
 
+		public bool Store(StoreMode mode, string key, object value, DateTime expiresAt)
+		{
+			return false;
+		}
+
+		public Task<bool> StoreAsync(StoreMode mode, string key, object value)
+		{
+			return Task.FromResult(false);
+		}
+
+		public Task<bool> StoreAsync(StoreMode mode, string key, object value, TimeSpan validFor)
+		{
+			return Task.FromResult(false);
+		}
+
+		public Task<bool> StoreAsync(StoreMode mode, string key, object value, DateTime expiresAt)
+		{
+			return Task.FromResult(false);
+		}
+		#endregion
+
+		#region Cas
 		public CasResult<bool> Cas(StoreMode mode, string key, object value)
 		{
 			return new CasResult<bool>();
@@ -42,99 +65,50 @@ namespace Enyim.Caching
 			throw new NotImplementedException();
 		}
 
-		public ulong Decrement(string key, ulong defaultValue, ulong delta)
+		public Task<CasResult<bool>> CasAsync(StoreMode mode, string key, object value)
 		{
-			throw new NotImplementedException();
+			return Task.FromResult(new CasResult<bool>());
 		}
 
-		public ulong Decrement(string key, ulong defaultValue, ulong delta, TimeSpan validFor)
+		public Task<CasResult<bool>> CasAsync(StoreMode mode, string key, object value, ulong cas)
 		{
-			throw new NotImplementedException();
+			return Task.FromResult(new CasResult<bool>());
 		}
 
-		public CasResult<ulong> Decrement(string key, ulong defaultValue, ulong delta, ulong cas)
+		public Task<CasResult<bool>> CasAsync(StoreMode mode, string key, object value, TimeSpan validFor, ulong cas)
 		{
-			throw new NotImplementedException();
+			return Task.FromResult(new CasResult<bool>());
 		}
 
-		public ulong Decrement(string key, ulong defaultValue, ulong delta, DateTime expiresAt)
+		public Task<CasResult<bool>> CasAsync(StoreMode mode, string key, object value, DateTime expiresAt, ulong cas)
 		{
-			throw new NotImplementedException();
+			return Task.FromResult(new CasResult<bool>());
+		}
+		#endregion
+
+		#region Add & Replace
+		public bool Add(string key, object value, int cacheMinutes)
+		{
+			return false;
 		}
 
-		public CasResult<ulong> Decrement(string key, ulong defaultValue, ulong delta, TimeSpan validFor, ulong cas)
+		public Task<bool> AddAsync(string key, object value, int cacheMinutes)
 		{
-			throw new NotImplementedException();
+			return Task.FromResult(false);
 		}
 
-		public CasResult<ulong> Decrement(string key, ulong defaultValue, ulong delta, DateTime expiresAt, ulong cas)
+		public bool Replace(string key, object value, int cacheMinutes)
 		{
-			throw new NotImplementedException();
+			return false;
 		}
 
-		public void Dispose()
+		public Task<bool> ReplaceAsync(string key, object value, int cacheMinutes)
 		{
-
+			return Task.FromResult(false);
 		}
+		#endregion
 
-		public void FlushAll()
-		{
-			throw new NotImplementedException();
-		}
-
-		public object Get(string key)
-		{
-			throw new NotImplementedException();
-		}
-
-		public T Get<T>(string key)
-		{
-			return default(T);
-		}
-
-		public Task<IGetOperationResult<T>> DoGetAsync<T>(string key)
-		{
-			var result = new DefaultGetOperationResultFactory<T>().Create();
-			result.Success = false;
-			result.Value = default(T);
-			return Task.FromResult(result);
-		}
-
-		public IDictionary<string, object> Get(IEnumerable<string> keys)
-		{
-			throw new NotImplementedException();
-		}
-
-		public Task<IDictionary<string, object>> GetAsync(IEnumerable<string> keys)
-		{
-			throw new NotImplementedException();
-		}
-
-		public Task<object> GetAsync(string key)
-		{
-			return Task.FromResult<object>(null);
-		}
-
-		public Task<T> GetAsync<T>(string key)
-		{
-			return Task.FromResult(default(T));
-		}
-
-		public IDictionary<string, CasResult<object>> GetWithCas(IEnumerable<string> keys)
-		{
-			throw new NotImplementedException();
-		}
-
-		public CasResult<object> GetWithCas(string key)
-		{
-			throw new NotImplementedException();
-		}
-
-		public CasResult<T> GetWithCas<T>(string key)
-		{
-			throw new NotImplementedException();
-		}
-
+		#region Mutate
 		public ulong Increment(string key, ulong defaultValue, ulong delta)
 		{
 			throw new NotImplementedException();
@@ -145,12 +119,27 @@ namespace Enyim.Caching
 			throw new NotImplementedException();
 		}
 
-		public CasResult<ulong> Increment(string key, ulong defaultValue, ulong delta, ulong cas)
+		public ulong Increment(string key, ulong defaultValue, ulong delta, DateTime expiresAt)
 		{
 			throw new NotImplementedException();
 		}
 
-		public ulong Increment(string key, ulong defaultValue, ulong delta, DateTime expiresAt)
+		public Task<ulong> IncrementAsync(string key, ulong defaultValue, ulong delta)
+		{
+			throw new NotImplementedException();
+		}
+
+		public Task<ulong> IncrementAsync(string key, ulong defaultValue, ulong delta, TimeSpan validFor)
+		{
+			throw new NotImplementedException();
+		}
+
+		public Task<ulong> IncrementAsync(string key, ulong defaultValue, ulong delta, DateTime expiresAt)
+		{
+			throw new NotImplementedException();
+		}
+
+		public CasResult<ulong> Increment(string key, ulong defaultValue, ulong delta, ulong cas)
 		{
 			throw new NotImplementedException();
 		}
@@ -165,16 +154,215 @@ namespace Enyim.Caching
 			throw new NotImplementedException();
 		}
 
-		public bool Prepend(string key, ArraySegment<byte> data)
+		public Task<CasResult<ulong>> IncrementAsync(string key, ulong defaultValue, ulong delta, ulong cas)
 		{
 			throw new NotImplementedException();
+		}
+
+		public Task<CasResult<ulong>> IncrementAsync(string key, ulong defaultValue, ulong delta, TimeSpan validFor, ulong cas)
+		{
+			throw new NotImplementedException();
+		}
+
+		public Task<CasResult<ulong>> IncrementAsync(string key, ulong defaultValue, ulong delta, DateTime expiresAt, ulong cas)
+		{
+			throw new NotImplementedException();
+		}
+
+		public ulong Decrement(string key, ulong defaultValue, ulong delta)
+		{
+			throw new NotImplementedException();
+		}
+
+		public ulong Decrement(string key, ulong defaultValue, ulong delta, TimeSpan validFor)
+		{
+			throw new NotImplementedException();
+		}
+
+		public ulong Decrement(string key, ulong defaultValue, ulong delta, DateTime expiresAt)
+		{
+			throw new NotImplementedException();
+		}
+
+		public Task<ulong> DecrementAsync(string key, ulong defaultValue, ulong delta)
+		{
+			throw new NotImplementedException();
+		}
+
+		public Task<ulong> DecrementAsync(string key, ulong defaultValue, ulong delta, TimeSpan validFor)
+		{
+			throw new NotImplementedException();
+		}
+
+		public Task<ulong> DecrementAsync(string key, ulong defaultValue, ulong delta, DateTime expiresAt)
+		{
+			throw new NotImplementedException();
+		}
+
+		public CasResult<ulong> Decrement(string key, ulong defaultValue, ulong delta, ulong cas)
+		{
+			throw new NotImplementedException();
+		}
+
+		public CasResult<ulong> Decrement(string key, ulong defaultValue, ulong delta, TimeSpan validFor, ulong cas)
+		{
+			throw new NotImplementedException();
+		}
+
+		public CasResult<ulong> Decrement(string key, ulong defaultValue, ulong delta, DateTime expiresAt, ulong cas)
+		{
+			throw new NotImplementedException();
+		}
+
+		public Task<CasResult<ulong>> DecrementAsync(string key, ulong defaultValue, ulong delta, ulong cas)
+		{
+			throw new NotImplementedException();
+		}
+
+		public Task<CasResult<ulong>> DecrementAsync(string key, ulong defaultValue, ulong delta, TimeSpan validFor, ulong cas)
+		{
+			throw new NotImplementedException();
+		}
+
+		public Task<CasResult<ulong>> DecrementAsync(string key, ulong defaultValue, ulong delta, DateTime expiresAt, ulong cas)
+		{
+			throw new NotImplementedException();
+		}
+		#endregion
+
+		#region Concatenate
+		public bool Append(string key, ArraySegment<byte> data)
+		{
+			return false;
+		}
+
+		public CasResult<bool> Append(string key, ulong cas, ArraySegment<byte> data)
+		{
+			return new CasResult<bool>();
+		}
+
+		public Task<bool> AppendAsync(string key, ArraySegment<byte> data)
+		{
+			return Task.FromResult(false);
+		}
+
+		public Task<CasResult<bool>> AppendAsync(string key, ulong cas, ArraySegment<byte> data)
+		{
+			return Task.FromResult(new CasResult<bool>());
+		}
+
+		public bool Prepend(string key, ArraySegment<byte> data)
+		{
+			return false;
 		}
 
 		public CasResult<bool> Prepend(string key, ulong cas, ArraySegment<byte> data)
 		{
+			return new CasResult<bool>();
+		}
+
+		public Task<bool> PrependAsync(string key, ArraySegment<byte> data)
+		{
+			return Task.FromResult(false);
+		}
+
+		public Task<CasResult<bool>> PrependAsync(string key, ulong cas, ArraySegment<byte> data)
+		{
+			return Task.FromResult(new CasResult<bool>());
+		}
+		#endregion
+
+		#region Get
+		public bool TryGet(string key, out object value)
+		{
 			throw new NotImplementedException();
 		}
 
+		public object Get(string key)
+		{
+			return null;
+		}
+
+		public T Get<T>(string key)
+		{
+			return default(T);
+		}
+
+		public Task<object> GetAsync(string key)
+		{
+			return Task.FromResult<object>(null);
+		}
+
+		public Task<T> GetAsync<T>(string key)
+		{
+			return Task.FromResult(default(T));
+		}
+
+		public Task<IGetOperationResult<T>> DoGetAsync<T>(string key)
+		{
+			var result = new DefaultGetOperationResultFactory<T>().Create();
+			result.Success = false;
+			result.Value = default(T);
+			return Task.FromResult(result);
+		}
+
+		public bool TryGetWithCas(string key, out CasResult<object> value)
+		{
+			throw new NotImplementedException();
+		}
+
+		public CasResult<object> GetWithCas(string key)
+		{
+			throw new NotImplementedException();
+		}
+
+		public CasResult<T> GetWithCas<T>(string key)
+		{
+			throw new NotImplementedException();
+		}
+
+		public Task<CasResult<object>> GetWithCasAsync(string key)
+		{
+			throw new NotImplementedException();
+		}
+
+		public Task<CasResult<T>> GetWithCasAsync<T>(string key)
+		{
+			throw new NotImplementedException();
+		}
+
+		public IDictionary<string, object> Get(IEnumerable<string> keys)
+		{
+			throw new NotImplementedException();
+		}
+
+		public IDictionary<string, T> Get<T>(IEnumerable<string> keys)
+		{
+			throw new NotImplementedException();
+		}
+
+		public Task<IDictionary<string, object>> GetAsync(IEnumerable<string> keys)
+		{
+			throw new NotImplementedException();
+		}
+
+		public Task<IDictionary<string, T>> GetAsync<T>(IEnumerable<string> keys)
+		{
+			throw new NotImplementedException();
+		}
+
+		public IDictionary<string, CasResult<object>> GetWithCas(IEnumerable<string> keys)
+		{
+			throw new NotImplementedException();
+		}
+
+		public Task<IDictionary<string, CasResult<object>>> GetWithCasAsync(IEnumerable<string> keys)
+		{
+			throw new NotImplementedException();
+		}
+		#endregion
+
+		#region Remove & Exist
 		public bool Remove(string key)
 		{
 			return true;
@@ -183,6 +371,28 @@ namespace Enyim.Caching
 		public Task<bool> RemoveAsync(string key)
 		{
 			return Task.FromResult(true);
+		}
+
+		public bool Exists(string key)
+		{
+			throw new NotImplementedException();
+		}
+
+		public Task<bool> ExistsAsync(string key)
+		{
+			throw new NotImplementedException();
+		}
+		#endregion
+
+		#region Flush & Stats
+		public void FlushAll()
+		{
+			throw new NotImplementedException();
+		}
+
+		public Task FlushAllAsync()
+		{
+			throw new NotImplementedException();
 		}
 
 		public ServerStats Stats()
@@ -195,69 +405,17 @@ namespace Enyim.Caching
 			throw new NotImplementedException();
 		}
 
-		public bool Store(StoreMode mode, string key, object value)
-		{
-			return false;
-		}
-
-		public bool Store(StoreMode mode, string key, object value, TimeSpan validFor)
-		{
-			return false;
-		}
-
-		public Task<bool> StoreAsync(StoreMode mode, string key, object value, TimeSpan validFor)
-		{
-			return Task.FromResult(false);
-		}
-
-		public Task<bool> StoreAsync(StoreMode mode, string key, object value, DateTime expiresAt)
-		{
-			return Task.FromResult(false);
-		}
-
-		public bool Store(StoreMode mode, string key, object value, DateTime expiresAt)
-		{
-			return false;
-		}
-
-		public bool TryGet(string key, out object value)
+		public Task<ServerStats> StatsAsync()
 		{
 			throw new NotImplementedException();
 		}
 
-		public bool TryGetWithCas(string key, out CasResult<object> value)
+		public Task<ServerStats> StatsAsync(string type)
 		{
 			throw new NotImplementedException();
 		}
+		#endregion
 
-		public bool Add(string key, object value, int cacheMinutes)
-		{
-			throw new NotImplementedException();
-		}
-
-		public Task<bool> AddAsync(string key, object value, int cacheMinutes)
-		{
-			throw new NotImplementedException();
-		}
-
-		public bool Replace(string key, object value, int cacheMinutes)
-		{
-			throw new NotImplementedException();
-		}
-
-		public Task<bool> ReplaceAsync(string key, object value, int cacheMinutes)
-		{
-			throw new NotImplementedException();
-		}
-
-		public bool Exists(string key)
-		{
-			throw new NotImplementedException();
-		}
-
-		public Task<bool> ExistsAsync(string key)
-		{
-			throw new NotImplementedException();
-		}
+		public void Dispose() { }
 	}
 }

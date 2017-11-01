@@ -9,9 +9,9 @@
 		<Company>VIEApps.net</Company>
 		<Product>VIEApps NGX</Product>
 		<Copyright>© 2010 Attila Kiskó, © 2017 VIEApps.net</Copyright>
-		<Version>1.1.0.0</Version>
-		<AssemblyVersion>1.1.0.0</AssemblyVersion>
-		<FileVersion>1.1.0.0</FileVersion>
+		<Version>1.1.2.1711</Version>
+		<AssemblyVersion>1.1.2.1711</AssemblyVersion>
+		<FileVersion>1.1.2.1711</FileVersion>
 		<GeneratePackageOnBuild>false</GeneratePackageOnBuild>
 		<PackageId>VIEApps.Enyim.Caching</PackageId>
 		<PackageTags>memcached;cache;enyim;enyimmemcached;enyim.memcached;enyim.caching;vieapps;vieapps.components</PackageTags>
