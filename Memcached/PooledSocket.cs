@@ -301,16 +301,18 @@ namespace Enyim.Caching.Memcached
 
 		/// <summary>
 		/// Receives data asynchronously. Returns true if the IO is pending. Returns false if the socket already failed or the data was available in the buffer.
-		/// p.Next will only be called if the call completes asynchronously.
+		/// args.Next will only be called if the call completes asynchronously.
 		/// </summary>
-		public bool ReceiveAsync(AsyncIOArgs p)
+		/// <param name="args"></param>
+		/// <returns></returns>
+		public bool ReceiveAsync(AsyncIOArgs args)
 		{
 			this.CheckDisposed();
 
 			if (!this.IsAlive)
 			{
-				p.Fail = true;
-				p.Result = null;
+				args.Fail = true;
+				args.Result = null;
 
 				return false;
 			}
@@ -318,7 +320,7 @@ namespace Enyim.Caching.Memcached
 			if (this.helper == null)
 				this.helper = new AsyncSocketHelper(this);
 
-			return this.helper.Read(p);
+			return this.helper.Read(args);
 		}
 	}
 }

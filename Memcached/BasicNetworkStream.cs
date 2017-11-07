@@ -45,6 +45,31 @@ namespace Enyim.Caching.Memcached
 				set { throw new NotSupportedException(); }
 			}
 
+			public override long Seek(long offset, SeekOrigin origin)
+			{
+				throw new NotSupportedException();
+			}
+
+			public override void SetLength(long value)
+			{
+				throw new NotSupportedException();
+			}
+
+			public override void Write(byte[] buffer, int offset, int count)
+			{
+				throw new NotSupportedException();
+			}
+
+			public override int Read(byte[] buffer, int offset, int count)
+			{
+				int result = this.socket.Receive(buffer, offset, count, SocketFlags.None, out SocketError errorCode);
+
+				// actually "0 bytes read" could mean an error as well
+				if (errorCode == SocketError.Success && result > 0)
+					return result;
+
+				throw new IOException(String.Format("Failed to read from the socket '{0}'. Error: {1}", this.socket.RemoteEndPoint, errorCode == SocketError.Success ? "?" : errorCode.ToString()));
+			}
 
 			public override IAsyncResult BeginRead(byte[] buffer, int offset, int count, AsyncCallback callback, object state)
 			{
@@ -65,32 +90,6 @@ namespace Enyim.Caching.Memcached
 					return result;
 
 				throw new IOException(String.Format("Failed to read from the socket '{0}'. Error: {1}", this.socket.RemoteEndPoint, errorCode));
-			}
-
-			public override int Read(byte[] buffer, int offset, int count)
-			{
-				int result = this.socket.Receive(buffer, offset, count, SocketFlags.None, out SocketError errorCode);
-
-				// actually "0 bytes read" could mean an error as well
-				if (errorCode == SocketError.Success && result > 0)
-					return result;
-
-				throw new IOException(String.Format("Failed to read from the socket '{0}'. Error: {1}", this.socket.RemoteEndPoint, errorCode == SocketError.Success ? "?" : errorCode.ToString()));
-			}
-
-			public override long Seek(long offset, SeekOrigin origin)
-			{
-				throw new NotSupportedException();
-			}
-
-			public override void SetLength(long value)
-			{
-				throw new NotSupportedException();
-			}
-
-			public override void Write(byte[] buffer, int offset, int count)
-			{
-				throw new NotSupportedException();
 			}
 		}
 	}

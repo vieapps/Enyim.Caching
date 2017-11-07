@@ -107,7 +107,10 @@ namespace Enyim.Caching.Configuration
 		public MemcachedClientConfiguration(ILoggerFactory loggerFactory, MemcachedClientConfigurationSectionHandler configuration)
 		{
 			this._logger = loggerFactory.CreateLogger<MemcachedClientConfiguration>();
-			this.Protocol = MemcachedProtocol.Binary;
+
+			if (!Enum.TryParse<MemcachedProtocol>(configuration.Section.Attributes["protocol"]?.Value ?? "Binary", out MemcachedProtocol protocol))
+				protocol = MemcachedProtocol.Binary;
+			this.Protocol = protocol;
 
 			this.Servers = new List<EndPoint>();
 			if (configuration.Section.SelectNodes("servers/add") is XmlNodeList nodes)

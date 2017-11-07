@@ -3,21 +3,26 @@
 	<PropertyGroup>
 		<TargetFramework>netstandard2.0</TargetFramework>
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+		<RootNamespace>Enyim</RootNamespace>
 		<AssemblyName>Enyim.Caching</AssemblyName>
-		<Description>The .NET Standard 2.0 memcached client library, fully async with binary serialization supported</Description>
-		<Authors>VIEApps.net</Authors>
+		<AssemblyTitle>Enyim Memcached</AssemblyTitle>
+		<AssemblyVersion>1.2.0.1712</AssemblyVersion>
+		<FileVersion>1.2.0.1712</FileVersion>
+		<InformationalVersion>.NET Standard 2.0 (v1.2.nstd-2017.12.01)</InformationalVersion>
+		<Product>Enyim Memcached</Product>
 		<Company>VIEApps.net</Company>
-		<Product>VIEApps NGX</Product>
-		<Copyright>© 2010 Attila Kiskó, © 2017 VIEApps.net</Copyright>
-		<Version>1.1.2.1711</Version>
-		<AssemblyVersion>1.1.2.1711</AssemblyVersion>
-		<FileVersion>1.1.2.1711</FileVersion>
-		<GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
 		<PackageId>VIEApps.Enyim.Caching</PackageId>
-		<PackageTags>memcached;cache;enyim;enyimmemcached;enyim.memcached;enyim.caching;vieapps;vieapps.components</PackageTags>
+		<Version>1.2.0.1712</Version>
+		<Title>Enyim Caching</Title>
+		<Description>The .NET Standard 2.0 memcached client library, fully async with binary serialization supported</Description>
+		<Summary>The .NET Standard 2.0 memcached client library, fully async with binary serialization supported</Summary>
+		<Authors>VIEApps.net</Authors>
+		<Copyright>© 2010 Attila Kiskó, © 2016 CNBlogs, © 2017 VIEApps.net</Copyright>
+		<PackageReleaseNotes></PackageReleaseNotes>
+		<PackageTags>cache;caching;distributed;distributedcache;memcached;enyim;enyimmemcached;enyim.memcached;enyim.caching;vieapps;vieapps.components</PackageTags>
 		<PackageProjectUrl>https://github.com/vieapps/Enyim.Caching</PackageProjectUrl>
 		<RepositoryUrl>https://github.com/vieapps/Enyim.Caching</RepositoryUrl>
-		<RepositoryType>git</RepositoryType>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">

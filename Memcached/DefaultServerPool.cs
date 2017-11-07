@@ -29,11 +29,9 @@ namespace Enyim.Caching.Memcached
 
 		public DefaultServerPool(IMemcachedClientConfiguration configuration, IOperationFactory opFactory, ILogger logger)
 		{
-			this.configuration = configuration ?? throw new ArgumentNullException("socketConfig");
-			this.factory = opFactory ?? throw new ArgumentNullException("opFactory");
-
+			this.configuration = configuration ?? throw new ArgumentNullException(nameof(configuration), "Socket configuration is invalid");
+			this.factory = opFactory ?? throw new ArgumentNullException(nameof(opFactory), "Operation factory is invalid");
 			this.deadTimeoutMsec = (int)this.configuration.SocketPool.DeadTimeout.TotalMilliseconds;
-
 			this._logger = logger;
 		}
 
@@ -51,7 +49,7 @@ namespace Enyim.Caching.Memcached
 			return new MemcachedNode(endpoint, this.configuration.SocketPool, this._logger);
 		}
 
-		private void rezCallback(object state)
+		private void OnResurrectCallback(object state)
 		{
 			var isDebug = this._logger.IsEnabled(LogLevel.Debug);
 			if (isDebug)
@@ -169,10 +167,11 @@ namespace Enyim.Caching.Memcached
 				// when we have one, we trigger it and it will run after DeadTimeout has elapsed
 				if (!this.isTimerActive)
 				{
-					if (isDebug) this._logger.LogDebug("Starting the recovery timer.");
+					if (isDebug)
+						this._logger.LogDebug("Starting the recovery timer.");
 
 					if (this.resurrectTimer == null)
-						this.resurrectTimer = new Timer(this.rezCallback, null, this.deadTimeoutMsec, Timeout.Infinite);
+						this.resurrectTimer = new Timer(this.OnResurrectCallback, null, this.deadTimeoutMsec, Timeout.Infinite);
 					else
 						this.resurrectTimer.Change(this.deadTimeoutMsec, Timeout.Infinite);
 
@@ -269,7 +268,9 @@ namespace Enyim.Caching.Memcached
 				// stop the timer
 				if (this.resurrectTimer != null)
 					using (this.resurrectTimer)
+					{
 						this.resurrectTimer.Change(Timeout.Infinite, Timeout.Infinite);
+					}
 
 				this.allNodes = null;
 				this.resurrectTimer = null;

@@ -6,7 +6,7 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 {
 	public class BinaryResponse
 	{
-		private static readonly Enyim.Caching.ILog log = Enyim.Caching.LogManager.GetLogger(typeof(BinaryResponse));
+		private static readonly ILog log = LogManager.GetLogger(typeof(BinaryResponse));
 
 		private const byte MAGIC_VALUE = 0x81;
 		private const int HeaderLength = 24;
