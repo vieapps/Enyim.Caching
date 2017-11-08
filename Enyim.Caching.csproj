@@ -11,7 +11,7 @@
 		<InformationalVersion>.NET Standard 2.0 (v1.2.nstd-2017.12.01)</InformationalVersion>
 		<Product>Enyim Memcached</Product>
 		<Company>VIEApps.net</Company>
-		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+		<GeneratePackageOnBuild>false</GeneratePackageOnBuild>
 		<PackageId>VIEApps.Enyim.Caching</PackageId>
 		<Version>1.2.0.1712</Version>
 		<Title>Enyim Caching</Title>

@@ -225,47 +225,47 @@ namespace Enyim.Caching.Memcached
 		}
 
 		#region [ Typed serialization          ]
-		public virtual ArraySegment<byte> SerializeNull()
+		protected virtual ArraySegment<byte> SerializeNull()
 		{
 			return DefaultTranscoder.NullArray;
 		}
 
-		public virtual ArraySegment<byte> SerializeBoolean(bool value)
+		protected virtual ArraySegment<byte> SerializeBoolean(bool value)
 		{
 			return new ArraySegment<byte>(BitConverter.GetBytes(value));
 		}
 
-		public virtual ArraySegment<byte> SerializeDateTime(DateTime value)
+		protected virtual ArraySegment<byte> SerializeDateTime(DateTime value)
 		{
 			return new ArraySegment<byte>(BitConverter.GetBytes(value.ToBinary()));
 		}
 
-		public virtual ArraySegment<byte> SerializeChar(char value)
+		protected virtual ArraySegment<byte> SerializeChar(char value)
 		{
 			return new ArraySegment<byte>(BitConverter.GetBytes(value));
 		}
 
-		public virtual ArraySegment<byte> SerializeString(string value)
+		protected virtual ArraySegment<byte> SerializeString(string value)
 		{
 			return new ArraySegment<byte>(Encoding.UTF8.GetBytes((string)value));
 		}
 
-		public virtual ArraySegment<byte> SerializeByte(byte value)
+		protected virtual ArraySegment<byte> SerializeByte(byte value)
 		{
 			return new ArraySegment<byte>(new byte[] { value });
 		}
 
-		public virtual ArraySegment<byte> SerializeSByte(sbyte value)
+		protected virtual ArraySegment<byte> SerializeSByte(sbyte value)
 		{
 			return new ArraySegment<byte>(new byte[] { (byte)value });
 		}
 
-		public virtual ArraySegment<byte> SerializeInt16(Int16 value)
+		protected virtual ArraySegment<byte> SerializeInt16(Int16 value)
 		{
 			return new ArraySegment<byte>(BitConverter.GetBytes(value));
 		}
 
-		public virtual ArraySegment<byte> SerializeInt32(Int32 value)
+		protected virtual ArraySegment<byte> SerializeInt32(Int32 value)
 		{
 			return new ArraySegment<byte>(BitConverter.GetBytes(value));
 		}
@@ -275,32 +275,32 @@ namespace Enyim.Caching.Memcached
 			return new ArraySegment<byte>(BitConverter.GetBytes(value));
 		}
 
-		public virtual ArraySegment<byte> SerializeUInt16(UInt16 value)
+		protected virtual ArraySegment<byte> SerializeUInt16(UInt16 value)
 		{
 			return new ArraySegment<byte>(BitConverter.GetBytes(value));
 		}
 
-		public virtual ArraySegment<byte> SerializeUInt32(UInt32 value)
+		protected virtual ArraySegment<byte> SerializeUInt32(UInt32 value)
 		{
 			return new ArraySegment<byte>(BitConverter.GetBytes(value));
 		}
 
-		public virtual ArraySegment<byte> SerializeUInt64(UInt64 value)
+		protected virtual ArraySegment<byte> SerializeUInt64(UInt64 value)
 		{
 			return new ArraySegment<byte>(BitConverter.GetBytes(value));
 		}
 
-		public virtual ArraySegment<byte> SerializeSingle(Single value)
+		protected virtual ArraySegment<byte> SerializeSingle(Single value)
 		{
 			return new ArraySegment<byte>(BitConverter.GetBytes(value));
 		}
 
-		public virtual ArraySegment<byte> SerializeDouble(Double value)
+		protected virtual ArraySegment<byte> SerializeDouble(Double value)
 		{
 			return new ArraySegment<byte>(BitConverter.GetBytes(value));
 		}
 
-		public virtual ArraySegment<byte> SerializeDecimal(Decimal value)
+		protected virtual ArraySegment<byte> SerializeDecimal(Decimal value)
 		{
 			return this.SerializeObject(value);
 		}
@@ -322,77 +322,77 @@ namespace Enyim.Caching.Memcached
 		#endregion
 
 		#region [ Typed deserialization        ]
-		public virtual Boolean DeserializeBoolean(ArraySegment<byte> value)
+		protected virtual Boolean DeserializeBoolean(ArraySegment<byte> value)
 		{
 			return BitConverter.ToBoolean(value.Array, value.Offset);
 		}
 
-		public virtual DateTime DeserializeDateTime(ArraySegment<byte> value)
+		protected virtual DateTime DeserializeDateTime(ArraySegment<byte> value)
 		{
 			return DateTime.FromBinary(BitConverter.ToInt64(value.Array, value.Offset));
 		}
 
-		public virtual Char DeserializeChar(ArraySegment<byte> value)
+		protected virtual Char DeserializeChar(ArraySegment<byte> value)
 		{
 			return BitConverter.ToChar(value.Array, value.Offset);
 		}
 
-		public virtual String DeserializeString(ArraySegment<byte> value)
+		protected virtual String DeserializeString(ArraySegment<byte> value)
 		{
 			return Encoding.UTF8.GetString(value.Array, value.Offset, value.Count);
 		}
 
-		public virtual Byte DeserializeByte(ArraySegment<byte> value)
+		protected virtual Byte DeserializeByte(ArraySegment<byte> value)
 		{
 			return value.Array[value.Offset];
 		}
 
-		public virtual SByte DeserializeSByte(ArraySegment<byte> value)
+		protected virtual SByte DeserializeSByte(ArraySegment<byte> value)
 		{
 			return (SByte)value.Array[value.Offset];
 		}
 
-		public virtual Int16 DeserializeInt16(ArraySegment<byte> value)
+		protected virtual Int16 DeserializeInt16(ArraySegment<byte> value)
 		{
 			return BitConverter.ToInt16(value.Array, value.Offset);
 		}
 
-		public virtual Int32 DeserializeInt32(ArraySegment<byte> value)
+		protected virtual Int32 DeserializeInt32(ArraySegment<byte> value)
 		{
 			return BitConverter.ToInt32(value.Array, value.Offset);
 		}
 
-		public virtual Int64 DeserializeInt64(ArraySegment<byte> value)
+		protected virtual Int64 DeserializeInt64(ArraySegment<byte> value)
 		{
 			return BitConverter.ToInt64(value.Array, value.Offset);
 		}
 
-		public virtual UInt16 DeserializeUInt16(ArraySegment<byte> value)
+		protected virtual UInt16 DeserializeUInt16(ArraySegment<byte> value)
 		{
 			return BitConverter.ToUInt16(value.Array, value.Offset);
 		}
 
-		public virtual UInt32 DeserializeUInt32(ArraySegment<byte> value)
+		protected virtual UInt32 DeserializeUInt32(ArraySegment<byte> value)
 		{
 			return BitConverter.ToUInt32(value.Array, value.Offset);
 		}
 
-		public virtual UInt64 DeserializeUInt64(ArraySegment<byte> value)
+		protected virtual UInt64 DeserializeUInt64(ArraySegment<byte> value)
 		{
 			return BitConverter.ToUInt64(value.Array, value.Offset);
 		}
 
-		public virtual Single DeserializeSingle(ArraySegment<byte> value)
+		protected virtual Single DeserializeSingle(ArraySegment<byte> value)
 		{
 			return BitConverter.ToSingle(value.Array, value.Offset);
 		}
 
-		public virtual Double DeserializeDouble(ArraySegment<byte> value)
+		protected virtual Double DeserializeDouble(ArraySegment<byte> value)
 		{
 			return BitConverter.ToDouble(value.Array, value.Offset);
 		}
 
-		public virtual Decimal DeserializeDecimal(ArraySegment<byte> value)
+		protected virtual Decimal DeserializeDecimal(ArraySegment<byte> value)
 		{
 			return (Decimal)this.DeserializeObject(value);
 		}

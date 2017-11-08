@@ -117,7 +117,7 @@ namespace Enyim.Caching.Configuration
 				foreach (XmlNode server in nodes)
 				{
 					var info = configuration.GetJson(server);
-					this.AddServer((info["address"] as JValue).Value as string, Convert.ToInt32((info["port"] as JValue).Value));
+					this.AddServer((info["address"] as JValue).Value as string, Convert.ToInt32(info["port"] != null ? (info["port"] as JValue).Value as string : "11211"));
 				}
 
 			this.SocketPool = new SocketPoolConfiguration();
