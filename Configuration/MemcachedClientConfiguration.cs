@@ -4,8 +4,6 @@ using System.Collections.Generic;
 using System.Configuration;
 using System.Xml;
 
-using Newtonsoft.Json.Linq;
-
 using Enyim.Reflection;
 using Enyim.Caching.Memcached;
 using Enyim.Caching.Memcached.Protocol.Binary;
@@ -116,64 +114,63 @@ namespace Enyim.Caching.Configuration
 			if (configuration.Section.SelectNodes("servers/add") is XmlNodeList nodes)
 				foreach (XmlNode server in nodes)
 				{
-					var info = configuration.GetJson(server);
-					this.AddServer((info["address"] as JValue).Value as string, Convert.ToInt32(info["port"] != null ? (info["port"] as JValue).Value as string : "11211"));
+					var address = server.Attributes["address"]?.Value ?? "localhost";
+					var port = Convert.ToInt32(server.Attributes["port"]?.Value ?? "11211");
+					this.AddServer(address, port);
 				}
 
 			this.SocketPool = new SocketPoolConfiguration();
 			if (configuration.Section.SelectSingleNode("socketPool") is XmlNode socketpool)
 			{
-				var info = configuration.GetJson(socketpool);
-				if (info["maxPoolSize"] != null)
-					this.SocketPool.MaxPoolSize = Convert.ToInt32((info["maxPoolSize"] as JValue).Value);
-				if (info["minPoolSize"] != null)
-					this.SocketPool.MinPoolSize = Convert.ToInt32((info["minPoolSize"] as JValue).Value);
-				if (info["connectionTimeout"] != null)
-					this.SocketPool.ConnectionTimeout = TimeSpan.Parse((info["connectionTimeout"] as JValue).Value as string);
-				if (info["deadTimeout"] != null)
-					this.SocketPool.DeadTimeout = TimeSpan.Parse((info["deadTimeout"] as JValue).Value as string);
-				if (info["queueTimeout"] != null)
-					this.SocketPool.QueueTimeout = TimeSpan.Parse((info["queueTimeout"] as JValue).Value as string);
-				if (info["receiveTimeout"] != null)
-					this.SocketPool.ReceiveTimeout = TimeSpan.Parse((info["receiveTimeout"] as JValue).Value as string);
+				if (socketpool.Attributes["maxPoolSize"]?.Value != null)
+					this.SocketPool.MaxPoolSize = Convert.ToInt32(socketpool.Attributes["maxPoolSize"].Value);
+				if (socketpool.Attributes["minPoolSize"]?.Value != null)
+					this.SocketPool.MinPoolSize = Convert.ToInt32(socketpool.Attributes["minPoolSize"].Value);
+				if (socketpool.Attributes["connectionTimeout"]?.Value != null)
+					this.SocketPool.ConnectionTimeout = TimeSpan.Parse(socketpool.Attributes["connectionTimeout"].Value);
+				if (socketpool.Attributes["deadTimeout"]?.Value != null)
+					this.SocketPool.DeadTimeout = TimeSpan.Parse(socketpool.Attributes["deadTimeout"].Value);
+				if (socketpool.Attributes["queueTimeout"]?.Value != null)
+					this.SocketPool.QueueTimeout = TimeSpan.Parse(socketpool.Attributes["queueTimeout"].Value);
+				if (socketpool.Attributes["receiveTimeout"]?.Value != null)
+					this.SocketPool.ReceiveTimeout = TimeSpan.Parse(socketpool.Attributes["receiveTimeout"].Value);
 
-				var failurePolicy = info["failurePolicy"] != null ? (info["failurePolicy"] as JValue).Value as string : null;
+				var failurePolicy = socketpool.Attributes["failurePolicy"]?.Value;
 				if ("throttling" == failurePolicy)
 				{
-					var failureThreshold = info["failureThreshold"] != null ? Convert.ToInt32((info["failureThreshold"] as JValue).Value) : 4;
-					var resetAfter = info["resetAfter"] != null ? TimeSpan.Parse((info["resetAfter"] as JValue).Value as string) : TimeSpan.FromSeconds(300);
+					var failureThreshold = Convert.ToInt32(socketpool.Attributes["failureThreshold"]?.Value ?? "4");
+					var resetAfter = TimeSpan.Parse(socketpool.Attributes["resetAfter"]?.Value ?? "00:05:00");
 					this.SocketPool.FailurePolicyFactory = new ThrottlingFailurePolicyFactory(failureThreshold, resetAfter);
 				}
 			}
 
 			if (configuration.Section.SelectSingleNode("authentication") is XmlNode authentication)
 			{
-				var info = configuration.GetJson(authentication);
-				if (info["type"] != null)
+				if (authentication.Attributes["type"]?.Value != null)
 					try
 					{
-						var authenticationType = Type.GetType((info["type"] as JValue).Value as string);
+						var authenticationType = Type.GetType(authentication.Attributes["type"].Value);
 						if (authenticationType != null)
 						{
 							this._logger.LogDebug($"Authentication type is {authenticationType}.");
 
 							this.Authentication = new AuthenticationConfiguration();
 							this.Authentication.Type = authenticationType;
-							if (info["zone"] != null)
-								this.Authentication.Parameters.Add("zone", (info["zone"] as JValue).Value);
-							if (info["userName"] != null)
-								this.Authentication.Parameters.Add("userName", (info["userName"] as JValue).Value);
-							if (info["password"] != null)
-								this.Authentication.Parameters.Add("password", (info["password"] as JValue).Value);
+							if (authentication.Attributes["zone"]?.Value != null)
+								this.Authentication.Parameters.Add("zone", authentication.Attributes["zone"].Value);
+							if (authentication.Attributes["userName"]?.Value != null)
+								this.Authentication.Parameters.Add("userName", authentication.Attributes["userName"].Value);
+							if (authentication.Attributes["password"]?.Value != null)
+								this.Authentication.Parameters.Add("password", authentication.Attributes["password"].Value);
 						}
 						else
 						{
-							this._logger.LogError($"Unable to load authentication type {(info["type"] as JValue).Value as string}.");
+							this._logger.LogError($"Unable to load authentication type {authentication.Attributes["type"].Value}.");
 						}
 					}
 					catch (Exception ex)
 					{
-						this._logger.LogError(new EventId(), ex, $"Unable to load authentication type {(info["type"] as JValue).Value as string}.");
+						this._logger.LogError(new EventId(), ex, $"Unable to load authentication type {authentication.Attributes["type"].Value}.");
 					}
 			}
 		}
@@ -317,18 +314,8 @@ namespace Enyim.Caching.Configuration
 			this._section = section;
 			return this;
 		}
-
 		XmlNode _section = null;
-
 		public XmlNode Section { get { return this._section; } }
-
-		public JObject GetJson(XmlNode node)
-		{
-			var settings = new JObject();
-			foreach (XmlAttribute attribute in node.Attributes)
-				settings.Add(new JProperty(attribute.Name, attribute.Value));
-			return settings;
-		}
 	}
 }
 
