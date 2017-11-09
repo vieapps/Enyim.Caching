@@ -3,9 +3,6 @@ using System.IO;
 using System.Text;
 using System.Runtime.Serialization.Formatters.Binary;
 
-using Newtonsoft.Json;
-using Newtonsoft.Json.Bson;
-
 namespace Enyim.Caching.Memcached
 {
 	/// <summary>
@@ -129,7 +126,7 @@ namespace Enyim.Caching.Memcached
 
 				// we should never arrive here, but it's better to be safe than sorry
 				var result = new byte[tmp.Count];
-				Array.Copy(tmp.Array, tmp.Offset, result, 0, tmp.Count);
+				Buffer.BlockCopy(tmp.Array, tmp.Offset, result, 0, tmp.Count);
 				return result;
 			}
 
@@ -305,7 +302,7 @@ namespace Enyim.Caching.Memcached
 			return this.SerializeObject(value);
 		}
 
-		public virtual ArraySegment<byte> SerializeObject(object value)
+		protected virtual ArraySegment<byte> SerializeObject(object value)
 		{
 			if (value == null)
 				return DefaultTranscoder.NullArray;
@@ -397,11 +394,10 @@ namespace Enyim.Caching.Memcached
 			return (Decimal)this.DeserializeObject(value);
 		}
 
-		public virtual object DeserializeObject(ArraySegment<byte> value)
+		protected virtual object DeserializeObject(ArraySegment<byte> value)
 		{
 			if (value == null || value.Count < 1)
 				return null;
-
 			using (var stream = new MemoryStream(value.Array, value.Offset, value.Count))
 			{
 				return (new BinaryFormatter()).Deserialize(stream);

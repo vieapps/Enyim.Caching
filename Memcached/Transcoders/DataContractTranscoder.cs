@@ -17,7 +17,7 @@ namespace Enyim.Caching.Memcached
 		/// </summary>
 		/// <param name="value"></param>
 		/// <returns></returns>
-		public override ArraySegment<byte> SerializeObject(object value)
+		protected override ArraySegment<byte> SerializeObject(object value)
 		{
 			using (var stream = new MemoryStream())
 			{
@@ -34,7 +34,7 @@ namespace Enyim.Caching.Memcached
 		/// </summary>
 		/// <param name="value"></param>
 		/// <returns></returns>
-		public override object DeserializeObject(ArraySegment<byte> value)
+		protected override object DeserializeObject(ArraySegment<byte> value)
 		{
 			using (var stream = new MemoryStream(value.Array, value.Offset, value.Count))
 			{
