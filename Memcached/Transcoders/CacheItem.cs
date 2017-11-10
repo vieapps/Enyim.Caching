@@ -8,8 +8,8 @@ namespace Enyim.Caching.Memcached
 	/// </summary>
 	public struct CacheItem
 	{
-		private ArraySegment<byte> data;
-		private uint flags;
+		ArraySegment<byte> data;
+		uint flags;
 
 		/// <summary>
 		/// Initializes a new instance of <see cref="T:CacheItem"/>.

@@ -8,7 +8,7 @@ namespace Enyim.Caching.Memcached
 {
 	/// <summary>
 	/// Default <see cref="T:Enyim.Caching.Memcached.ITranscoder"/> implementation.
-	/// Primitive types are manually serialized, the rest is serialized using Json.NET Bson.
+	/// Primitive types are manually serialized, the rest is serialized using <see cref="T:Newtonsoft.Json.Bson"/>.
 	/// </summary>
 	public class DataContractTranscoder : DefaultTranscoder
 	{

@@ -15,6 +15,16 @@ namespace Enyim.Caching.Memcached
 		#region Helpers
 		internal const uint RawDataFlag = 0xfa52;
 		internal static readonly ArraySegment<byte> NullArray = new ArraySegment<byte>(new byte[0]);
+
+		CacheItem ITranscoder.Serialize(object value)
+		{
+			return this.Serialize(value);
+		}
+
+		object ITranscoder.Deserialize(CacheItem item)
+		{
+			return this.Deserialize(item);
+		}
 		#endregion
 
 		protected virtual CacheItem Serialize(object value)
@@ -28,14 +38,11 @@ namespace Enyim.Caching.Memcached
 			if (value is byte[])
 				return new CacheItem(DefaultTranscoder.RawDataFlag, new ArraySegment<byte>(value as byte[]));
 
-			// TypeCode.DBNull is 2
-			var code = value == null ? (TypeCode)2 : Type.GetTypeCode(value.GetType());
-
 			ArraySegment<byte> data;
+			var code = value == null ? TypeCode.DBNull : Type.GetTypeCode(value.GetType());
 			switch (code)
 			{
-				// TypeCode.DBNull
-				case (TypeCode)2:
+				case TypeCode.DBNull:
 					data = this.SerializeNull();
 					break;
 
@@ -108,11 +115,6 @@ namespace Enyim.Caching.Memcached
 			return new CacheItem((uint)((int)code | 0x0100), data);
 		}
 
-		CacheItem ITranscoder.Serialize(object value)
-		{
-			return this.Serialize(value);
-		}
-
 		protected virtual object Deserialize(CacheItem item)
 		{
 			if (item.Data.Array == null)
@@ -130,9 +132,8 @@ namespace Enyim.Caching.Memcached
 				return result;
 			}
 
-			var code = (TypeCode)(item.Flags & 0xff);
 			var data = item.Data;
-
+			var code = (TypeCode)(item.Flags & 0xff);
 			switch (code)
 			{
 				// incrementing a non-existing key then getting it
@@ -148,8 +149,7 @@ namespace Enyim.Caching.Memcached
 						? null
 						: this.DeserializeString(data);
 
-				// TypeCode.DBNull
-				case (TypeCode)2:
+				case TypeCode.DBNull:
 					return null;
 
 				case TypeCode.Boolean:
@@ -203,11 +203,6 @@ namespace Enyim.Caching.Memcached
 				default:
 					throw new InvalidOperationException("Unknown TypeCode was returned: " + code);
 			}
-		}
-
-		object ITranscoder.Deserialize(CacheItem item)
-		{
-			return this.Deserialize(item);
 		}
 
 		T ITranscoder.Deserialize<T>(CacheItem item)

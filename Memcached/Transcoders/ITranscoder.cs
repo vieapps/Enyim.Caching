@@ -1,5 +1,3 @@
-using System;
-
 namespace Enyim.Caching.Memcached
 {
 	/// <summary>
@@ -21,8 +19,14 @@ namespace Enyim.Caching.Memcached
 		/// <returns>The deserialized object</returns>
 		object Deserialize(CacheItem item);
 
-        T Deserialize<T>(CacheItem item);
-    }
+		/// <summary>
+		/// Deserializes the <see cref="T:CacheItem"/> into an object.
+		/// </summary>
+		/// <typeparam name="T"></typeparam>
+		/// <param name="item">The stream that contains the data to deserialize.</param>
+		/// <returns>The deserialized object</returns>
+		T Deserialize<T>(CacheItem item);
+	}
 }
 
 #region [ License information          ]

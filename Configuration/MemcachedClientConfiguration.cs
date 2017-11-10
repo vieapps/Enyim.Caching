@@ -21,7 +21,7 @@ namespace Enyim.Caching.Configuration
 		// these are lazy initialized in the getters
 		private Type nodeLocator;
 		private ITranscoder _transcoder;
-		private IMemcachedKeyTransformer keyTransformer;
+		private IMemcachedKeyTransformer _keyTransformer;
 		private ILogger<MemcachedClientConfiguration> _logger;
 
 		/// <summary>
@@ -92,14 +92,10 @@ namespace Enyim.Caching.Configuration
 			}
 
 			if (options.Transcoder != null)
-			{
 				this._transcoder = options.Transcoder;
-			}
 
 			if (options.NodeLocatorFactory != null)
-			{
 				this.NodeLocatorFactory = options.NodeLocatorFactory;
-			}
 		}
 
 		public MemcachedClientConfiguration(ILoggerFactory loggerFactory, MemcachedClientConfigurationSectionHandler configuration)
@@ -111,8 +107,8 @@ namespace Enyim.Caching.Configuration
 			this.Protocol = protocol;
 
 			this.Servers = new List<EndPoint>();
-			if (configuration.Section.SelectNodes("servers/add") is XmlNodeList nodes)
-				foreach (XmlNode server in nodes)
+			if (configuration.Section.SelectNodes("servers/add") is XmlNodeList servers)
+				foreach (XmlNode server in servers)
 				{
 					var address = server.Attributes["address"]?.Value ?? "localhost";
 					var port = Convert.ToInt32(server.Attributes["port"]?.Value ?? "11211");
@@ -145,7 +141,6 @@ namespace Enyim.Caching.Configuration
 			}
 
 			if (configuration.Section.SelectSingleNode("authentication") is XmlNode authentication)
-			{
 				if (authentication.Attributes["type"]?.Value != null)
 					try
 					{
@@ -172,7 +167,6 @@ namespace Enyim.Caching.Configuration
 					{
 						this._logger.LogError(new EventId(), ex, $"Unable to load authentication type {authentication.Attributes["type"].Value}.");
 					}
-			}
 		}
 
 		/// <summary>
@@ -214,8 +208,8 @@ namespace Enyim.Caching.Configuration
 		/// </summary>
 		public IMemcachedKeyTransformer KeyTransformer
 		{
-			get { return this.keyTransformer ?? (this.keyTransformer = new DefaultKeyTransformer()); }
-			set { this.keyTransformer = value; }
+			get { return this._keyTransformer ?? (this._keyTransformer = new DefaultKeyTransformer()); }
+			set { this._keyTransformer = value; }
 		}
 
 		/// <summary>
@@ -243,8 +237,8 @@ namespace Enyim.Caching.Configuration
 		/// </summary>
 		public ITranscoder Transcoder
 		{
-			get { return _transcoder ?? (_transcoder = new DefaultTranscoder()); }
-			set { _transcoder = value; }
+			get { return this._transcoder ?? (this._transcoder = new DefaultTranscoder()); }
+			set { this._transcoder = value; }
 		}
 
 		/// <summary>

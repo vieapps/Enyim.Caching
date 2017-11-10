@@ -1355,15 +1355,15 @@ namespace Enyim.Caching
 			var result = await this.PerformTryGetAsync(key);
 			return result.Success
 				? new CasResult<T>()
-					{
-						Cas = result.Cas,
-						Result = (T)result.Value
-					}
+				{
+					Cas = result.Cas,
+					Result = (T)result.Value
+				}
 				: new CasResult<T>
-					{
-						Cas = result.Cas,
-						Result = default(T)
-					};
+				{
+					Cas = result.Cas,
+					Result = default(T)
+				};
 		}
 
 		/// <summary>
@@ -1398,7 +1398,7 @@ namespace Enyim.Caching
 
 					if (commandResult.Success)
 					{
-						if (typeof(T).GetTypeCode() == TypeCode.Object && typeof(T) != typeof(Byte[]))
+						if (Type.GetTypeCode(typeof(T)) == TypeCode.Object && typeof(T) != typeof(Byte[]))
 						{
 							result.Success = true;
 							result.Value = this.transcoder.Deserialize<T>(command.Result);
