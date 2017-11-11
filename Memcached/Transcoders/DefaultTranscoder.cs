@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Text;
+using System.Linq;
 using System.Runtime.Serialization.Formatters.Binary;
 
 namespace Enyim.Caching.Memcached
@@ -294,7 +295,9 @@ namespace Enyim.Caching.Memcached
 
 		protected virtual ArraySegment<byte> SerializeDecimal(Decimal value)
 		{
-			return this.SerializeObject(value);
+			var data = new byte[0];
+			Decimal.GetBits((decimal)value).ToList().ForEach(i => data = data.Concat(BitConverter.GetBytes(i)).ToArray());
+			return new ArraySegment<byte>(data);
 		}
 
 		protected virtual ArraySegment<byte> SerializeObject(object value)
@@ -386,7 +389,10 @@ namespace Enyim.Caching.Memcached
 
 		protected virtual Decimal DeserializeDecimal(ArraySegment<byte> value)
 		{
-			return (Decimal)this.DeserializeObject(value);
+			var bits = new int[4];
+			for (var index = 0; index < 16; index += 4)
+				bits[index / 4] = BitConverter.ToInt32(value.Array, index);
+			return new Decimal(bits);
 		}
 
 		protected virtual object DeserializeObject(ArraySegment<byte> value)

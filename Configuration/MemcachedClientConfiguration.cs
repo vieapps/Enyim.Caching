@@ -160,12 +160,23 @@ namespace Enyim.Caching.Configuration
 						}
 						else
 						{
-							this._logger.LogError($"Unable to load authentication type {authentication.Attributes["type"].Value}.");
+							this._logger.LogError($"Unable to load authentication type [{authentication.Attributes["type"].Value}]");
 						}
 					}
 					catch (Exception ex)
 					{
-						this._logger.LogError(new EventId(), ex, $"Unable to load authentication type {authentication.Attributes["type"].Value}.");
+						this._logger.LogError(new EventId(), ex, $"Unable to load authentication type [{authentication.Attributes["type"].Value}]");
+					}
+
+			if (configuration.Section.SelectSingleNode("transcoder") is XmlNode transcoder)
+				if (transcoder.Attributes["type"]?.Value != null)
+					try
+					{
+						this._transcoder = FastActivator.Create(Type.GetType(transcoder.Attributes["type"].Value)) as ITranscoder;
+					}
+					catch (Exception ex)
+					{
+						this._logger.LogError(new EventId(), ex, $"Unable to load transcoder [{transcoder.Attributes["type"].Value}]");
 					}
 		}
 
