@@ -25,9 +25,12 @@ namespace Enyim
 
 		protected override void HashCore(byte[] array, int ibStart, int cbSize)
 		{
-			if (array == null) throw new ArgumentNullException("array");
-			if (ibStart < 0 || ibStart > array.Length) throw new ArgumentOutOfRangeException("ibStart");
-			if (ibStart + cbSize > array.Length) throw new ArgumentOutOfRangeException("cbSize");
+			if (array == null)
+				throw new ArgumentNullException("array");
+			if (ibStart < 0 || ibStart > array.Length)
+				throw new ArgumentOutOfRangeException("ibStart");
+			if (ibStart + cbSize > array.Length)
+				throw new ArgumentOutOfRangeException("cbSize");
 
 			if (this.shouldReset)
 			{
@@ -75,6 +78,7 @@ namespace Enyim
 		}
 
 		#endregion
+
 		#region [ CrcTable                     ]
 		private static readonly uint[] CrcTable = new uint[]
 		{
@@ -132,6 +136,7 @@ namespace Enyim
 			0x2D02EF8D
 		};
 		#endregion
+
 		#region [ IUIntHash                    ]
 
 		uint IUIntHashAlgorithm.ComputeHash(byte[] data)
@@ -145,6 +150,7 @@ namespace Enyim
 		}
 
 		#endregion
+
 	}
 }
 

@@ -2,29 +2,6 @@
 
 namespace Enyim.Caching
 {
-	/// <summary>
-	/// Creates loggers based on the current configuration.
-	/// </summary>
-	/// <example>
-	/// 
-	/// Config file:
-	/// 
-	/// <configuration>
-	///		<configSections>
-	///			<sectionGroup name="enyim.com">
-	///				<section name="log" type="Enyim.Caching.EnyimLoggerSection, Enyim.Caching" />
-	///			</sectionGroup>
-	///		</configSections>
-	///		<enyim.com>
-	///			<log factory="Enyim.Caching.Log4NetLoggerFactory, Enyim.Caching" />
-	///		</enyim.com>
-	/// </configuration>
-	/// 
-	/// Code:
-	/// 
-	///		LogManager.AssignFactory(new Log4NetLogFactory());
-	/// 
-	/// </example>
 	public static class LogManager
 	{
 		private static ILogFactory factory;
@@ -35,22 +12,8 @@ namespace Enyim.Caching
 #if DEBUG
 			factory = new ConsoleLogFactory();
 #else
-            factory = new NullLoggerFactory();
+			factory = new NullLoggerFactory();
 #endif
-			//			var section = ConfigurationManager.GetSection("enyim.com/log") as Enyim.Caching.Configuration.LoggerSection;
-			//			ILogFactory f = null;
-
-			//			if (section != null && section.LogFactory != null)
-			//			{
-			//				f = Enyim.Reflection.FastActivator.Create(section.LogFactory) as ILogFactory;
-			//			}
-			//#if !log4net
-			//			// use an empty logger if nothing is specified in the app.config
-			//			LogManager.factory = f ?? (ILogFactory)new NullLoggerFactory();
-			//#else
-			//			// use the log4net logger logger if nothing is specified in the app.config
-			//			LogManager.factory = f ?? (ILogFactory)new Log4NetLogFactory();
-			//#endif
 		}
 
 		/// <summary>

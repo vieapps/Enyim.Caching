@@ -19,10 +19,10 @@ namespace Enyim.Caching.Configuration
 	public class MemcachedClientConfiguration : IMemcachedClientConfiguration
 	{
 		// these are lazy initialized in the getters
-		private Type nodeLocator;
-		private ITranscoder _transcoder;
-		private IMemcachedKeyTransformer _keyTransformer;
-		private ILogger<MemcachedClientConfiguration> _logger;
+		Type _nodeLocatorType;
+		ITranscoder _transcoder;
+		IMemcachedKeyTransformer _keyTransformer;
+		ILogger<MemcachedClientConfiguration> _logger;
 
 		/// <summary>
 		/// Initializes a new instance of the <see cref="T:MemcachedClientConfiguration"/> class.
@@ -81,7 +81,7 @@ namespace Enyim.Caching.Configuration
 					var keyTransformerType = Type.GetType(options.KeyTransformer);
 					if (keyTransformerType != null)
 					{
-						this.KeyTransformer = Activator.CreateInstance(keyTransformerType) as IMemcachedKeyTransformer;
+						this.KeyTransformer = FastActivator.Create(keyTransformerType) as IMemcachedKeyTransformer;
 						this._logger.LogDebug($"Use '{options.KeyTransformer}' KeyTransformer");
 					}
 				}
@@ -112,7 +112,10 @@ namespace Enyim.Caching.Configuration
 				{
 					var address = server.Attributes["address"]?.Value ?? "localhost";
 					var port = Convert.ToInt32(server.Attributes["port"]?.Value ?? "11211");
-					this.AddServer(address, port);
+					if (IPAddress.TryParse(address, out IPAddress ipAddress))
+						this.Servers.Add(new IPEndPoint(ipAddress, port));
+					else
+						this.Servers.Add(new DnsEndPoint(address, port));
 				}
 
 			this.SocketPool = new SocketPoolConfiguration();
@@ -168,11 +171,24 @@ namespace Enyim.Caching.Configuration
 						this._logger.LogError(new EventId(), ex, $"Unable to load authentication type [{authentication.Attributes["type"].Value}]");
 					}
 
+			if (configuration.Section.SelectSingleNode("keyTransformer") is XmlNode keyTransformer)
+				if (keyTransformer.Attributes["type"]?.Value != null)
+					try
+					{
+						this._keyTransformer = FastActivator.Create(Type.GetType(keyTransformer.Attributes["type"].Value)) as IMemcachedKeyTransformer;
+						this._logger.LogDebug($"Use '{keyTransformer.Attributes["type"].Value}' KeyTransformer");
+					}
+					catch (Exception ex)
+					{
+						this._logger.LogError(new EventId(), ex, $"Unable to load key transformer [{keyTransformer.Attributes["type"].Value}]");
+					}
+
 			if (configuration.Section.SelectSingleNode("transcoder") is XmlNode transcoder)
 				if (transcoder.Attributes["type"]?.Value != null)
 					try
 					{
 						this._transcoder = FastActivator.Create(Type.GetType(transcoder.Attributes["type"].Value)) as ITranscoder;
+						this._logger.LogDebug($"Use '{transcoder.Attributes["type"].Value}' transcoder");
 					}
 					catch (Exception ex)
 					{
@@ -229,11 +245,11 @@ namespace Enyim.Caching.Configuration
 		/// <remarks>If both <see cref="M:NodeLocator"/> and  <see cref="M:NodeLocatorFactory"/> are assigned then the latter takes precedence.</remarks>
 		public Type NodeLocator
 		{
-			get { return this.nodeLocator; }
+			get { return this._nodeLocatorType; }
 			set
 			{
 				ConfigurationHelper.CheckForInterface(value, typeof(IMemcachedNodeLocator));
-				this.nodeLocator = value;
+				this._nodeLocatorType = value;
 			}
 		}
 
@@ -259,7 +275,7 @@ namespace Enyim.Caching.Configuration
 
 		#region [ interface                     ]
 
-		IList<System.Net.EndPoint> IMemcachedClientConfiguration.Servers
+		IList<EndPoint> IMemcachedClientConfiguration.Servers
 		{
 			get { return this.Servers; }
 		}
@@ -307,7 +323,6 @@ namespace Enyim.Caching.Configuration
 
 			throw new ArgumentOutOfRangeException("Unknown protocol: " + (int)this.Protocol);
 		}
-
 		#endregion
 
 	}
@@ -319,6 +334,7 @@ namespace Enyim.Caching.Configuration
 			this._section = section;
 			return this;
 		}
+
 		XmlNode _section = null;
 		public XmlNode Section { get { return this._section; } }
 	}

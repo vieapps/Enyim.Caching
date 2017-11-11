@@ -12,26 +12,26 @@ namespace Enyim.Caching.Memcached
 {
 	public class DefaultServerPool : IServerPool, IDisposable
 	{
-		private readonly ILogger _logger;
+		readonly ILogger _logger;
 
-		private IMemcachedNode[] allNodes;
+		IMemcachedNode[] _allNodes;
 
-		private IMemcachedClientConfiguration configuration;
-		private IOperationFactory factory;
-		private IMemcachedNodeLocator nodeLocator;
+		IMemcachedClientConfiguration _configuration;
+		IOperationFactory _factory;
+		IMemcachedNodeLocator _nodeLocator;
 
-		private object DeadSync = new Object();
-		private System.Threading.Timer resurrectTimer;
-		private bool isTimerActive;
-		private int deadTimeoutMsec;
-		private bool isDisposed;
-		private event Action<IMemcachedNode> nodeFailed;
+		object _deadSync = new Object();
+		int _deadTimeoutMsec;
+		System.Threading.Timer _resurrectTimer;
+		bool _isTimerActive;
+		bool _isDisposed;
+		event Action<IMemcachedNode> _nodeFailed;
 
 		public DefaultServerPool(IMemcachedClientConfiguration configuration, IOperationFactory opFactory, ILogger logger)
 		{
-			this.configuration = configuration ?? throw new ArgumentNullException(nameof(configuration), "Socket configuration is invalid");
-			this.factory = opFactory ?? throw new ArgumentNullException(nameof(opFactory), "Operation factory is invalid");
-			this.deadTimeoutMsec = (int)this.configuration.SocketPool.DeadTimeout.TotalMilliseconds;
+			this._configuration = configuration ?? throw new ArgumentNullException(nameof(configuration), "Socket configuration is invalid");
+			this._factory = opFactory ?? throw new ArgumentNullException(nameof(opFactory), "Operation factory is invalid");
+			this._deadTimeoutMsec = (int)this._configuration.SocketPool.DeadTimeout.TotalMilliseconds;
 			this._logger = logger;
 		}
 
@@ -46,10 +46,10 @@ namespace Enyim.Caching.Memcached
 
 		protected virtual IMemcachedNode CreateNode(EndPoint endpoint)
 		{
-			return new MemcachedNode(endpoint, this.configuration.SocketPool, this._logger);
+			return new MemcachedNode(endpoint, this._configuration.SocketPool, this._logger);
 		}
 
-		private void OnResurrectCallback(object state)
+		void OnResurrectCallback(object state)
 		{
 			var isDebug = this._logger.IsEnabled(LogLevel.Debug);
 			if (isDebug)
@@ -70,16 +70,16 @@ namespace Enyim.Caching.Memcached
 			// 7. if all servers are up, we set isRunning to false, so the timer is suspended
 			// 8. GOTO 2
 
-			lock (this.DeadSync)
+			lock (this._deadSync)
 			{
-				if (this.isDisposed)
+				if (this._isDisposed)
 				{
 					if (this._logger.IsEnabled(LogLevel.Warning))
 						this._logger.LogWarning("IsAlive timer was triggered but the pool is already disposed. Ignoring.");
 					return;
 				}
 
-				var nodes = this.allNodes;
+				var nodes = this._allNodes;
 				var aliveList = new List<IMemcachedNode>(nodes.Length);
 				var changed = false;
 				var deadCount = 0;
@@ -119,7 +119,7 @@ namespace Enyim.Caching.Memcached
 				{
 					if (isDebug)
 						this._logger.LogDebug("Reinitializing the locator.");
-					this.nodeLocator.Initialize(aliveList);
+					this._nodeLocator.Initialize(aliveList);
 				}
 
 				// stop or restart the timer
@@ -127,18 +127,18 @@ namespace Enyim.Caching.Memcached
 				{
 					if (isDebug)
 						this._logger.LogDebug("deadCount == 0, stopping the timer.");
-					this.isTimerActive = false;
+					this._isTimerActive = false;
 				}
 				else
 				{
 					if (isDebug)
 						this._logger.LogDebug("deadCount == {0}, starting the timer.", deadCount);
-					this.resurrectTimer.Change(this.deadTimeoutMsec, Timeout.Infinite);
+					this._resurrectTimer.Change(this._deadTimeoutMsec, Timeout.Infinite);
 				}
 			}
 		}
 
-		private void NodeFail(IMemcachedNode node)
+		void NodeFail(IMemcachedNode node)
 		{
 			var isDebug = this._logger.IsEnabled(LogLevel.Debug);
 			if (isDebug)
@@ -146,9 +146,9 @@ namespace Enyim.Caching.Memcached
 
 			// the timer is stopped until we encounter the first dead server
 			// when we have one, we trigger it and it will run after DeadTimeout has elapsed
-			lock (this.DeadSync)
+			lock (this._deadSync)
 			{
-				if (this.isDisposed)
+				if (this._isDisposed)
 				{
 					if (this._logger.IsEnabled(LogLevel.Warning))
 						this._logger.LogWarning("Got a node fail but the pool is already disposed. Ignoring.");
@@ -156,26 +156,26 @@ namespace Enyim.Caching.Memcached
 				}
 
 				// bubble up the fail event to the client
-				this.nodeFailed?.Invoke(node);
+				this._nodeFailed?.Invoke(node);
 
 				// re-initialize the locator
-				var newLocator = this.configuration.CreateNodeLocator();
-				newLocator.Initialize(allNodes.Where(n => n.IsAlive).ToArray());
-				Interlocked.Exchange(ref this.nodeLocator, newLocator);
+				var newLocator = this._configuration.CreateNodeLocator();
+				newLocator.Initialize(_allNodes.Where(n => n.IsAlive).ToArray());
+				Interlocked.Exchange(ref this._nodeLocator, newLocator);
 
 				// the timer is stopped until we encounter the first dead server
 				// when we have one, we trigger it and it will run after DeadTimeout has elapsed
-				if (!this.isTimerActive)
+				if (!this._isTimerActive)
 				{
 					if (isDebug)
 						this._logger.LogDebug("Starting the recovery timer.");
 
-					if (this.resurrectTimer == null)
-						this.resurrectTimer = new Timer(this.OnResurrectCallback, null, this.deadTimeoutMsec, Timeout.Infinite);
+					if (this._resurrectTimer == null)
+						this._resurrectTimer = new Timer(this.OnResurrectCallback, null, this._deadTimeoutMsec, Timeout.Infinite);
 					else
-						this.resurrectTimer.Change(this.deadTimeoutMsec, Timeout.Infinite);
+						this._resurrectTimer.Change(this._deadTimeoutMsec, Timeout.Infinite);
 
-					this.isTimerActive = true;
+					this._isTimerActive = true;
 
 					if (isDebug)
 						this._logger.LogDebug("Timer started.");
@@ -186,22 +186,22 @@ namespace Enyim.Caching.Memcached
 		#region [ IServerPool                  ]
 		IMemcachedNode IServerPool.Locate(string key)
 		{
-			return this.nodeLocator.Locate(key);
+			return this._nodeLocator.Locate(key);
 		}
 
 		IOperationFactory IServerPool.OperationFactory
 		{
-			get { return this.factory; }
+			get { return this._factory; }
 		}
 
 		IEnumerable<IMemcachedNode> IServerPool.GetWorkingNodes()
 		{
-			return this.nodeLocator.GetWorkingNodes();
+			return this._nodeLocator.GetWorkingNodes();
 		}
 
 		void IServerPool.Start()
 		{
-			this.allNodes = this.configuration.Servers
+			this._allNodes = this._configuration.Servers
 				.Select(ip =>
 				{
 					var node = this.CreateNode(ip);
@@ -211,21 +211,21 @@ namespace Enyim.Caching.Memcached
 				.ToArray();
 
 			// initialize the locator
-			var locator = this.configuration.CreateNodeLocator();
-			locator.Initialize(allNodes);
+			var locator = this._configuration.CreateNodeLocator();
+			locator.Initialize(_allNodes);
 
-			this.nodeLocator = locator;
+			this._nodeLocator = locator;
 		}
 
 		event Action<IMemcachedNode> IServerPool.NodeFailed
 		{
 			add
 			{
-				this.nodeFailed += value;
+				this._nodeFailed += value;
 			}
 			remove
 			{
-				this.nodeFailed -= value;
+				this._nodeFailed -= value;
 			}
 		}
 		#endregion
@@ -235,15 +235,15 @@ namespace Enyim.Caching.Memcached
 		{
 			GC.SuppressFinalize(this);
 
-			lock (this.DeadSync)
+			lock (this._deadSync)
 			{
-				if (this.isDisposed) return;
+				if (this._isDisposed) return;
 
-				this.isDisposed = true;
+				this._isDisposed = true;
 
 				// dispose the locator first, maybe it wants to access 
 				// the nodes one last time
-				if (this.nodeLocator is IDisposable nd)
+				if (this._nodeLocator is IDisposable nd)
 					try
 					{
 						nd.Dispose();
@@ -253,12 +253,12 @@ namespace Enyim.Caching.Memcached
 						this._logger.LogError(nameof(DefaultServerPool), e);
 					}
 
-				this.nodeLocator = null;
+				this._nodeLocator = null;
 
-				for (var i = 0; i < this.allNodes.Length; i++)
+				for (var i = 0; i < this._allNodes.Length; i++)
 					try
 					{
-						this.allNodes[i].Dispose();
+						this._allNodes[i].Dispose();
 					}
 					catch (Exception e)
 					{
@@ -266,14 +266,14 @@ namespace Enyim.Caching.Memcached
 					}
 
 				// stop the timer
-				if (this.resurrectTimer != null)
-					using (this.resurrectTimer)
+				if (this._resurrectTimer != null)
+					using (this._resurrectTimer)
 					{
-						this.resurrectTimer.Change(Timeout.Infinite, Timeout.Infinite);
+						this._resurrectTimer.Change(Timeout.Infinite, Timeout.Infinite);
 					}
 
-				this.allNodes = null;
-				this.resurrectTimer = null;
+				this._allNodes = null;
+				this._resurrectTimer = null;
 			}
 		}
 		#endregion

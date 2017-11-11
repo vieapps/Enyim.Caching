@@ -15,14 +15,10 @@ namespace Microsoft.Extensions.DependencyInjection
 		public static IServiceCollection AddEnyimMemcached(this IServiceCollection services, Action<MemcachedClientOptions> setupAction)
 		{
 			if (services == null)
-			{
 				throw new ArgumentNullException(nameof(services));
-			}
 
 			if (setupAction == null)
-			{
 				throw new ArgumentNullException(nameof(setupAction));
-			}
 
 			return AddEnyimMemcached(services, s => s.Configure(setupAction));
 		}
@@ -30,19 +26,15 @@ namespace Microsoft.Extensions.DependencyInjection
 		public static IServiceCollection AddEnyimMemcached(this IServiceCollection services, IConfiguration configuration)
 		{
 			if (services == null)
-			{
 				throw new ArgumentNullException(nameof(services));
-			}
 
 			if (configuration == null)
-			{
 				throw new ArgumentNullException(nameof(configuration));
-			}
 
 			return AddEnyimMemcached(services, s => s.Configure<MemcachedClientOptions>(configuration));
 		}
 
-		private static IServiceCollection AddEnyimMemcached(IServiceCollection services, Action<IServiceCollection> configure)
+		static IServiceCollection AddEnyimMemcached(IServiceCollection services, Action<IServiceCollection> configure)
 		{
 			services.AddOptions();
 			configure(services);
@@ -54,14 +46,10 @@ namespace Microsoft.Extensions.DependencyInjection
 		public static IServiceCollection AddDistributedEnyimMemcached(this IServiceCollection services, Action<MemcachedClientOptions> setupAction)
 		{
 			if (services == null)
-			{
 				throw new ArgumentNullException(nameof(services));
-			}
 
 			if (setupAction == null)
-			{
 				throw new ArgumentNullException(nameof(setupAction));
-			}
 
 			services.AddOptions();
 			services.Configure(setupAction);
@@ -82,11 +70,11 @@ namespace Microsoft.AspNetCore.Builder
 			try
 			{
 				app.ApplicationServices.GetService<IMemcachedClient>().DoGetAsync<string>("EnyimMemcached").Wait();
-				Console.WriteLine("EnyimMemcached Started.");
+				app.ApplicationServices.GetService<ILogger<IMemcachedClient>>().LogInformation(new EventId(), null, "Enyim Cemcached is started");
 			}
 			catch (Exception ex)
 			{
-				app.ApplicationServices.GetService<ILogger<IMemcachedClient>>().LogError(new EventId(), ex, "EnyimMemcached Failed.");
+				app.ApplicationServices.GetService<ILogger<IMemcachedClient>>().LogError(new EventId(), ex, "Enyim Cemcached is failed");
 			}
 			return app;
 		}

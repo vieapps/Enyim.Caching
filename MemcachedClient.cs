@@ -1856,7 +1856,7 @@ namespace Enyim.Caching
 		}
 		#endregion
 
-		#region IDistributedCache methods
+		#region Methods of IDistributedCache 
 		protected static readonly DateTime UnixEpoch = new DateTime(1970, 1, 1);
 
 		protected static uint GetExpiration(TimeSpan? validFor, DateTime? expiresAt = null, DateTimeOffset? absoluteExpiration = null, TimeSpan? relativeToNow = null)
@@ -1882,7 +1882,7 @@ namespace Enyim.Caching
 				expiresAt = DateTime.Now.Add(validFor.Value);
 			}
 
-			DateTime datetime = expiresAt.Value;
+			var datetime = expiresAt.Value;
 			if (datetime < MemcachedClient.UnixEpoch)
 				throw new ArgumentOutOfRangeException("expiresAt", "expiresAt must be >= 1970/1/1");
 
@@ -1900,41 +1900,34 @@ namespace Enyim.Caching
 
 		byte[] IDistributedCache.Get(string key)
 		{
-			this._logger.LogInformation($"{nameof(IDistributedCache.Get)}(\"{key}\")");
 			return this.Get<byte[]>(key);
 		}
 
-		async Task<byte[]> IDistributedCache.GetAsync(string key, CancellationToken token = default(CancellationToken))
+		Task<byte[]> IDistributedCache.GetAsync(string key, CancellationToken token = default(CancellationToken))
 		{
-			this._logger.LogInformation($"{nameof(IDistributedCache.GetAsync)}(\"{key}\")");
-			return await this.GetAsync<byte[]>(key);
+			return this.GetAsync<byte[]>(key);
 		}
 
 		void IDistributedCache.Set(string key, byte[] value, DistributedCacheEntryOptions options)
 		{
-			this._logger.LogInformation($"{nameof(IDistributedCache.Set)}(\"{key}\")");
-
 			var expires = MemcachedClient.GetExpiration(options.SlidingExpiration, null, options.AbsoluteExpiration, options.AbsoluteExpirationRelativeToNow);
 			this.PerformStore(StoreMode.Set, key, value, expires, 0);
 			if (expires > 0)
 				this.PerformStore(StoreMode.Set, MemcachedClient.GetExpiratonKey(key), expires, expires, 0);
 		}
 
-		async Task IDistributedCache.SetAsync(string key, byte[] value, DistributedCacheEntryOptions options, CancellationToken token = default(CancellationToken))
+		Task IDistributedCache.SetAsync(string key, byte[] value, DistributedCacheEntryOptions options, CancellationToken token = default(CancellationToken))
 		{
-			this._logger.LogInformation($"{nameof(IDistributedCache.SetAsync)}(\"{key}\")");
-
 			var expires = MemcachedClient.GetExpiration(options.SlidingExpiration, null, options.AbsoluteExpiration, options.AbsoluteExpirationRelativeToNow);
-			await this.PerformStoreAsync(StoreMode.Set, key, value, expires);
-			if (expires > 0)
-				await this.PerformStoreAsync(StoreMode.Set, MemcachedClient.GetExpiratonKey(key), expires, expires);
+			return Task.WhenAll(
+				this.PerformStoreAsync(StoreMode.Set, key, value, expires),
+				expires > 0 ? this.PerformStoreAsync(StoreMode.Set, MemcachedClient.GetExpiratonKey(key), expires, expires) : Task.CompletedTask
+			);
 		}
 
 		void IDistributedCache.Refresh(string key)
 		{
-			this._logger.LogInformation($"{nameof(IDistributedCache.Refresh)}(\"{key}\")");
-
-			var value = Get(key);
+			var value = this.Get(key);
 			if (value != null)
 			{
 				var expirationValue = this.Get(MemcachedClient.GetExpiratonKey(key));
@@ -1945,8 +1938,6 @@ namespace Enyim.Caching
 
 		async Task IDistributedCache.RefreshAsync(string key, CancellationToken token = default(CancellationToken))
 		{
-			this._logger.LogInformation($"{nameof(IDistributedCache.RefreshAsync)}(\"{key}\")");
-
 			var result = await this.DoGetAsync<byte[]>(key);
 			if (result.Success)
 			{
@@ -1961,9 +1952,9 @@ namespace Enyim.Caching
 			this.Remove(key);
 		}
 
-		async Task IDistributedCache.RemoveAsync(string key, CancellationToken token = default(CancellationToken))
+		Task IDistributedCache.RemoveAsync(string key, CancellationToken token = default(CancellationToken))
 		{
-			await this.RemoveAsync(key);
+			return this.RemoveAsync(key);
 		}
 		#endregion
 

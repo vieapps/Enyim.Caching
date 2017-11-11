@@ -20,7 +20,10 @@ namespace Enyim.Collections
 		{
 			var node = new Node(item);
 
-			do { node.Next = this.head.Next; }
+			do
+			{
+				node.Next = this.head.Next;
+			}
 			while (Interlocked.CompareExchange(ref this.head.Next, node, node.Next) != node.Next);
 		}
 
@@ -32,7 +35,8 @@ namespace Enyim.Collections
 			do
 			{
 				node = head.Next;
-				if (node == null) return false;
+				if (node == null)
+					return false;
 			}
 			while (Interlocked.CompareExchange(ref head.Next, node.Next, node) != node);
 
@@ -55,6 +59,7 @@ namespace Enyim.Collections
 		}
 
 		#endregion
+
 	}
 }
 
