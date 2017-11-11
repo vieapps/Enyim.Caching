@@ -1,7 +1,7 @@
 # VIEApps.Enyim.Caching
 The .NET Standard 2.0 memcached client library: 
 - 100% compatible with EnyimMemcached 2.x library, fully async
-- Object serialization with various transcoders: BinaryFormatter, Protocol Buffers, Json.NET Bson, MessagePack
+- Objects are serializing with various transcoders: BinaryFormatter, Protocol Buffers, Json.NET Bson, MessagePack
 - Ready with .NET Core 2.0 and .NET Framework 4.6.1 (and higher) with more useful methods (Add, Replace, Exists)
 ### Nuget
 - Package ID: VIEApps.Enyim.Caching
@@ -23,28 +23,42 @@ The .NET Standard 2.0 memcached client library:
 				"Port": 11211
 			}
 		],
+		"SocketPool": {
+			"MinPoolSize": 10,
+			"MaxPoolSize": 100,
+			"DeadTimeout": "00:01:00",
+			"ConnectionTimeout": "00:00:05",
+			"ReceiveTimeout": "00:00:01"
+		}
 	}
 }
 ```
 ### With authentication
 ```json
 {
-  "EnyimMemcached": {
+	"EnyimMemcached": {
 		"Servers": [
-		  {
+			{
 				"Address": "127.0.0.1",
 				"Port": 11211
-		  }
+			}
 		],
+		"SocketPool": {
+			"MinPoolSize": 10,
+			"MaxPoolSize": 100,
+			"DeadTimeout": "00:01:00",
+			"ConnectionTimeout": "00:00:05",
+			"ReceiveTimeout": "00:00:01"
+		},
 		"Authentication": {
-		  "Type": "Enyim.Caching.Memcached.PlainTextAuthenticator, Enyim.Caching",
-		  "Parameters": {
-			"zone": "",
-			"userName": "username",
-			"password": "password"
-		  }
+			"Type": "Enyim.Caching.Memcached.PlainTextAuthenticator, Enyim.Caching",
+			"Parameters": {
+				"zone": "",
+				"userName": "username",
+				"password": "password"
+			}
 		}
-  }
+	}
 }
 ```
 ### Startup.cs
