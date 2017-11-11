@@ -1,52 +1,49 @@
-# Enyim.Caching
-
-The .NET Standard 2.0 memcached client library 
-- 100% compatible with EnyimMemcached 2.x library
-- Fully async
-- Various serialization transcoders: BinaryFormatter, Protocol Buffers, Json.net Bson, MessagePack
+# VIEApps.Enyim.Caching
+The .NET Standard 2.0 memcached client library: 
+- 100% compatible with EnyimMemcached 2.x library, fully async
+- Object serialization with various transcoders: BinaryFormatter, Protocol Buffers, Json.NET Bson, MessagePack
 - Ready with .NET Core 2.0 and .NET Framework 4.6.1 (and higher) with more useful methods (Add, Replace, Exists)
-- Ready with ASP.NET Core 2.0 middleware (IDistributedCache)
 ### Nuget
 - Package ID: VIEApps.Enyim.Caching
 - Details: https://www.nuget.org/packages/VIEApps.Enyim.Caching
 ### Information
-- Migrated from [EnyimMemcachedCore](https://github.com/cnblogs/EnyimMemcachedCore)
-- Original [EnyimMemcached](https://github.com/enyim/EnyimMemcached) on .NET Framework 3.5
-### Usage
+- Migrated from the fork [EnyimMemcachedCore](https://github.com/cnblogs/EnyimMemcachedCore) (.NET Core 2.0)
+- Reference from the original [EnyimMemcached](https://github.com/enyim/EnyimMemcached) (.NET Framework 3.5)
+### Usage (ASP.NET Core)
 - Add services.AddEnyimMemcached(...) and app.UseEnyimMemcached() in Startup
 - Add IMemcachedClient into constructor
 ## Configure with the appsettings.json file
 ### Without authentication
 ```json
 {
-  "EnyimMemcached": {
-	"Servers": [
-	  {
-		"Address": "127.0.0.1",
-		"Port": 11211
-	  }
-	]
-  }
+	"EnyimMemcached": {
+		"Servers": [
+			{
+				"Address": "127.0.0.1",
+				"Port": 11211
+			}
+		],
+	}
 }
 ```
 ### With authentication
 ```json
 {
   "EnyimMemcached": {
-	"Servers": [
-	  {
-		"Address": "127.0.0.1",
-		"Port": 11211
-	  }
-	],
-	"Authentication": {
-	  "Type": "Enyim.Caching.Memcached.PlainTextAuthenticator, Enyim.Caching",
-	  "Parameters": {
-		"zone": "",
-		"userName": "username",
-		"password": "password"
-	  }
-	}
+		"Servers": [
+		  {
+				"Address": "127.0.0.1",
+				"Port": 11211
+		  }
+		],
+		"Authentication": {
+		  "Type": "Enyim.Caching.Memcached.PlainTextAuthenticator, Enyim.Caching",
+		  "Parameters": {
+			"zone": "",
+			"userName": "username",
+			"password": "password"
+		  }
+		}
   }
 }
 ```
@@ -84,7 +81,7 @@ public class TabNavService
 
 	public async Task<IEnumerable<TabNav>> GetAll()
 	{
-				var cacheKey = "aboutus_tabnavs_all";
+		var cacheKey = "aboutus_tabnavs_all";
 		var result = await _memcachedClient.GetAsync<IEnumerable<TabNav>>(cacheKey);
 		if (!result.Success)
 		{
@@ -106,9 +103,7 @@ public class CreativeService
 	private ICreativeRepository _creativeRepository;
 	private IDistributedCache _cache;
 
-	public CreativeService(
-		ICreativeRepository creativeRepository,
-		IDistributedCache cache)
+	public CreativeService(ICreativeRepository creativeRepository, IDistributedCache cache)
 	{
 		_creativeRepository = creativeRepository;
 		_cache = cache;
@@ -122,18 +117,11 @@ public class CreativeService
 		var creativesJson = await _cache.GetStringAsync(cacheKey);
 		if (creativesJson == null)
 		{
-			creatives = await _creativeRepository.GetCreatives(unitName)
-					.ProjectTo<CreativeDTO>().ToListAsync();
-
+			creatives = await _creativeRepository.GetCreatives(unitName).ProjectTo<CreativeDTO>().ToListAsync();
 			var json = string.Empty;
 			if (creatives != null && creatives.Count() > 0)
-			{
 				json = JsonConvert.SerializeObject(creatives);
-			}
-			await _cache.SetStringAsync(
-				cacheKey, 
-				json, 
-				new DistributedCacheEntryOptions().SetSlidingExpiration(TimeSpan.FromMinutes(5)));
+			await _cache.SetStringAsync(cacheKey, json, new DistributedCacheEntryOptions().SetSlidingExpiration(TimeSpan.FromMinutes(5)));
 		}
 		else
 		{
@@ -193,3 +181,5 @@ public class CreativeService
 	}
 }
 ```
+## Other transcoders (Protocol Buffers, Json.NET Bson, MessagePack)
+See [VIEApps.Enyim.Caching.Transcoders](https://github.com/vieapps/Enyim.Caching.Transcoders)
