@@ -10,13 +10,13 @@ The .NET Standard 2.0 memcached client library:
 - Migrated from the fork [EnyimMemcachedCore](https://github.com/cnblogs/EnyimMemcachedCore) (.NET Core 2.0)
 - Reference from the original [EnyimMemcached](https://github.com/enyim/EnyimMemcached) (.NET Framework 3.5)
 ### Usage (ASP.NET Core)
-- Add services.AddEnyimMemcached(...) and app.UseEnyimMemcached() in Startup
+- Add services.AddMemcached(...) and app.UseMemcached() in Startup
 - Add IMemcachedClient into constructor
 ## Configure with the appsettings.json file
 ### Without authentication
 ```json
 {
-	"EnyimMemcached": {
+	"Memcached": {
 		"Servers": [
 			{
 				"Address": "127.0.0.1",
@@ -36,7 +36,7 @@ The .NET Standard 2.0 memcached client library:
 ### With authentication
 ```json
 {
-	"EnyimMemcached": {
+	"Memcached": {
 		"Servers": [
 			{
 				"Address": "127.0.0.1",
@@ -67,12 +67,13 @@ public class Startup
 {
 	public void ConfigureServices(IServiceCollection services)
 	{
-		services.AddEnyimMemcached(options => Configuration.GetSection("EnyimMemcached").Bind(options));
+		services.AddMemcached(options => Configuration.GetSection("Memcached").Bind(options));
+		services.AddMemcachedAsIDistributedCache(options => Configuration.GetSection("Memcached").Bind(options));
 	}
 	
 	public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory)
 	{ 
-		app.UseEnyimMemcached();
+		app.UseMemcached();
 	}
 }
 ```
@@ -85,9 +86,7 @@ public class TabNavService
 	private ITabNavRepository _tabNavRepository;
 	private IMemcachedClient _memcachedClient;
 
-	public TabNavService(
-		ITabNavRepository tabNavRepository,
-		IMemcachedClient memcachedClient)
+	public TabNavService(ITabNavRepository tabNavRepository, IMemcachedClient memcachedClient)
 	{
 		_tabNavRepository = tabNavRepository;
 		_memcachedClient = memcachedClient;
