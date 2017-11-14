@@ -26,16 +26,11 @@ namespace Enyim.Caching
 	{
 
 		#region Attributes
-		/// <summary>
-		/// Represents a value which indicates that an item should never expire.
-		/// </summary>
-		public static readonly TimeSpan Infinite = TimeSpan.Zero;
+		ILogger<MemcachedClient> _logger;
 
-		private ILogger<MemcachedClient> _logger;
-
-		private IServerPool pool;
-		private IMemcachedKeyTransformer keyTransformer;
-		private ITranscoder transcoder;
+		IServerPool _serverPool;
+		IMemcachedKeyTransformer _keyTransformer;
+		ITranscoder _transcoder;
 
 		public IStoreOperationResultFactory StoreOperationResultFactory { get; set; }
 
@@ -47,11 +42,11 @@ namespace Enyim.Caching
 
 		public IRemoveOperationResultFactory RemoveOperationResultFactory { get; set; }
 
-		protected IServerPool Pool { get { return this.pool; } }
+		protected IServerPool Pool { get { return this._serverPool; } }
 
-		protected IMemcachedKeyTransformer KeyTransformer { get { return this.keyTransformer; } }
+		protected IMemcachedKeyTransformer KeyTransformer { get { return this._keyTransformer; } }
 
-		protected ITranscoder Transcoder { get { return this.transcoder; } }
+		protected ITranscoder Transcoder { get { return this._transcoder; } }
 
 		public event Action<IMemcachedNode> NodeFailed;
 		#endregion
@@ -88,15 +83,15 @@ namespace Enyim.Caching
 		{
 			this._logger = loggerFactory.CreateLogger<MemcachedClient>();
 
-			this.keyTransformer = configuration.CreateKeyTransformer() ?? new DefaultKeyTransformer();
-			this.transcoder = configuration.CreateTranscoder() ?? new DefaultTranscoder();
+			this._keyTransformer = configuration.CreateKeyTransformer() ?? new DefaultKeyTransformer();
+			this._transcoder = configuration.CreateTranscoder() ?? new DefaultTranscoder();
 
-			this.pool = configuration.CreatePool();
-			this.pool.NodeFailed += (node) =>
+			this._serverPool = configuration.CreatePool();
+			this._serverPool.NodeFailed += (node) =>
 			{
 				this.NodeFailed?.Invoke(node);
 			};
-			this.pool.Start();
+			this._serverPool.Start();
 
 			this.StoreOperationResultFactory = new DefaultStoreOperationResultFactory();
 			this.GetOperationResultFactory = new DefaultGetOperationResultFactory();
@@ -126,14 +121,14 @@ namespace Enyim.Caching
 				return result;
 			}
 
-			var hashedKey = this.keyTransformer.Transform(key);
-			var node = this.pool.Locate(hashedKey);
+			var hashedKey = this._keyTransformer.Transform(key);
+			var node = this._serverPool.Locate(hashedKey);
 			if (node != null)
 			{
 				CacheItem item;
 				try
 				{
-					item = this.transcoder.Serialize(value);
+					item = this._transcoder.Serialize(value);
 				}
 				catch (ArgumentException)
 				{
@@ -146,7 +141,7 @@ namespace Enyim.Caching
 					return result;
 				}
 
-				var command = this.pool.OperationFactory.Store(mode, hashedKey, item, expires, cas);
+				var command = this._serverPool.OperationFactory.Store(mode, hashedKey, item, expires, cas);
 				var commandResult = node.Execute(command);
 
 				result.Cas = cas = command.CasValue;
@@ -228,15 +223,15 @@ namespace Enyim.Caching
 				return result;
 			}
 
-			var hashedKey = this.keyTransformer.Transform(key);
-			var node = this.pool.Locate(hashedKey);
+			var hashedKey = this._keyTransformer.Transform(key);
+			var node = this._serverPool.Locate(hashedKey);
 
 			if (node != null)
 			{
 				CacheItem item;
 				try
 				{
-					item = this.transcoder.Serialize(value);
+					item = this._transcoder.Serialize(value);
 				}
 				catch (ArgumentException)
 				{
@@ -249,7 +244,7 @@ namespace Enyim.Caching
 					return result;
 				}
 
-				var command = this.pool.OperationFactory.Store(mode, hashedKey, item, expires, cas);
+				var command = this._serverPool.OperationFactory.Store(mode, hashedKey, item, expires, cas);
 				var commandResult = await node.ExecuteAsync(command);
 
 				result.Cas = command.CasValue;
@@ -512,13 +507,13 @@ namespace Enyim.Caching
 		#region Mutate
 		protected virtual IMutateOperationResult PerformMutate(MutationMode mode, string key, ulong defaultValue, ulong delta, uint expires, ulong cas  = 0)
 		{
-			var hashedKey = this.keyTransformer.Transform(key);
-			var node = this.pool.Locate(hashedKey);
+			var hashedKey = this._keyTransformer.Transform(key);
+			var node = this._serverPool.Locate(hashedKey);
 			var result = this.MutateOperationResultFactory.Create();
 
 			if (node != null)
 			{
-				var command = this.pool.OperationFactory.Mutate(mode, hashedKey, defaultValue, delta, expires, cas);
+				var command = this._serverPool.OperationFactory.Mutate(mode, hashedKey, defaultValue, delta, expires, cas);
 				var commandResult = node.Execute(command);
 
 				result.Cas = command.CasValue;
@@ -542,7 +537,7 @@ namespace Enyim.Caching
 			return result;
 		}
 
-		private IMutateOperationResult CasMutate(MutationMode mode, string key, ulong defaultValue, ulong delta, uint expires, ulong cas)
+		IMutateOperationResult CasMutate(MutationMode mode, string key, ulong defaultValue, ulong delta, uint expires, ulong cas)
 		{
 			return this.PerformMutate(mode, key, defaultValue, delta, expires, cas);
 		}
@@ -755,13 +750,13 @@ namespace Enyim.Caching
 
 		protected virtual async Task<IMutateOperationResult> PerformMutateAsync(MutationMode mode, string key, ulong defaultValue, ulong delta, uint expires, ulong cas = 0)
 		{
-			var hashedKey = this.keyTransformer.Transform(key);
-			var node = this.pool.Locate(hashedKey);
+			var hashedKey = this._keyTransformer.Transform(key);
+			var node = this._serverPool.Locate(hashedKey);
 			var result = this.MutateOperationResultFactory.Create();
 
 			if (node != null)
 			{
-				var command = this.pool.OperationFactory.Mutate(mode, hashedKey, defaultValue, delta, expires, cas);
+				var command = this._serverPool.OperationFactory.Mutate(mode, hashedKey, defaultValue, delta, expires, cas);
 				var commandResult = await node.ExecuteAsync(command);
 
 				result.Cas = command.CasValue;
@@ -785,7 +780,7 @@ namespace Enyim.Caching
 			return result;
 		}
 
-		private async Task<IMutateOperationResult> CasMutateAsync(MutationMode mode, string key, ulong defaultValue, ulong delta, uint expires, ulong cas)
+		async Task<IMutateOperationResult> CasMutateAsync(MutationMode mode, string key, ulong defaultValue, ulong delta, uint expires, ulong cas)
 		{
 			return await this.PerformMutateAsync(mode, key, defaultValue, delta, expires, cas);
 		}
@@ -1000,13 +995,13 @@ namespace Enyim.Caching
 		#region Concatenate
 		protected virtual IConcatOperationResult PerformConcatenate(ConcatenationMode mode, string key, ref ulong cas, ArraySegment<byte> data)
 		{
-			var hashedKey = this.keyTransformer.Transform(key);
-			var node = this.pool.Locate(hashedKey);
+			var hashedKey = this._keyTransformer.Transform(key);
+			var node = this._serverPool.Locate(hashedKey);
 			var result = this.ConcatOperationResultFactory.Create();
 
 			if (node != null)
 			{
-				var command = this.pool.OperationFactory.Concat(mode, hashedKey, cas, data);
+				var command = this._serverPool.OperationFactory.Concat(mode, hashedKey, cas, data);
 				var commandResult = node.Execute(command);
 
 				if (commandResult.Success)
@@ -1088,13 +1083,13 @@ namespace Enyim.Caching
 
 		protected virtual async Task<IConcatOperationResult> PerformConcatenateAsync(ConcatenationMode mode, string key, ArraySegment<byte> data, ulong cas = 0)
 		{
-			var hashedKey = this.keyTransformer.Transform(key);
-			var node = this.pool.Locate(hashedKey);
+			var hashedKey = this._keyTransformer.Transform(key);
+			var node = this._serverPool.Locate(hashedKey);
 			var result = this.ConcatOperationResultFactory.Create();
 
 			if (node != null)
 			{
-				var command = this.pool.OperationFactory.Concat(mode, hashedKey, cas, data);
+				var command = this._serverPool.OperationFactory.Concat(mode, hashedKey, cas, data);
 				var commandResult = await node.ExecuteAsync(command);
 
 				if (commandResult.Success)
@@ -1174,8 +1169,8 @@ namespace Enyim.Caching
 		#region Get
 		protected virtual IGetOperationResult PerformTryGet(string key, out ulong cas, out object value)
 		{
-			var hashedKey = this.keyTransformer.Transform(key);
-			var node = this.pool.Locate(hashedKey);
+			var hashedKey = this._keyTransformer.Transform(key);
+			var node = this._serverPool.Locate(hashedKey);
 			var result = this.GetOperationResultFactory.Create();
 
 			cas = 0;
@@ -1183,12 +1178,12 @@ namespace Enyim.Caching
 
 			if (node != null)
 			{
-				var command = this.pool.OperationFactory.Get(hashedKey);
+				var command = this._serverPool.OperationFactory.Get(hashedKey);
 				var commandResult = node.Execute(command);
 
 				if (commandResult.Success)
 				{
-					result.Value = value = this.transcoder.Deserialize(command.Result);
+					result.Value = value = this._transcoder.Deserialize(command.Result);
 					result.Cas = cas = command.CasValue;
 
 					result.Pass();
@@ -1297,18 +1292,18 @@ namespace Enyim.Caching
 
 		protected virtual async Task<IGetOperationResult> PerformTryGetAsync(string key)
 		{
-			var hashedKey = this.keyTransformer.Transform(key);
-			var node = this.pool.Locate(hashedKey);
+			var hashedKey = this._keyTransformer.Transform(key);
+			var node = this._serverPool.Locate(hashedKey);
 			var result = this.GetOperationResultFactory.Create();
 
 			if (node != null)
 			{
-				var command = this.pool.OperationFactory.Get(hashedKey);
+				var command = this._serverPool.OperationFactory.Get(hashedKey);
 				var commandResult = await node.ExecuteAsync(command);
 
 				if (commandResult.Success)
 				{
-					result.Value = this.transcoder.Deserialize(command.Result);
+					result.Value = this._transcoder.Deserialize(command.Result);
 					result.Cas = command.CasValue;
 
 					result.Pass();
@@ -1397,7 +1392,7 @@ namespace Enyim.Caching
 
 			foreach (var key in keys)
 			{
-				var node = this.pool.Locate(key);
+				var node = this._serverPool.Locate(key);
 				if (node == null)
 					continue;
 
@@ -1414,7 +1409,7 @@ namespace Enyim.Caching
 		{
 			// transform the keys and index them by hashed => original
 			// the multi-get results will be mapped using this index
-			var hashed = keys.ToDictionary(key => this.keyTransformer.Transform(key), key => key);
+			var hashed = keys.ToDictionary(key => this._keyTransformer.Transform(key), key => key);
 			var values = new Dictionary<string, T>(hashed.Count);
 
 			// action to execute command in parallel
@@ -1425,7 +1420,7 @@ namespace Enyim.Caching
 					try
 					{
 						// execute command
-						var command = this.pool.OperationFactory.MultiGet(nodeKeys);
+						var command = this._serverPool.OperationFactory.MultiGet(nodeKeys);
 						var commandResult = node.Execute(command);
 
 						// deserialize the items in the dictionary
@@ -1466,7 +1461,7 @@ namespace Enyim.Caching
 		/// <returns>a Dictionary holding all items indexed by their key.</returns>
 		public IDictionary<string, object> Get(IEnumerable<string> keys)
 		{
-			return this.PerformMultiGet<object>(keys, (mget, kvp) => this.transcoder.Deserialize(kvp.Value));
+			return this.PerformMultiGet<object>(keys, (mget, kvp) => this._transcoder.Deserialize(kvp.Value));
 		}
 
 		/// <summary>
@@ -1477,7 +1472,7 @@ namespace Enyim.Caching
 		/// <returns>a Dictionary holding all items indexed by their key.</returns>
 		public IDictionary<string, T> Get<T>(IEnumerable<string> keys)
 		{
-			return this.PerformMultiGet<T>(keys, (mget, kvp) => this.transcoder.Deserialize<T>(kvp.Value));
+			return this.PerformMultiGet<T>(keys, (mget, kvp) => this._transcoder.Deserialize<T>(kvp.Value));
 		}
 
 		/// <summary>
@@ -1489,7 +1484,7 @@ namespace Enyim.Caching
 		{
 			return this.PerformMultiGet<CasResult<object>>(keys, (mget, kvp) => new CasResult<object>
 			{
-				Result = this.transcoder.Deserialize(kvp.Value),
+				Result = this._transcoder.Deserialize(kvp.Value),
 				Cas = mget.Cas[kvp.Key]
 			});
 		}
@@ -1498,7 +1493,7 @@ namespace Enyim.Caching
 		{
 			// transform the keys and index them by hashed => original
 			// the multi-get results will be mapped using this index
-			var hashed = keys.ToDictionary(key => this.keyTransformer.Transform(key), key => key);
+			var hashed = keys.ToDictionary(key => this._keyTransformer.Transform(key), key => key);
 			var values = new Dictionary<string, T>(hashed.Count);
 
 			// action to execute command in parallel
@@ -1507,7 +1502,7 @@ namespace Enyim.Caching
 				try
 				{
 					// execute command
-					var command = this.pool.OperationFactory.MultiGet(nodeKeys);
+					var command = this._serverPool.OperationFactory.MultiGet(nodeKeys);
 					var commandResult = await node.ExecuteAsync(command);
 
 					// deserialize the items in the dictionary
@@ -1547,7 +1542,7 @@ namespace Enyim.Caching
 		/// <returns>a Dictionary holding all items indexed by their key.</returns>
 		public Task<IDictionary<string, object>> GetAsync(IEnumerable<string> keys)
 		{
-			return this.PerformMultiGetAsync<object>(keys, (mget, kvp) => this.transcoder.Deserialize(kvp.Value));
+			return this.PerformMultiGetAsync<object>(keys, (mget, kvp) => this._transcoder.Deserialize(kvp.Value));
 		}
 
 		/// <summary>
@@ -1558,7 +1553,7 @@ namespace Enyim.Caching
 		/// <returns>a Dictionary holding all items indexed by their key.</returns>
 		public Task<IDictionary<string, T>> GetAsync<T>(IEnumerable<string> keys)
 		{
-			return this.PerformMultiGetAsync<T>(keys, (mget, kvp) => this.transcoder.Deserialize<T>(kvp.Value));
+			return this.PerformMultiGetAsync<T>(keys, (mget, kvp) => this._transcoder.Deserialize<T>(kvp.Value));
 		}
 
 		/// <summary>
@@ -1570,7 +1565,7 @@ namespace Enyim.Caching
 		{
 			return this.PerformMultiGetAsync<CasResult<object>>(keys, (mget, kvp) => new CasResult<object>
 			{
-				Result = this.transcoder.Deserialize(kvp.Value),
+				Result = this._transcoder.Deserialize(kvp.Value),
 				Cas = mget.Cas[kvp.Key]
 			});
 		}
@@ -1579,13 +1574,13 @@ namespace Enyim.Caching
 		#region Remove
 		protected IRemoveOperationResult PerformRemove(string key)
 		{
-			var hashedKey = this.keyTransformer.Transform(key);
-			var node = this.pool.Locate(hashedKey);
+			var hashedKey = this._keyTransformer.Transform(key);
+			var node = this._serverPool.Locate(hashedKey);
 			var result = this.RemoveOperationResultFactory.Create();
 
 			if (node != null)
 			{
-				var command = this.pool.OperationFactory.Delete(hashedKey, 0);
+				var command = this._serverPool.OperationFactory.Delete(hashedKey, 0);
 				var commandResult = node.Execute(command);
 
 				if (commandResult.Success)
@@ -1617,13 +1612,13 @@ namespace Enyim.Caching
 
 		protected async Task<IRemoveOperationResult> PerformRemoveAsync(string key)
 		{
-			var hashedKey = this.keyTransformer.Transform(key);
-			var node = this.pool.Locate(hashedKey);
+			var hashedKey = this._keyTransformer.Transform(key);
+			var node = this._serverPool.Locate(hashedKey);
 			var result = this.RemoveOperationResultFactory.Create();
 
 			if (node != null)
 			{
-				var command = this.pool.OperationFactory.Delete(hashedKey, 0);
+				var command = this._serverPool.OperationFactory.Delete(hashedKey, 0);
 				var commandResult = await node.ExecuteAsync(command);
 
 				if (commandResult.Success)
@@ -1692,8 +1687,8 @@ namespace Enyim.Caching
 		/// </summary>
 		public void FlushAll()
 		{
-			foreach (var node in this.pool.GetWorkingNodes())
-				node.Execute(this.pool.OperationFactory.Flush());
+			foreach (var node in this._serverPool.GetWorkingNodes())
+				node.Execute(this._serverPool.OperationFactory.Flush());
 		}
 
 		/// <summary>
@@ -1701,7 +1696,7 @@ namespace Enyim.Caching
 		/// </summary>
 		public Task FlushAllAsync()
 		{
-			var tasks = this.pool.GetWorkingNodes().Select(node => node.ExecuteAsync(this.pool.OperationFactory.Flush()));
+			var tasks = this._serverPool.GetWorkingNodes().Select(node => node.ExecuteAsync(this._serverPool.OperationFactory.Flush()));
 			return Task.WhenAll(tasks);
 		}
 		#endregion
@@ -1726,7 +1721,7 @@ namespace Enyim.Caching
 				});
 			};
 
-			var tasks = this.pool.GetWorkingNodes().Select(node => actionAsync(node, this.pool.OperationFactory.Stats(type), node.EndPoint)).ToArray();
+			var tasks = this._serverPool.GetWorkingNodes().Select(node => actionAsync(node, this._serverPool.OperationFactory.Stats(type), node.EndPoint)).ToArray();
 			if (tasks.Length > 0)
 				Task.WaitAll(tasks, TimeSpan.FromSeconds(13));
 
@@ -1758,7 +1753,7 @@ namespace Enyim.Caching
 					results[endpoint] = command.Result;
 			};
 
-			var tasks = this.pool.GetWorkingNodes().Select(node => actionAsync(node, this.pool.OperationFactory.Stats(type), node.EndPoint)).ToList();
+			var tasks = this._serverPool.GetWorkingNodes().Select(node => actionAsync(node, this._serverPool.OperationFactory.Stats(type), node.EndPoint)).ToList();
 			if (tasks.Count > 0)
 				await Task.WhenAll(tasks);
 
@@ -1797,15 +1792,15 @@ namespace Enyim.Caching
 		public void Dispose()
 		{
 			GC.SuppressFinalize(this);
-			if (this.pool != null)
+			if (this._serverPool != null)
 				try
 				{
-					this.pool.Dispose();
+					this._serverPool.Dispose();
 				}
 				catch { }
 				finally
 				{
-					this.pool = null;
+					this._serverPool = null;
 				}
 		}
 		#endregion
@@ -1819,7 +1814,7 @@ namespace Enyim.Caching
 			var expires = options == null ? 0 : options.GetExpiration();
 			this.PerformStore(StoreMode.Set, key, value, expires);
 			if (expires > 0)
-				this.PerformStore(StoreMode.Set, key.GetExpiratonKey(), expires, expires);
+				this.PerformStore(StoreMode.Set, key.GetExpirationKey(), expires, expires);
 		}
 
 		Task IDistributedCache.SetAsync(string key, byte[] value, DistributedCacheEntryOptions options, CancellationToken token = default(CancellationToken))
@@ -1830,7 +1825,7 @@ namespace Enyim.Caching
 			var expires = options == null ? 0 : options.GetExpiration();
 			return Task.WhenAll(
 				this.PerformStoreAsync(StoreMode.Set, key, value, expires),
-				expires > 0 ? this.PerformStoreAsync(StoreMode.Set, key.GetExpiratonKey(), expires, expires) : Task.CompletedTask
+				expires > 0 ? this.PerformStoreAsync(StoreMode.Set, key.GetExpirationKey(), expires, expires) : Task.CompletedTask
 			);
 		}
 
@@ -1856,11 +1851,11 @@ namespace Enyim.Caching
 				throw new ArgumentNullException(nameof(key));
 
 			var value = this.Get<byte[]>(key);
-			var expires = value != null ? this.Get<uint?>(key.GetExpiratonKey()) : null;
+			var expires = value != null ? this.Get<uint?>(key.GetExpirationKey()) : null;
 			if (value != null && expires != null && expires.Value > 0)
 			{
 				this.PerformStore(StoreMode.Replace, key, value, expires.Value);
-				this.PerformStore(StoreMode.Replace, key.GetExpiratonKey(), expires.Value, expires.Value);
+				this.PerformStore(StoreMode.Replace, key.GetExpirationKey(), expires.Value, expires.Value);
 			}
 		}
 
@@ -1870,11 +1865,11 @@ namespace Enyim.Caching
 				throw new ArgumentNullException(nameof(key));
 
 			var value = await this.GetAsync<byte[]>(key);
-			var expires = value != null ? await this.GetAsync<uint?>(key.GetExpiratonKey()) : null;
+			var expires = value != null ? await this.GetAsync<uint?>(key.GetExpirationKey()) : null;
 			if (value != null && expires != null && expires.Value > 0)
 				await Task.WhenAll(
 					this.PerformStoreAsync(StoreMode.Replace, key, value, expires.Value),
-					this.PerformStoreAsync(StoreMode.Replace, key.GetExpiratonKey(), expires.Value, expires.Value)
+					this.PerformStoreAsync(StoreMode.Replace, key.GetExpirationKey(), expires.Value, expires.Value)
 				);
 		}
 
@@ -1884,7 +1879,7 @@ namespace Enyim.Caching
 				throw new ArgumentNullException(nameof(key));
 
 			this.Remove(key);
-			this.Remove(key.GetExpiratonKey());
+			this.Remove(key.GetExpirationKey());
 		}
 
 		Task IDistributedCache.RemoveAsync(string key, CancellationToken token = default(CancellationToken))
@@ -1894,7 +1889,7 @@ namespace Enyim.Caching
 
 			return Task.WhenAll(
 				this.RemoveAsync(key),
-				this.RemoveAsync(key.GetExpiratonKey())
+				this.RemoveAsync(key.GetExpirationKey())
 			);
 		}
 		#endregion

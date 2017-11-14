@@ -177,7 +177,7 @@ namespace Enyim.Caching
 			return this.PerformMultiGet<IGetOperationResult>(keys, (mget, kvp) =>
 			{
 				var result = GetOperationResultFactory.Create();
-				result.Value = this.transcoder.Deserialize(kvp.Value);
+				result.Value = this._transcoder.Deserialize(kvp.Value);
 				result.Cas = mget.Cas[kvp.Key];
 				result.Success = true;
 				return result;

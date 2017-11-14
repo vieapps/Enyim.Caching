@@ -63,7 +63,7 @@ namespace Enyim.Reflection
 #region Extensions for working with ASP.NET Core
 namespace Microsoft.Extensions.DependencyInjection
 {
-	public static class ServiceCollectionExtensions
+	public static partial class ServiceCollectionExtensions
 	{
 		/// <summary>
 		/// Adds the service of <see cref="Enyim.Caching.IMemcachedClient">memcached</see> into the collection of services for using with dependency injection
@@ -91,7 +91,7 @@ namespace Microsoft.Extensions.DependencyInjection
 
 namespace Microsoft.AspNetCore.Builder
 {
-	public static class ApplicationBuilderExtensions
+	public static partial class ApplicationBuilderExtensions
 	{
 		/// <summary>
 		/// Calls to use the service of <see cref="Enyim.Caching.IMemcachedClient">memcached</see>
@@ -200,9 +200,9 @@ namespace CacheUtils
 					: DateTime.Now.Add(options.SlidingExpiration.Value)).GetExpiration();
 		}
 
-		internal static string GetExpiratonKey(this string key)
+		internal static string GetExpirationKey(this string key)
 		{
-			return $"distributed-expiraton-key@{key}";
+			return $"distributed-expiration-key@{key}";
 		}
 
 		/// <summary>
