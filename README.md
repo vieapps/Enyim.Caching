@@ -9,11 +9,10 @@ The .NET Standard 2.0 memcached client library:
 ### Information
 - Migrated from the fork [EnyimMemcachedCore](https://github.com/cnblogs/EnyimMemcachedCore) (.NET Core 2.0)
 - Reference from the original [EnyimMemcached](https://github.com/enyim/EnyimMemcached) (.NET Framework 3.5)
-### Usage (ASP.NET Core)
-- Add services.AddMemcached(...) and app.UseMemcached() in Startup
-- Add IMemcachedClient into constructor
-## Configure with the appsettings.json file
-### Without authentication
+## Usage (ASP.NET Core 2.0)
+- Add services.AddMemcached(...) and app.UseMemcached() in Startup.cs
+- Add IMemcachedClient or IDistributedCache into constructor (using dependency injection)
+### Configure (by the appsettings.json file) without authentication
 ```json
 {
 	"Memcached": {
@@ -33,7 +32,7 @@ The .NET Standard 2.0 memcached client library:
 	}
 }
 ```
-### With authentication
+### Configure (by the appsettings.json file) with authentication
 ```json
 {
 	"Memcached": {
@@ -67,45 +66,42 @@ public class Startup
 {
 	public void ConfigureServices(IServiceCollection services)
 	{
+		// ....
 		services.AddMemcached(options => Configuration.GetSection("Memcached").Bind(options));
-		services.AddMemcachedAsIDistributedCache(options => Configuration.GetSection("Memcached").Bind(options));
 	}
 	
-	public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory)
+	public void Configure(IApplicationBuilder appBuilder, IHostingEnvironment env, ILoggerFactory loggerFactory)
 	{ 
-		app.UseMemcached();
+		// ....
+		appBuilder.UseMemcached();
 	}
 }
 ```
-
-## Example usage (.NET Core)
 ### Use IMemcachedClient interface
 ```cs
 public class TabNavService
 {
-	private ITabNavRepository _tabNavRepository;
-	private IMemcachedClient _memcachedClient;
+	ITabNavRepository _tabNavRepository;
+	IMemcachedClient _cache;
 
 	public TabNavService(ITabNavRepository tabNavRepository, IMemcachedClient memcachedClient)
 	{
 		_tabNavRepository = tabNavRepository;
-		_memcachedClient = memcachedClient;
+		_cache = memcachedClient;
 	}
 
 	public async Task<IEnumerable<TabNav>> GetAll()
 	{
 		var cacheKey = "aboutus_tabnavs_all";
-		var result = await _memcachedClient.GetAsync<IEnumerable<TabNav>>(cacheKey);
-		if (!result.Success)
+		var result = await _cache.GetAsync<IEnumerable<TabNav>>(cacheKey);
+		if (result == null)
 		{
 			var tabNavs = await _tabNavRepository.GetAll();
-			await _memcachedClient.AddAsync(cacheKey, tabNavs, 300);
+			await _cache.SetAsync(cacheKey, tabNavs, TimeSpan.FromMinutes(30));
 			return tabNavs;
 		}
 		else
-		{
-			return result.Value;
-		}
+			return result;
 	}
 }
 ```
@@ -113,8 +109,8 @@ public class TabNavService
 ```cs
 public class CreativeService
 {
-	private ICreativeRepository _creativeRepository;
-	private IDistributedCache _cache;
+	ICreativeRepository _creativeRepository;
+	IDistributedCache _cache;
 
 	public CreativeService(ICreativeRepository creativeRepository, IDistributedCache cache)
 	{
@@ -127,26 +123,26 @@ public class CreativeService
 		var cacheKey = $"creatives_{unitName}";
 		IList<CreativeDTO> creatives = null;
 
-		var creativesJson = await _cache.GetStringAsync(cacheKey);
+		var creativesBytes = await _cache.GetAsync(cacheKey);
+		var creativesJson = creativesBytes != null ? System.Text.Encoding.UTF8.GetString(creativesBytes) : null;
 		if (creativesJson == null)
 		{
 			creatives = await _creativeRepository.GetCreatives(unitName).ProjectTo<CreativeDTO>().ToListAsync();
 			var json = string.Empty;
 			if (creatives != null && creatives.Count() > 0)
 				json = JsonConvert.SerializeObject(creatives);
-			await _cache.SetStringAsync(cacheKey, json, new DistributedCacheEntryOptions().SetSlidingExpiration(TimeSpan.FromMinutes(5)));
+			creativesBytes = System.Text.Encoding.UTF8.GetBytes(json);
+			await _cache.SetAsync(cacheKey, creativesBytes, new DistributedCacheEntryOptions().SetSlidingExpiration(TimeSpan.FromMinutes(30)));
 		}
 		else
-		{
 			creatives = JsonConvert.DeserializeObject<List<CreativeDTO>>(creativesJson);
-		}
 
 		return creatives;
 	}
 }
 ```
-## Configure with the app.config/web.config file
-### Without authentication
+## Usage (.NET Core 2.0/.NET Framework 4.6.1 (and higher) stand-alone apps)
+### Configure (by the app.config/web.config) without authentication
 ```xml
 <?xml version="1.0" encoding="utf-8"?>
 <configuration>
@@ -161,7 +157,7 @@ public class CreativeService
 	</memcached>
 </configuration>
 ```
-### With authentication
+### Configure (by the app.config/web.config) with authentication
 ```xml
 <?xml version="1.0" encoding="utf-8"?>
 <configuration>
@@ -177,20 +173,20 @@ public class CreativeService
 	</memcached>
 </configuration>
 ```
-## Example usage (.NET Core 2.0/.NET Framework 4.6.1) with the .config file
+### Example of usage
 ```cs
 public class CreativeService
 {
-	private MemcachedClient _memcachedClient;
+	MemcachedClient _cache;
 
 	public CreativeService()
 	{
-		_memcachedClient = new MemcachedClient(ConfigurationManager.GetSection("memcached") as MemcachedClientConfigurationSectionHandler);
+		_cache = new MemcachedClient(ConfigurationManager.GetSection("memcached") as MemcachedClientConfigurationSectionHandler);
 	}
 
 	public async Task<IList<CreativeDTO>> GetCreatives(string unitName)
 	{
-		return await _memcachedClient.GetAsync<IList<CreativeDTO>>($"creatives_{unitName}");
+		return await _cache.GetAsync<IList<CreativeDTO>>($"creatives_{unitName}");
 	}
 }
 ```

@@ -35,15 +35,16 @@ namespace Enyim.Caching.Configuration
 			this._logger = loggerFactory.CreateLogger<MemcachedClientConfiguration>();
 
 			var options = optionsAccessor.Value;
+
 			this.Servers = new List<EndPoint>();
 			foreach (var server in options.Servers)
-			{
-				if (IPAddress.TryParse(server.Address, out IPAddress address))
-					this.Servers.Add(new IPEndPoint(address, server.Port));
+				if (server.Address.IndexOf(":") > 0)
+					this.AddServer(server.Address);
 				else
-					this.Servers.Add(new DnsEndPoint(server.Address, server.Port));
-			}
+					this.AddServer(server.Address, server.Port);
+
 			this.SocketPool = options.SocketPool;
+
 			this.Protocol = options.Protocol;
 
 			if (options.Authentication != null && !string.IsNullOrEmpty(options.Authentication.Type))
@@ -53,7 +54,7 @@ namespace Enyim.Caching.Configuration
 					var authenticationType = Type.GetType(options.Authentication.Type);
 					if (authenticationType != null)
 					{
-						this._logger.LogDebug($"Authentication type is {authenticationType}.");
+						this._logger.LogDebug($"Authentication type is {authenticationType}");
 
 						this.Authentication = new AuthenticationConfiguration();
 						this.Authentication.Type = authenticationType;
@@ -82,12 +83,12 @@ namespace Enyim.Caching.Configuration
 					if (keyTransformerType != null)
 					{
 						this.KeyTransformer = FastActivator.Create(keyTransformerType) as IMemcachedKeyTransformer;
-						this._logger.LogDebug($"Use '{options.KeyTransformer}' KeyTransformer");
+						this._logger.LogDebug($"Use '{options.KeyTransformer}' of key-transformer");
 					}
 				}
 				catch (Exception ex)
 				{
-					this._logger.LogError(new EventId(), ex, $"Unable to load '{options.KeyTransformer}' KeyTransformer");
+					this._logger.LogError(new EventId(), ex, $"Unable to load '{options.KeyTransformer}' of key-transformer");
 				}
 			}
 
@@ -111,11 +112,10 @@ namespace Enyim.Caching.Configuration
 				foreach (XmlNode server in servers)
 				{
 					var address = server.Attributes["address"]?.Value ?? "localhost";
-					var port = Convert.ToInt32(server.Attributes["port"]?.Value ?? "11211");
-					if (IPAddress.TryParse(address, out IPAddress ipAddress))
-						this.Servers.Add(new IPEndPoint(ipAddress, port));
+					if (address.IndexOf(":") > 0)
+						this.AddServer(address);
 					else
-						this.Servers.Add(new DnsEndPoint(address, port));
+						this.AddServer(address, Convert.ToInt32(server.Attributes["port"]?.Value ?? "11211"));
 				}
 
 			this.SocketPool = new SocketPoolConfiguration();
@@ -150,7 +150,7 @@ namespace Enyim.Caching.Configuration
 						var authenticationType = Type.GetType(authentication.Attributes["type"].Value);
 						if (authenticationType != null)
 						{
-							this._logger.LogDebug($"Authentication type is {authenticationType}.");
+							this._logger.LogDebug($"Authentication type is {authenticationType}");
 
 							this.Authentication = new AuthenticationConfiguration();
 							this.Authentication.Type = authenticationType;
@@ -176,7 +176,7 @@ namespace Enyim.Caching.Configuration
 					try
 					{
 						this._keyTransformer = FastActivator.Create(Type.GetType(keyTransformer.Attributes["type"].Value)) as IMemcachedKeyTransformer;
-						this._logger.LogDebug($"Use '{keyTransformer.Attributes["type"].Value}' KeyTransformer");
+						this._logger.LogDebug($"Use '{keyTransformer.Attributes["type"].Value}' of key-transformer");
 					}
 					catch (Exception ex)
 					{

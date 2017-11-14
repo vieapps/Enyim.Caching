@@ -82,7 +82,6 @@ namespace Enyim.Caching
 		T Get<T>(string key);
 		Task<object> GetAsync(string key);
 		Task<T> GetAsync<T>(string key);
-		Task<IGetOperationResult<T>> DoGetAsync<T>(string key);
 
 		bool TryGetWithCas(string key, out CasResult<object> value);
 		CasResult<object> GetWithCas(string key);

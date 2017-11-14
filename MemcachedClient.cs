@@ -10,9 +10,12 @@ using Enyim.Caching.Memcached;
 using Enyim.Caching.Memcached.Results;
 using Enyim.Caching.Memcached.Results.Factories;
 using Enyim.Caching.Memcached.Results.Extensions;
+using Microsoft.Extensions.DependencyInjection;
 
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Caching.Distributed;
+
+using CacheUtils;
 
 namespace Enyim.Caching
 {
@@ -27,6 +30,7 @@ namespace Enyim.Caching
 		/// Represents a value which indicates that an item should never expire.
 		/// </summary>
 		public static readonly TimeSpan Infinite = TimeSpan.Zero;
+
 		private ILogger<MemcachedClient> _logger;
 
 		private IServerPool pool;
@@ -64,7 +68,7 @@ namespace Enyim.Caching
 				throw new ArgumentNullException(nameof(configuration));
 
 			loggerFactory = loggerFactory ?? new NullLoggerFactory();
-			this.Initialize(new MemcachedClientConfiguration(loggerFactory, configuration), loggerFactory);
+			this.Prepare(loggerFactory, new MemcachedClientConfiguration(loggerFactory, configuration));
 		}
 
 		/// <summary>
@@ -74,14 +78,14 @@ namespace Enyim.Caching
 		/// <param name="configuration"></param>
 		public MemcachedClient(ILoggerFactory loggerFactory, IMemcachedClientConfiguration configuration)
 		{
-			this.Initialize(configuration, loggerFactory);
-		}
-
-		void Initialize(IMemcachedClientConfiguration configuration, ILoggerFactory loggerFactory)
-		{
 			if (configuration == null)
 				throw new ArgumentNullException(nameof(configuration));
 
+			this.Prepare(loggerFactory ?? new NullLoggerFactory(), configuration);
+		}
+
+		void Prepare(ILoggerFactory loggerFactory, IMemcachedClientConfiguration configuration)
+		{
 			this._logger = loggerFactory.CreateLogger<MemcachedClient>();
 
 			this.keyTransformer = configuration.CreateKeyTransformer() ?? new DefaultKeyTransformer();
@@ -99,6 +103,21 @@ namespace Enyim.Caching
 			this.MutateOperationResultFactory = new DefaultMutateOperationResultFactory();
 			this.ConcatOperationResultFactory = new DefaultConcatOperationResultFactory();
 			this.RemoveOperationResultFactory = new DefaultRemoveOperationResultFactory();
+
+			this._logger.LogInformation("An instance of MemcachedClient was created successful");
+		}
+
+		static MemcachedClient _Instance = null;
+
+		internal static MemcachedClient GetInstance(IServiceProvider svcProvider)
+		{
+			if (MemcachedClient._Instance == null)
+			{
+				var loggerFactory = svcProvider.GetService<ILoggerFactory>();
+				var configuration = svcProvider.GetService<IMemcachedClientConfiguration>();
+				MemcachedClient._Instance = new MemcachedClient(loggerFactory, configuration);
+			}
+			return MemcachedClient._Instance;
 		}
 		#endregion
 
@@ -153,7 +172,7 @@ namespace Enyim.Caching
 			return result;
 		}
 
-		private IStoreOperationResult PerformStore(StoreMode mode, string key, object value, uint expires, ulong cas)
+		IStoreOperationResult PerformStore(StoreMode mode, string key, object value, uint expires, ulong cas = 0)
 		{
 			ulong tmp = cas;
 			var retval = this.PerformStore(mode, key, value, expires, ref tmp, out int status);
@@ -189,7 +208,7 @@ namespace Enyim.Caching
 		public bool Store(StoreMode mode, string key, object value, TimeSpan validFor)
 		{
 			ulong tmp = 0;
-			return this.PerformStore(mode, key, value, MemcachedClient.GetExpiration(validFor, null), ref tmp, out int status).Success;
+			return this.PerformStore(mode, key, value, validFor.GetExpiration(), ref tmp, out int status).Success;
 		}
 
 		/// <summary>
@@ -203,7 +222,7 @@ namespace Enyim.Caching
 		public bool Store(StoreMode mode, string key, object value, DateTime expiresAt)
 		{
 			ulong tmp = 0;
-			return this.PerformStore(mode, key, value, MemcachedClient.GetExpiration(null, expiresAt), ref tmp, out int status).Success;
+			return this.PerformStore(mode, key, value, expiresAt.GetExpiration(), ref tmp, out int status).Success;
 		}
 
 		protected async virtual Task<IStoreOperationResult> PerformStoreAsync(StoreMode mode, string key, object value, uint expires, ulong cas = 0)
@@ -279,7 +298,7 @@ namespace Enyim.Caching
 		/// <returns>true if the item was successfully stored in the cache; false otherwise.</returns>
 		public async Task<bool> StoreAsync(StoreMode mode, string key, object value, TimeSpan validFor)
 		{
-			return (await this.PerformStoreAsync(mode, key, value, MemcachedClient.GetExpiration(validFor, null))).Success;
+			return (await this.PerformStoreAsync(mode, key, value, validFor.GetExpiration())).Success;
 		}
 
 		/// <summary>
@@ -292,7 +311,7 @@ namespace Enyim.Caching
 		/// <returns>true if the item was successfully stored in the cache; false otherwise.</returns>
 		public async Task<bool> StoreAsync(StoreMode mode, string key, object value, DateTime expiresAt)
 		{
-			return (await this.PerformStoreAsync(mode, key, value, MemcachedClient.GetExpiration(null, expiresAt))).Success;
+			return (await this.PerformStoreAsync(mode, key, value, expiresAt.GetExpiration())).Success;
 		}
 		#endregion
 
@@ -341,7 +360,7 @@ namespace Enyim.Caching
 		/// <returns>A CasResult object containing the version of the item and the result of the operation (true if the item was successfully stored in the cache; false otherwise).</returns>
 		public CasResult<bool> Cas(StoreMode mode, string key, object value, TimeSpan validFor, ulong cas)
 		{
-			var result = this.PerformStore(mode, key, value, MemcachedClient.GetExpiration(validFor, null), cas);
+			var result = this.PerformStore(mode, key, value, validFor.GetExpiration(), cas);
 			return new CasResult<bool>()
 			{
 				Cas = result.Cas,
@@ -361,7 +380,7 @@ namespace Enyim.Caching
 		/// <returns>A CasResult object containing the version of the item and the result of the operation (true if the item was successfully stored in the cache; false otherwise).</returns>
 		public CasResult<bool> Cas(StoreMode mode, string key, object value, DateTime expiresAt, ulong cas)
 		{
-			var result = this.PerformStore(mode, key, value, MemcachedClient.GetExpiration(null, expiresAt), cas);
+			var result = this.PerformStore(mode, key, value, expiresAt.GetExpiration(), cas);
 			return new CasResult<bool>()
 			{
 				Cas = result.Cas,
@@ -414,7 +433,7 @@ namespace Enyim.Caching
 		/// <returns>A CasResult object containing the version of the item and the result of the operation (true if the item was successfully stored in the cache; false otherwise).</returns>
 		public async Task<CasResult<bool>> CasAsync(StoreMode mode, string key, object value, TimeSpan validFor, ulong cas)
 		{
-			var result = await this.PerformStoreAsync(mode, key, value, MemcachedClient.GetExpiration(validFor, null), cas);
+			var result = await this.PerformStoreAsync(mode, key, value, validFor.GetExpiration(), cas);
 			return new CasResult<bool>()
 			{
 				Cas = result.Cas,
@@ -434,7 +453,7 @@ namespace Enyim.Caching
 		/// <returns>A CasResult object containing the version of the item and the result of the operation (true if the item was successfully stored in the cache; false otherwise).</returns>
 		public async Task<CasResult<bool>> CasAsync(StoreMode mode, string key, object value, DateTime expiresAt, ulong cas)
 		{
-			var result = await this.PerformStoreAsync(mode, key, value, MemcachedClient.GetExpiration(null, expiresAt), cas);
+			var result = await this.PerformStoreAsync(mode, key, value, expiresAt.GetExpiration(), cas);
 			return new CasResult<bool>()
 			{
 				Cas = result.Cas,
@@ -558,7 +577,7 @@ namespace Enyim.Caching
 		/// <remarks>If the client uses the Text protocol, the item must be inserted into the cache before it can be changed. It must be inserted as a <see cref="T:System.String"/>. Moreover the Text protocol only works with <see cref="System.UInt32"/> values, so return value -1 always indicates that the item was not found.</remarks>
 		public ulong Increment(string key, ulong defaultValue, ulong delta, TimeSpan validFor)
 		{
-			return this.PerformMutate(MutationMode.Increment, key, defaultValue, delta, MemcachedClient.GetExpiration(validFor, null)).Value;
+			return this.PerformMutate(MutationMode.Increment, key, defaultValue, delta, validFor.GetExpiration()).Value;
 		}
 
 		/// <summary>
@@ -572,7 +591,7 @@ namespace Enyim.Caching
 		/// <remarks>If the client uses the Text protocol, the item must be inserted into the cache before it can be changed. It must be inserted as a <see cref="T:System.String"/>. Moreover the Text protocol only works with <see cref="System.UInt32"/> values, so return value -1 always indicates that the item was not found.</remarks>
 		public ulong Increment(string key, ulong defaultValue, ulong delta, DateTime expiresAt)
 		{
-			return this.PerformMutate(MutationMode.Increment, key, defaultValue, delta, MemcachedClient.GetExpiration(null, expiresAt)).Value;
+			return this.PerformMutate(MutationMode.Increment, key, defaultValue, delta, expiresAt.GetExpiration()).Value;
 		}
 
 		/// <summary>
@@ -607,7 +626,7 @@ namespace Enyim.Caching
 		/// <remarks>If the client uses the Text protocol, the item must be inserted into the cache before it can be changed. It must be inserted as a <see cref="T:System.String"/>. Moreover the Text protocol only works with <see cref="System.UInt32"/> values, so return value -1 always indicates that the item was not found.</remarks>
 		public CasResult<ulong> Increment(string key, ulong defaultValue, ulong delta, TimeSpan validFor, ulong cas)
 		{
-			var result = this.CasMutate(MutationMode.Increment, key, defaultValue, delta, MemcachedClient.GetExpiration(validFor, null), cas);
+			var result = this.CasMutate(MutationMode.Increment, key, defaultValue, delta, validFor.GetExpiration(), cas);
 			return new CasResult<ulong>()
 			{
 				Cas = result.Cas,
@@ -628,7 +647,7 @@ namespace Enyim.Caching
 		/// <remarks>If the client uses the Text protocol, the item must be inserted into the cache before it can be changed. It must be inserted as a <see cref="T:System.String"/>. Moreover the Text protocol only works with <see cref="System.UInt32"/> values, so return value -1 always indicates that the item was not found.</remarks>
 		public CasResult<ulong> Increment(string key, ulong defaultValue, ulong delta, DateTime expiresAt, ulong cas)
 		{
-			var result = this.CasMutate(MutationMode.Increment, key, defaultValue, delta, MemcachedClient.GetExpiration(null, expiresAt), cas);
+			var result = this.CasMutate(MutationMode.Increment, key, defaultValue, delta, expiresAt.GetExpiration(), cas);
 			return new CasResult<ulong>()
 			{
 				Cas = result.Cas,
@@ -661,7 +680,7 @@ namespace Enyim.Caching
 		/// <remarks>If the client uses the Text protocol, the item must be inserted into the cache before it can be changed. It must be inserted as a <see cref="T:System.String"/>. Moreover the Text protocol only works with <see cref="System.UInt32"/> values, so return value -1 always indicates that the item was not found.</remarks>
 		public ulong Decrement(string key, ulong defaultValue, ulong delta, TimeSpan validFor)
 		{
-			return this.PerformMutate(MutationMode.Decrement, key, defaultValue, delta, MemcachedClient.GetExpiration(validFor, null)).Value;
+			return this.PerformMutate(MutationMode.Decrement, key, defaultValue, delta, validFor.GetExpiration()).Value;
 		}
 
 		/// <summary>
@@ -675,7 +694,7 @@ namespace Enyim.Caching
 		/// <remarks>If the client uses the Text protocol, the item must be inserted into the cache before it can be changed. It must be inserted as a <see cref="T:System.String"/>. Moreover the Text protocol only works with <see cref="System.UInt32"/> values, so return value -1 always indicates that the item was not found.</remarks>
 		public ulong Decrement(string key, ulong defaultValue, ulong delta, DateTime expiresAt)
 		{
-			return this.PerformMutate(MutationMode.Decrement, key, defaultValue, delta, MemcachedClient.GetExpiration(null, expiresAt)).Value;
+			return this.PerformMutate(MutationMode.Decrement, key, defaultValue, delta, expiresAt.GetExpiration()).Value;
 		}
 
 		/// <summary>
@@ -710,7 +729,7 @@ namespace Enyim.Caching
 		/// <remarks>If the client uses the Text protocol, the item must be inserted into the cache before it can be changed. It must be inserted as a <see cref="T:System.String"/>. Moreover the Text protocol only works with <see cref="System.UInt32"/> values, so return value -1 always indicates that the item was not found.</remarks>
 		public CasResult<ulong> Decrement(string key, ulong defaultValue, ulong delta, TimeSpan validFor, ulong cas)
 		{
-			var result = this.CasMutate(MutationMode.Decrement, key, defaultValue, delta, MemcachedClient.GetExpiration(validFor, null), cas);
+			var result = this.CasMutate(MutationMode.Decrement, key, defaultValue, delta, validFor.GetExpiration(), cas);
 			return new CasResult<ulong>()
 			{
 				Cas = result.Cas,
@@ -731,7 +750,7 @@ namespace Enyim.Caching
 		/// <remarks>If the client uses the Text protocol, the item must be inserted into the cache before it can be changed. It must be inserted as a <see cref="T:System.String"/>. Moreover the Text protocol only works with <see cref="System.UInt32"/> values, so return value -1 always indicates that the item was not found.</remarks>
 		public CasResult<ulong> Decrement(string key, ulong defaultValue, ulong delta, DateTime expiresAt, ulong cas)
 		{
-			var result = this.CasMutate(MutationMode.Decrement, key, defaultValue, delta, MemcachedClient.GetExpiration(null, expiresAt), cas);
+			var result = this.CasMutate(MutationMode.Decrement, key, defaultValue, delta, expiresAt.GetExpiration(), cas);
 			return new CasResult<ulong>()
 			{
 				Cas = result.Cas,
@@ -801,7 +820,7 @@ namespace Enyim.Caching
 		/// <remarks>If the client uses the Text protocol, the item must be inserted into the cache before it can be changed. It must be inserted as a <see cref="T:System.String"/>. Moreover the Text protocol only works with <see cref="System.UInt32"/> values, so return value -1 always indicates that the item was not found.</remarks>
 		public async Task<ulong> IncrementAsync(string key, ulong defaultValue, ulong delta, TimeSpan validFor)
 		{
-			return (await this.PerformMutateAsync(MutationMode.Increment, key, defaultValue, delta, MemcachedClient.GetExpiration(validFor, null))).Value;
+			return (await this.PerformMutateAsync(MutationMode.Increment, key, defaultValue, delta, validFor.GetExpiration())).Value;
 		}
 
 		/// <summary>
@@ -815,7 +834,7 @@ namespace Enyim.Caching
 		/// <remarks>If the client uses the Text protocol, the item must be inserted into the cache before it can be changed. It must be inserted as a <see cref="T:System.String"/>. Moreover the Text protocol only works with <see cref="System.UInt32"/> values, so return value -1 always indicates that the item was not found.</remarks>
 		public async Task<ulong> IncrementAsync(string key, ulong defaultValue, ulong delta, DateTime expiresAt)
 		{
-			return (await this.PerformMutateAsync(MutationMode.Increment, key, defaultValue, delta, MemcachedClient.GetExpiration(null, expiresAt))).Value;
+			return (await this.PerformMutateAsync(MutationMode.Increment, key, defaultValue, delta, expiresAt.GetExpiration())).Value;
 		}
 
 		/// <summary>
@@ -850,7 +869,7 @@ namespace Enyim.Caching
 		/// <remarks>If the client uses the Text protocol, the item must be inserted into the cache before it can be changed. It must be inserted as a <see cref="T:System.String"/>. Moreover the Text protocol only works with <see cref="System.UInt32"/> values, so return value -1 always indicates that the item was not found.</remarks>
 		public async Task<CasResult<ulong>> IncrementAsync(string key, ulong defaultValue, ulong delta, TimeSpan validFor, ulong cas)
 		{
-			var result = await this.CasMutateAsync(MutationMode.Increment, key, defaultValue, delta, MemcachedClient.GetExpiration(validFor, null), cas);
+			var result = await this.CasMutateAsync(MutationMode.Increment, key, defaultValue, delta, validFor.GetExpiration(), cas);
 			return new CasResult<ulong>()
 			{
 				Cas = result.Cas,
@@ -871,7 +890,7 @@ namespace Enyim.Caching
 		/// <remarks>If the client uses the Text protocol, the item must be inserted into the cache before it can be changed. It must be inserted as a <see cref="T:System.String"/>. Moreover the Text protocol only works with <see cref="System.UInt32"/> values, so return value -1 always indicates that the item was not found.</remarks>
 		public async Task<CasResult<ulong>> IncrementAsync(string key, ulong defaultValue, ulong delta, DateTime expiresAt, ulong cas)
 		{
-			var result = await this.CasMutateAsync(MutationMode.Increment, key, defaultValue, delta, MemcachedClient.GetExpiration(null, expiresAt), cas);
+			var result = await this.CasMutateAsync(MutationMode.Increment, key, defaultValue, delta, expiresAt.GetExpiration(), cas);
 			return new CasResult<ulong>()
 			{
 				Cas = result.Cas,
@@ -904,7 +923,7 @@ namespace Enyim.Caching
 		/// <remarks>If the client uses the Text protocol, the item must be inserted into the cache before it can be changed. It must be inserted as a <see cref="T:System.String"/>. Moreover the Text protocol only works with <see cref="System.UInt32"/> values, so return value -1 always indicates that the item was not found.</remarks>
 		public async Task<ulong> DecrementAsync(string key, ulong defaultValue, ulong delta, TimeSpan validFor)
 		{
-			return (await this.PerformMutateAsync(MutationMode.Decrement, key, defaultValue, delta, MemcachedClient.GetExpiration(validFor, null))).Value;
+			return (await this.PerformMutateAsync(MutationMode.Decrement, key, defaultValue, delta, validFor.GetExpiration())).Value;
 		}
 
 		/// <summary>
@@ -918,7 +937,7 @@ namespace Enyim.Caching
 		/// <remarks>If the client uses the Text protocol, the item must be inserted into the cache before it can be changed. It must be inserted as a <see cref="T:System.String"/>. Moreover the Text protocol only works with <see cref="System.UInt32"/> values, so return value -1 always indicates that the item was not found.</remarks>
 		public async Task<ulong> DecrementAsync(string key, ulong defaultValue, ulong delta, DateTime expiresAt)
 		{
-			return (await this.PerformMutateAsync(MutationMode.Decrement, key, defaultValue, delta, MemcachedClient.GetExpiration(null, expiresAt))).Value;
+			return (await this.PerformMutateAsync(MutationMode.Decrement, key, defaultValue, delta, expiresAt.GetExpiration())).Value;
 		}
 
 		/// <summary>
@@ -953,7 +972,7 @@ namespace Enyim.Caching
 		/// <remarks>If the client uses the Text protocol, the item must be inserted into the cache before it can be changed. It must be inserted as a <see cref="T:System.String"/>. Moreover the Text protocol only works with <see cref="System.UInt32"/> values, so return value -1 always indicates that the item was not found.</remarks>
 		public async Task<CasResult<ulong>> DecrementAsync(string key, ulong defaultValue, ulong delta, TimeSpan validFor, ulong cas)
 		{
-			var result = await this.CasMutateAsync(MutationMode.Decrement, key, defaultValue, delta, MemcachedClient.GetExpiration(validFor, null), cas);
+			var result = await this.CasMutateAsync(MutationMode.Decrement, key, defaultValue, delta, validFor.GetExpiration(), cas);
 			return new CasResult<ulong>()
 			{
 				Cas = result.Cas,
@@ -974,7 +993,7 @@ namespace Enyim.Caching
 		/// <remarks>If the client uses the Text protocol, the item must be inserted into the cache before it can be changed. It must be inserted as a <see cref="T:System.String"/>. Moreover the Text protocol only works with <see cref="System.UInt32"/> values, so return value -1 always indicates that the item was not found.</remarks>
 		public async Task<CasResult<ulong>> DecrementAsync(string key, ulong defaultValue, ulong delta, DateTime expiresAt, ulong cas)
 		{
-			var result = await this.CasMutateAsync(MutationMode.Decrement, key, defaultValue, delta, MemcachedClient.GetExpiration(null, expiresAt), cas);
+			var result = await this.CasMutateAsync(MutationMode.Decrement, key, defaultValue, delta, expiresAt.GetExpiration(), cas);
 			return new CasResult<ulong>()
 			{
 				Cas = result.Cas,
@@ -1375,65 +1394,6 @@ namespace Enyim.Caching
 		{
 			return this.GetWithCasAsync<object>(key);
 		}
-
-		/// <summary>
-		/// Retrieves the specified item from the cache with IGetOperationResult.
-		/// </summary>
-		/// <typeparam name="T"></typeparam>
-		/// <param name="key"></param>
-		/// <returns></returns>
-		public async Task<IGetOperationResult<T>> DoGetAsync<T>(string key)
-		{
-			var result = new DefaultGetOperationResultFactory<T>().Create();
-
-			var hashedKey = this.keyTransformer.Transform(key);
-			var node = this.pool.Locate(hashedKey);
-
-			if (node != null)
-			{
-				try
-				{
-					var command = this.pool.OperationFactory.Get(hashedKey);
-					var commandResult = await node.ExecuteAsync(command);
-
-					if (commandResult.Success)
-					{
-						if (Type.GetTypeCode(typeof(T)) == TypeCode.Object && typeof(T) != typeof(Byte[]))
-						{
-							result.Success = true;
-							result.Value = this.transcoder.Deserialize<T>(command.Result);
-							return result;
-						}
-						else
-						{
-							var tempResult = this.transcoder.Deserialize(command.Result);
-							if (tempResult != null)
-							{
-								result.Success = true;
-								if (typeof(T) == typeof(Guid) && tempResult is string)
-									result.Value = (T)(object)new Guid(tempResult as string);
-								else
-									result.Value = (T)tempResult;
-								return result;
-							}
-						}
-					}
-				}
-				catch (Exception ex)
-				{
-					this._logger.LogError(0, ex, $"{nameof(this.DoGetAsync)}(\"{key}\")");
-					throw ex;
-				}
-			}
-			else
-			{
-				this._logger.LogError($"Unable to locate memcached node");
-			}
-
-			result.Success = false;
-			result.Value = default(T);
-			return result;
-		}
 		#endregion
 
 		#region Multi Get
@@ -1708,7 +1668,7 @@ namespace Enyim.Caching
 		/// <returns>Returns a boolean value indicating if the object that associates with the key is cached or not</returns>
 		public bool Exists(string key)
 		{
-			if (!this.Append(key, DefaultTranscoder.NullArray))
+			if (!this.Append(key, new ArraySegment<byte>(new byte[0])))
 			{
 				this.Remove(key);
 				return false;
@@ -1723,7 +1683,7 @@ namespace Enyim.Caching
 		/// <returns>Returns a boolean value indicating if the object that associates with the key is cached or not</returns>
 		public async Task<bool> ExistsAsync(string key)
 		{
-			if (!await this.AppendAsync(key, DefaultTranscoder.NullArray))
+			if (!await this.AppendAsync(key, new ArraySegment<byte>(new byte[0])))
 			{
 				await this.RemoveAsync(key);
 				return false;
@@ -1857,103 +1817,75 @@ namespace Enyim.Caching
 		#endregion
 
 		#region Methods of IDistributedCache 
-		protected static readonly DateTime UnixEpoch = new DateTime(1970, 1, 1);
-
-		protected static uint GetExpiration(TimeSpan? validFor, DateTime? expiresAt = null, DateTimeOffset? absoluteExpiration = null, TimeSpan? relativeToNow = null)
-		{
-			if (validFor != null && expiresAt != null)
-				throw new ArgumentException("You cannot specify both validFor and expiresAt.");
-
-			if (validFor == null && expiresAt == null && absoluteExpiration == null && relativeToNow == null)
-				return 0;
-
-			if (absoluteExpiration != null)
-				return (uint)absoluteExpiration.Value.ToUnixTimeSeconds();
-
-			if (relativeToNow != null)
-				return (uint)(DateTimeOffset.UtcNow + relativeToNow.Value).ToUnixTimeSeconds();
-
-			// convert timespans to absolute dates
-			if (validFor != null)
-			{
-				// infinity
-				if (validFor == TimeSpan.Zero || validFor == TimeSpan.MaxValue)
-					return 0;
-				expiresAt = DateTime.Now.Add(validFor.Value);
-			}
-
-			var datetime = expiresAt.Value;
-			if (datetime < MemcachedClient.UnixEpoch)
-				throw new ArgumentOutOfRangeException("expiresAt", "expiresAt must be >= 1970/1/1");
-
-			// accept MaxValue as infinite
-			if (datetime == DateTime.MaxValue)
-				return 0;
-
-			return (uint)(datetime.ToUniversalTime() - MemcachedClient.UnixEpoch).TotalSeconds;
-		}
-
 		protected static string GetExpiratonKey(string key)
 		{
-			return key + "-" + nameof(DistributedCacheEntryOptions);
-		}
-
-		byte[] IDistributedCache.Get(string key)
-		{
-			return this.Get<byte[]>(key);
-		}
-
-		Task<byte[]> IDistributedCache.GetAsync(string key, CancellationToken token = default(CancellationToken))
-		{
-			return this.GetAsync<byte[]>(key);
+			return key + "@" + nameof(DistributedCacheEntryOptions);
 		}
 
 		void IDistributedCache.Set(string key, byte[] value, DistributedCacheEntryOptions options)
 		{
-			var expires = MemcachedClient.GetExpiration(options.SlidingExpiration, null, options.AbsoluteExpiration, options.AbsoluteExpirationRelativeToNow);
-			this.PerformStore(StoreMode.Set, key, value, expires, 0);
+			var expires = options.GetExpiration();
+			this._logger.LogInformation($"MemcachedClient (IDistributedCache) => {nameof(IDistributedCache.Set)}(\"{key}\") [{expires}]");
+			this.PerformStore(StoreMode.Set, key, value, expires);
 			if (expires > 0)
-				this.PerformStore(StoreMode.Set, MemcachedClient.GetExpiratonKey(key), expires, expires, 0);
+				this.PerformStore(StoreMode.Set, MemcachedClient.GetExpiratonKey(key), expires, expires);
 		}
 
 		Task IDistributedCache.SetAsync(string key, byte[] value, DistributedCacheEntryOptions options, CancellationToken token = default(CancellationToken))
 		{
-			var expires = MemcachedClient.GetExpiration(options.SlidingExpiration, null, options.AbsoluteExpiration, options.AbsoluteExpirationRelativeToNow);
+			var expires = options.GetExpiration();
+			this._logger.LogInformation($"MemcachedClient (IDistributedCache) => {nameof(IDistributedCache.SetAsync)}(\"{key}\") [{expires}]");
 			return Task.WhenAll(
 				this.PerformStoreAsync(StoreMode.Set, key, value, expires),
 				expires > 0 ? this.PerformStoreAsync(StoreMode.Set, MemcachedClient.GetExpiratonKey(key), expires, expires) : Task.CompletedTask
 			);
 		}
 
+		byte[] IDistributedCache.Get(string key)
+		{
+			this._logger.LogInformation($"MemcachedClient (IDistributedCache) => {nameof(IDistributedCache.Get)}(\"{key}\")");
+			return this.Get<byte[]>(key);
+		}
+
+		Task<byte[]> IDistributedCache.GetAsync(string key, CancellationToken token = default(CancellationToken))
+		{
+			this._logger.LogInformation($"MemcachedClient (IDistributedCache) => {nameof(IDistributedCache.GetAsync)}(\"{key}\")");
+			return this.GetAsync<byte[]>(key);
+		}
+
 		void IDistributedCache.Refresh(string key)
 		{
-			var value = this.Get(key);
+			this._logger.LogInformation($"MemcachedClient (IDistributedCache) => {nameof(IDistributedCache.Refresh)}(\"{key}\")");
+			var value = this.Get<byte[]>(key);
 			if (value != null)
 			{
 				var expirationValue = this.Get(MemcachedClient.GetExpiratonKey(key));
 				if (expirationValue != null)
-					this.PerformStore(StoreMode.Replace, key, value, uint.Parse(expirationValue.ToString()), 0);
+					this.PerformStore(StoreMode.Replace, key, value, uint.Parse(expirationValue.ToString()));
 			}
 		}
 
 		async Task IDistributedCache.RefreshAsync(string key, CancellationToken token = default(CancellationToken))
 		{
-			var result = await this.DoGetAsync<byte[]>(key);
-			if (result.Success)
+			this._logger.LogInformation($"MemcachedClient (IDistributedCache) => {nameof(IDistributedCache.RefreshAsync)}(\"{key}\")");
+			var result = await this.GetAsync<byte[]>(key);
+			if (result != null)
 			{
-				var expirationResult = await this.DoGetAsync<uint>(MemcachedClient.GetExpiratonKey(key));
-				if (expirationResult.Success)
-					await this.PerformStoreAsync(StoreMode.Replace, key, result.Value, expirationResult.Value);
+				var expirationResult = await this.GetAsync<uint?>(MemcachedClient.GetExpiratonKey(key));
+				if (expirationResult != null)
+					await this.PerformStoreAsync(StoreMode.Replace, key, result, expirationResult.Value);
 			}
 		}
 
 		void IDistributedCache.Remove(string key)
 		{
+			this._logger.LogInformation($"MemcachedClient (IDistributedCache) => {nameof(IDistributedCache.Remove)}(\"{key}\")");
 			this.Remove(key);
 		}
 
 		Task IDistributedCache.RemoveAsync(string key, CancellationToken token = default(CancellationToken))
 		{
+			this._logger.LogInformation($"MemcachedClient (IDistributedCache) => {nameof(IDistributedCache.RemoveAsync)}(\"{key}\")");
 			return this.RemoveAsync(key);
 		}
 		#endregion

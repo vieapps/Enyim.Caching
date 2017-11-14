@@ -298,14 +298,6 @@ namespace Enyim.Caching
 			return Task.FromResult(default(T));
 		}
 
-		public Task<IGetOperationResult<T>> DoGetAsync<T>(string key)
-		{
-			var result = new DefaultGetOperationResultFactory<T>().Create();
-			result.Success = false;
-			result.Value = default(T);
-			return Task.FromResult(result);
-		}
-
 		public bool TryGetWithCas(string key, out CasResult<object> value)
 		{
 			throw new NotImplementedException();

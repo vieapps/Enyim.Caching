@@ -21,34 +21,31 @@ namespace Enyim.Caching.Memcached
 	[DebuggerDisplay("Address: {EndPoint}, IsAlive = {IsAlive}")]
 	public class MemcachedNode : IMemcachedNode
 	{
-		private readonly ILogger _logger;
-		private static readonly object SyncRoot = new Object();
-
-		private bool isDisposed;
-
-		private EndPoint endPoint;
-		private ISocketPoolConfiguration config;
-		private InternalPoolImpl internalPoolImpl;
-		private bool isInitialized;
+		static readonly object SyncRoot = new Object();
+		readonly ILogger _logger;
+		bool _isDisposed, _isInitialized;
+		EndPoint _endpoint;
+		ISocketPoolConfiguration _config;
+		InternalPoolImpl _internalPoolImpl;
 
 		public MemcachedNode(EndPoint endpoint, ISocketPoolConfiguration socketPoolConfig, ILogger logger)
 		{
-			this.endPoint = endpoint;
-			this.config = socketPoolConfig;
+			this._endpoint = endpoint;
+			this._config = socketPoolConfig;
 
 			if (socketPoolConfig.ConnectionTimeout.TotalMilliseconds >= Int32.MaxValue)
 				throw new InvalidOperationException("ConnectionTimeout must be < Int32.MaxValue");
 
 			this._logger = logger;
-			this.internalPoolImpl = new InternalPoolImpl(this, socketPoolConfig, this._logger);
+			this._internalPoolImpl = new InternalPoolImpl(this, socketPoolConfig, this._logger);
 		}
 
-		public event Action<IMemcachedNode> Failed;
-		private INodeFailurePolicy failurePolicy;
+		public event Action<IMemcachedNode> Failed = null;
+		INodeFailurePolicy _failurePolicy;
 
 		protected INodeFailurePolicy FailurePolicy
 		{
-			get { return this.failurePolicy ?? (this.failurePolicy = this.config.FailurePolicyFactory.Create(this)); }
+			get { return this._failurePolicy ?? (this._failurePolicy = this._config.FailurePolicyFactory.Create(this)); }
 		}
 
 		/// <summary>
@@ -56,7 +53,7 @@ namespace Enyim.Caching.Memcached
 		/// </summary>
 		public EndPoint EndPoint
 		{
-			get { return this.endPoint; }
+			get { return this._endpoint; }
 		}
 
 		/// <summary>
@@ -66,7 +63,7 @@ namespace Enyim.Caching.Memcached
 		/// <remarks>Used by the <see cref="T:ServerPool"/> to quickly check if the server's state is valid.</remarks>
 		public bool IsAlive
 		{
-			get { return this.internalPoolImpl.IsAlive; }
+			get { return this._internalPoolImpl.IsAlive; }
 		}
 
 		/// <summary>
@@ -78,7 +75,7 @@ namespace Enyim.Caching.Memcached
 		public bool Ping()
 		{
 			// is the server working?
-			if (this.internalPoolImpl.IsAlive)
+			if (this._internalPoolImpl.IsAlive)
 				return true;
 
 			// this codepath is (should be) called very rarely
@@ -89,24 +86,24 @@ namespace Enyim.Caching.Memcached
 				// we could connect to the server, let's recreate the socket pool
 				lock (SyncRoot)
 				{
-					if (this.isDisposed)
+					if (this._isDisposed)
 						return false;
 
 					// try to connect to the server
 					using (var socket = this.CreateSocket())
 					{
-
+						this._logger.LogInformation($"Try to connect to the server: {this._endpoint}");
 					}
 
-					if (this.internalPoolImpl.IsAlive)
+					if (this._internalPoolImpl.IsAlive)
 						return true;
 
 					// it's easier to create a new pool than reinitializing a dead one
 					// rewrite-then-dispose to avoid a race condition with Acquire (which does no locking)
-					var oldPool = this.internalPoolImpl;
-					var newPool = new InternalPoolImpl(this, this.config, this._logger);
+					var oldPool = this._internalPoolImpl;
+					var newPool = new InternalPoolImpl(this, this._config, this._logger);
 
-					Interlocked.Exchange(ref this.internalPoolImpl, newPool);
+					Interlocked.Exchange(ref this._internalPoolImpl, newPool);
 
 					try
 					{
@@ -130,19 +127,19 @@ namespace Enyim.Caching.Memcached
 		/// <returns>An <see cref="T:PooledSocket"/> instance which is connected to the memcached server, or <value>null</value> if the pool is dead.</returns>
 		public IPooledSocketResult Acquire()
 		{
-			if (!this.isInitialized)
-				lock (this.internalPoolImpl)
-					if (!this.isInitialized)
+			if (!this._isInitialized)
+				lock (this._internalPoolImpl)
+					if (!this._isInitialized)
 					{
 						var startTime = DateTime.Now;
-						this.internalPoolImpl.InitPool();
-						this.isInitialized = true;
+						this._internalPoolImpl.InitPool();
+						this._isInitialized = true;
 						this._logger.LogInformation("MemcachedInitPool-cost: {0}ms", (DateTime.Now - startTime).TotalMilliseconds);
 					}
 
 			try
 			{
-				return this.internalPoolImpl.Acquire();
+				return this._internalPoolImpl.Acquire();
 			}
 			catch (Exception e)
 			{
@@ -169,7 +166,8 @@ namespace Enyim.Caching.Memcached
 		/// </summary>
 		public void Dispose()
 		{
-			if (this.isDisposed) return;
+			if (this._isDisposed)
+				return;
 
 			GC.SuppressFinalize(this);
 
@@ -179,11 +177,11 @@ namespace Enyim.Caching.Memcached
 			// this should not kill any kittens
 			lock (SyncRoot)
 			{
-				if (this.isDisposed)
+				if (this._isDisposed)
 					return;
 
-				this.isDisposed = true;
-				this.internalPoolImpl.Dispose();
+				this._isDisposed = true;
+				this._internalPoolImpl.Dispose();
 			}
 		}
 
@@ -193,7 +191,7 @@ namespace Enyim.Caching.Memcached
 		}
 
 		#region [ InternalPoolImpl             ]
-		private class InternalPoolImpl : IDisposable
+		class InternalPoolImpl : IDisposable
 		{
 			private readonly ILogger _logger;
 			private bool _isDebugEnabled;
@@ -529,7 +527,7 @@ namespace Enyim.Caching.Memcached
 		{
 			try
 			{
-				return new PooledSocket(this.endPoint, this.config.ConnectionTimeout, this.config.ReceiveTimeout, this._logger);
+				return new PooledSocket(this._endpoint, this._config.ConnectionTimeout, this._config.ReceiveTimeout, this._logger);
 			}
 			catch (Exception ex)
 			{
@@ -646,7 +644,6 @@ namespace Enyim.Caching.Memcached
 				var rrs = op.ReadResponseAsync(socket, readSuccess =>
 				{
 					((IDisposable)socket).Dispose();
-
 					next(readSuccess);
 				});
 
