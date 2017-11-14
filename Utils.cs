@@ -66,7 +66,7 @@ namespace Microsoft.Extensions.DependencyInjection
 	public static class ServiceCollectionExtensions
 	{
 		/// <summary>
-		/// Adds the service of memcached into the collection of services for using with dependency injection
+		/// Adds the service of <see cref="Enyim.Caching.IMemcachedClient">memcached</see> into the collection of services for using with dependency injection
 		/// </summary>
 		/// <param name="services"></param>
 		/// <param name="setupAction">The action to bind options of 'Memcached' section from appsettings.json file</param>
@@ -74,9 +74,6 @@ namespace Microsoft.Extensions.DependencyInjection
 		/// <returns></returns>
 		public static IServiceCollection AddMemcached(this IServiceCollection services, Action<MemcachedClientOptions> setupAction, bool addInstanceOfIDistributedCache = true)
 		{
-			if (services == null)
-				throw new ArgumentNullException(nameof(services));
-
 			if (setupAction == null)
 				throw new ArgumentNullException(nameof(setupAction));
 
@@ -97,7 +94,7 @@ namespace Microsoft.AspNetCore.Builder
 	public static class ApplicationBuilderExtensions
 	{
 		/// <summary>
-		/// Calls to use the service of memcached
+		/// Calls to use the service of <see cref="Enyim.Caching.IMemcachedClient">memcached</see>
 		/// </summary>
 		/// <param name="appBuilder"></param>
 		/// <returns></returns>
@@ -201,6 +198,11 @@ namespace CacheUtils
 				: (options.SlidingExpiration.Value == TimeSpan.Zero || options.SlidingExpiration.Value == TimeSpan.MaxValue
 					? DateTime.MaxValue
 					: DateTime.Now.Add(options.SlidingExpiration.Value)).GetExpiration();
+		}
+
+		internal static string GetExpiratonKey(this string key)
+		{
+			return $"distributed-expiraton-key@{key}";
 		}
 
 		/// <summary>

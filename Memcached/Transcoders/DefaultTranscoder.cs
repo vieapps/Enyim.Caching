@@ -3,8 +3,8 @@ using System;
 namespace Enyim.Caching.Memcached
 {
 	/// <summary>
-	/// Default <see cref="T:Enyim.Caching.Memcached.ITranscoder"/> implementation.
-	/// Primitive types are manually serialized, the rest is serialized using <see cref="T:System.Runtime.Serialization.Formatters.Binary.BinaryFormatter"/>.
+	/// Default <see cref="Enyim.Caching.Memcached.ITranscoder"/> implementation.
+	/// Primitive types are manually serialized, the rest is serialized using <see cref="System.Runtime.Serialization.Formatters.Binary.BinaryFormatter"/>.
 	/// </summary>
 	public class DefaultTranscoder : ITranscoder
 	{

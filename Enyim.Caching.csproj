@@ -27,11 +27,13 @@
 
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
 		<WarningLevel>3</WarningLevel>
+		<NoWarn>1701;1702;1705;1066;0067</NoWarn>
 		<DocumentationFile>bin\Debug\netstandard2.0\Enyim.Caching.xml</DocumentationFile>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
 		<WarningLevel>3</WarningLevel>
+		<NoWarn>1701;1702;1705;1066;0067</NoWarn>
 		<DocumentationFile>bin\Release\netstandard2.0\Enyim.Caching.xml</DocumentationFile>
 	</PropertyGroup>
 

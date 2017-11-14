@@ -10,10 +10,10 @@ using Enyim.Caching.Memcached;
 using Enyim.Caching.Memcached.Results;
 using Enyim.Caching.Memcached.Results.Factories;
 using Enyim.Caching.Memcached.Results.Extensions;
-using Microsoft.Extensions.DependencyInjection;
 
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Caching.Distributed;
+using Microsoft.Extensions.DependencyInjection;
 
 using CacheUtils;
 
@@ -56,9 +56,21 @@ namespace Enyim.Caching
 		public event Action<IMemcachedNode> NodeFailed;
 		#endregion
 
-		#region Constructors
 		/// <summary>
-		/// Initializes new instance of memcached client using configuration section of app.config
+		/// Initializes new instance of memcached client using configuration section of appsettings.json file
+		/// </summary>
+		/// <param name="loggerFactory"></param>
+		/// <param name="configuration"></param>
+		public MemcachedClient(ILoggerFactory loggerFactory, IMemcachedClientConfiguration configuration)
+		{
+			if (configuration == null)
+				throw new ArgumentNullException(nameof(configuration));
+
+			this.Prepare(loggerFactory ?? new NullLoggerFactory(), configuration);
+		}
+
+		/// <summary>
+		/// Initializes new instance of memcached client using configuration section of app.config/web.config file
 		/// </summary>
 		/// <param name="configuration"></param>
 		/// <param name="loggerFactory"></param>
@@ -71,19 +83,7 @@ namespace Enyim.Caching
 			this.Prepare(loggerFactory, new MemcachedClientConfiguration(loggerFactory, configuration));
 		}
 
-		/// <summary>
-		/// Initializes new instance of memcached client using configuration section of appsettings.json
-		/// </summary>
-		/// <param name="loggerFactory"></param>
-		/// <param name="configuration"></param>
-		public MemcachedClient(ILoggerFactory loggerFactory, IMemcachedClientConfiguration configuration)
-		{
-			if (configuration == null)
-				throw new ArgumentNullException(nameof(configuration));
-
-			this.Prepare(loggerFactory ?? new NullLoggerFactory(), configuration);
-		}
-
+		#region Prepare
 		void Prepare(ILoggerFactory loggerFactory, IMemcachedClientConfiguration configuration)
 		{
 			this._logger = loggerFactory.CreateLogger<MemcachedClient>();
@@ -111,13 +111,7 @@ namespace Enyim.Caching
 
 		internal static MemcachedClient GetInstance(IServiceProvider svcProvider)
 		{
-			if (MemcachedClient._Instance == null)
-			{
-				var loggerFactory = svcProvider.GetService<ILoggerFactory>();
-				var configuration = svcProvider.GetService<IMemcachedClientConfiguration>();
-				MemcachedClient._Instance = new MemcachedClient(loggerFactory, configuration);
-			}
-			return MemcachedClient._Instance;
+			return MemcachedClient._Instance ?? (MemcachedClient._Instance = new MemcachedClient(svcProvider.GetService<ILoggerFactory>(), svcProvider.GetService<IMemcachedClientConfiguration>()));
 		}
 		#endregion
 
@@ -1816,77 +1810,92 @@ namespace Enyim.Caching
 		}
 		#endregion
 
-		#region Methods of IDistributedCache 
-		protected static string GetExpiratonKey(string key)
-		{
-			return key + "@" + nameof(DistributedCacheEntryOptions);
-		}
-
+		#region IDistributedCache 
 		void IDistributedCache.Set(string key, byte[] value, DistributedCacheEntryOptions options)
 		{
-			var expires = options.GetExpiration();
-			this._logger.LogInformation($"MemcachedClient (IDistributedCache) => {nameof(IDistributedCache.Set)}(\"{key}\") [{expires}]");
+			if (string.IsNullOrWhiteSpace(key))
+				throw new ArgumentNullException(nameof(key));
+
+			var expires = options == null ? 0 : options.GetExpiration();
 			this.PerformStore(StoreMode.Set, key, value, expires);
 			if (expires > 0)
-				this.PerformStore(StoreMode.Set, MemcachedClient.GetExpiratonKey(key), expires, expires);
+				this.PerformStore(StoreMode.Set, key.GetExpiratonKey(), expires, expires);
 		}
 
 		Task IDistributedCache.SetAsync(string key, byte[] value, DistributedCacheEntryOptions options, CancellationToken token = default(CancellationToken))
 		{
-			var expires = options.GetExpiration();
-			this._logger.LogInformation($"MemcachedClient (IDistributedCache) => {nameof(IDistributedCache.SetAsync)}(\"{key}\") [{expires}]");
+			if (string.IsNullOrWhiteSpace(key))
+				throw new ArgumentNullException(nameof(key));
+
+			var expires = options == null ? 0 : options.GetExpiration();
 			return Task.WhenAll(
 				this.PerformStoreAsync(StoreMode.Set, key, value, expires),
-				expires > 0 ? this.PerformStoreAsync(StoreMode.Set, MemcachedClient.GetExpiratonKey(key), expires, expires) : Task.CompletedTask
+				expires > 0 ? this.PerformStoreAsync(StoreMode.Set, key.GetExpiratonKey(), expires, expires) : Task.CompletedTask
 			);
 		}
 
 		byte[] IDistributedCache.Get(string key)
 		{
-			this._logger.LogInformation($"MemcachedClient (IDistributedCache) => {nameof(IDistributedCache.Get)}(\"{key}\")");
+			if (string.IsNullOrWhiteSpace(key))
+				throw new ArgumentNullException(nameof(key));
+
 			return this.Get<byte[]>(key);
 		}
 
 		Task<byte[]> IDistributedCache.GetAsync(string key, CancellationToken token = default(CancellationToken))
 		{
-			this._logger.LogInformation($"MemcachedClient (IDistributedCache) => {nameof(IDistributedCache.GetAsync)}(\"{key}\")");
+			if (string.IsNullOrWhiteSpace(key))
+				throw new ArgumentNullException(nameof(key));
+
 			return this.GetAsync<byte[]>(key);
 		}
 
 		void IDistributedCache.Refresh(string key)
 		{
-			this._logger.LogInformation($"MemcachedClient (IDistributedCache) => {nameof(IDistributedCache.Refresh)}(\"{key}\")");
+			if (string.IsNullOrWhiteSpace(key))
+				throw new ArgumentNullException(nameof(key));
+
 			var value = this.Get<byte[]>(key);
-			if (value != null)
+			var expires = value != null ? this.Get<uint?>(key.GetExpiratonKey()) : null;
+			if (value != null && expires != null && expires.Value > 0)
 			{
-				var expirationValue = this.Get(MemcachedClient.GetExpiratonKey(key));
-				if (expirationValue != null)
-					this.PerformStore(StoreMode.Replace, key, value, uint.Parse(expirationValue.ToString()));
+				this.PerformStore(StoreMode.Replace, key, value, expires.Value);
+				this.PerformStore(StoreMode.Replace, key.GetExpiratonKey(), expires.Value, expires.Value);
 			}
 		}
 
 		async Task IDistributedCache.RefreshAsync(string key, CancellationToken token = default(CancellationToken))
 		{
-			this._logger.LogInformation($"MemcachedClient (IDistributedCache) => {nameof(IDistributedCache.RefreshAsync)}(\"{key}\")");
-			var result = await this.GetAsync<byte[]>(key);
-			if (result != null)
-			{
-				var expirationResult = await this.GetAsync<uint?>(MemcachedClient.GetExpiratonKey(key));
-				if (expirationResult != null)
-					await this.PerformStoreAsync(StoreMode.Replace, key, result, expirationResult.Value);
-			}
+			if (string.IsNullOrWhiteSpace(key))
+				throw new ArgumentNullException(nameof(key));
+
+			var value = await this.GetAsync<byte[]>(key);
+			var expires = value != null ? await this.GetAsync<uint?>(key.GetExpiratonKey()) : null;
+			if (value != null && expires != null && expires.Value > 0)
+				await Task.WhenAll(
+					this.PerformStoreAsync(StoreMode.Replace, key, value, expires.Value),
+					this.PerformStoreAsync(StoreMode.Replace, key.GetExpiratonKey(), expires.Value, expires.Value)
+				);
 		}
 
 		void IDistributedCache.Remove(string key)
 		{
-			this._logger.LogInformation($"MemcachedClient (IDistributedCache) => {nameof(IDistributedCache.Remove)}(\"{key}\")");
+			if (string.IsNullOrWhiteSpace(key))
+				throw new ArgumentNullException(nameof(key));
+
 			this.Remove(key);
+			this.Remove(key.GetExpiratonKey());
 		}
 
 		Task IDistributedCache.RemoveAsync(string key, CancellationToken token = default(CancellationToken))
 		{
-			this._logger.LogInformation($"MemcachedClient (IDistributedCache) => {nameof(IDistributedCache.RemoveAsync)}(\"{key}\")");
-			return this.RemoveAsync(key);
+			if (string.IsNullOrWhiteSpace(key))
+				throw new ArgumentNullException(nameof(key));
+
+			return Task.WhenAll(
+				this.RemoveAsync(key),
+				this.RemoveAsync(key.GetExpiratonKey())
+			);
 		}
 		#endregion
 
