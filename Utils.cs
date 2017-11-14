@@ -128,15 +128,29 @@ namespace CacheUtils
 		public static readonly DateTime UnixEpoch = new DateTime(1970, 1, 1, 0, 0, 1);
 
 		/// <summary>
-		/// Converts this date-time to time-span (with Unix epoch)
+		/// Converts this date-time to time-span with Unix epoch
+		/// </summary>
+		/// <param name="datetime"></param>
+		/// <returns></returns>
+		public static TimeSpan ToUnixTimeSpan(this DateTime datetime)
+		{
+			return datetime < Helper.UnixEpoch
+				? throw new ArgumentOutOfRangeException(nameof(datetime), $"{nameof(datetime)} must be >= 1970/1/1")
+				: datetime.ToUniversalTime() - Helper.UnixEpoch;
+		}
+
+		/// <summary>
+		/// Converts this date-time to time-span
 		/// </summary>
 		/// <param name="datetime"></param>
 		/// <returns></returns>
 		public static TimeSpan ToTimeSpan(this DateTime datetime)
 		{
-			return datetime < Helper.UnixEpoch
-				? throw new ArgumentOutOfRangeException(nameof(datetime), $"{nameof(datetime)} must be >= 1970/1/1")
-				: datetime.ToUniversalTime() - Helper.UnixEpoch;
+			return datetime == DateTime.MaxValue
+				? TimeSpan.Zero
+				: datetime < DateTime.Now
+					? TimeSpan.FromMilliseconds(1)
+					: datetime - DateTime.Now;
 		}
 
 		/// <summary>
@@ -151,7 +165,7 @@ namespace CacheUtils
 
 			return expiresAt == DateTime.MaxValue
 				? 0
-				: (uint)expiresAt.ToTimeSpan().TotalSeconds;
+				: (uint)expiresAt.ToUnixTimeSpan().TotalSeconds;
 		}
 
 		/// <summary>
@@ -173,29 +187,20 @@ namespace CacheUtils
 		/// <returns></returns>
 		public static uint GetExpiration(this DistributedCacheEntryOptions options)
 		{
-			TimeSpan? validFor = options.SlidingExpiration;
-			DateTime? expiresAt = null;
-			DateTimeOffset? absoluteExpiration = options.AbsoluteExpiration;
-			TimeSpan? relativeToNow = options.AbsoluteExpirationRelativeToNow;
-
-			if (validFor != null && expiresAt != null)
+			if (options.SlidingExpiration != null && options.AbsoluteExpiration != null)
 				throw new ArgumentException("You cannot specify both sliding expiration and absolute expiration");
 
-			if (validFor == null && expiresAt == null && absoluteExpiration == null && relativeToNow == null)
-				return 0;
+			if (options.AbsoluteExpiration != null)
+				return (uint)options.AbsoluteExpiration.Value.ToUnixTimeSeconds();
 
-			if (absoluteExpiration != null)
-				return (uint)absoluteExpiration.Value.ToUnixTimeSeconds();
+			if (options.AbsoluteExpirationRelativeToNow != null)
+				return (uint)(DateTimeOffset.UtcNow + options.AbsoluteExpirationRelativeToNow.Value).ToUnixTimeSeconds();
 
-			if (relativeToNow != null)
-				return (uint)(DateTimeOffset.UtcNow + relativeToNow.Value).ToUnixTimeSeconds();
-
-			if (validFor != null)
-				expiresAt = validFor == TimeSpan.Zero || validFor == TimeSpan.MaxValue
+			return options.SlidingExpiration == null
+				? 0
+				: (options.SlidingExpiration.Value == TimeSpan.Zero || options.SlidingExpiration.Value == TimeSpan.MaxValue
 					? DateTime.MaxValue
-					: DateTime.Now.Add(validFor.Value);
-
-			return expiresAt.Value.GetExpiration();
+					: DateTime.Now.Add(options.SlidingExpiration.Value)).GetExpiration();
 		}
 
 		/// <summary>

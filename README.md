@@ -3,13 +3,13 @@ The .NET Standard 2.0 memcached client library:
 - 100% compatible with EnyimMemcached 2.x library, fully async
 - Objects are serializing with various transcoders: BinaryFormatter, Protocol Buffers, Json.NET Bson, MessagePack
 - Ready with .NET Core 2.0 and .NET Framework 4.6.1 (and higher) with more useful methods (Add, Replace, Exists)
-### Nuget
+### NuGet
 - Package ID: VIEApps.Enyim.Caching
 - Details: https://www.nuget.org/packages/VIEApps.Enyim.Caching
 ### Information
 - Migrated from the fork [EnyimMemcachedCore](https://github.com/cnblogs/EnyimMemcachedCore) (.NET Core 2.0)
 - Reference from the original [EnyimMemcached](https://github.com/enyim/EnyimMemcached) (.NET Framework 3.5)
-## Usage (ASP.NET Core 2.0)
+## Usage of ASP.NET Core 2.0 apps
 - Add services.AddMemcached(...) and app.UseMemcached() in Startup.cs
 - Add IMemcachedClient or IDistributedCache into constructor (using dependency injection)
 ### Configure (by the appsettings.json file) without authentication
@@ -141,7 +141,7 @@ public class CreativeService
 	}
 }
 ```
-## Usage (.NET Core 2.0/.NET Framework 4.6.1 (and higher) stand-alone apps)
+## Usage of .NET Core 2.0/.NET Framework 4.6.1 (and higher) stand-alone apps
 ### Configure (by the app.config/web.config) without authentication
 ```xml
 <?xml version="1.0" encoding="utf-8"?>
@@ -173,7 +173,7 @@ public class CreativeService
 	</memcached>
 </configuration>
 ```
-### Example of usage
+### Example
 ```cs
 public class CreativeService
 {
