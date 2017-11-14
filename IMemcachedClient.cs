@@ -29,6 +29,9 @@ namespace Enyim.Caching
 		Task<CasResult<bool>> CasAsync(StoreMode mode, string key, object value, DateTime expiresAt, ulong cas);
 		Task<CasResult<bool>> CasAsync(StoreMode mode, string key, object value, TimeSpan validFor, ulong cas);
 
+		bool Set(string key, object value, int cacheMinutes);
+		Task<bool> SetAsync(string key, object value, int cacheMinutes);
+
 		bool Add(string key, object value, int cacheMinutes);
 		Task<bool> AddAsync(string key, object value, int cacheMinutes);
 

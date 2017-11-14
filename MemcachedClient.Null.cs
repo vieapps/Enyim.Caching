@@ -86,7 +86,17 @@ namespace Enyim.Caching
 		}
 		#endregion
 
-		#region Add & Replace
+		#region Set, Add & Replace
+		public bool Set(string key, object value, int cacheMinutes)
+		{
+			return false;
+		}
+
+		public Task<bool> SetAsync(string key, object value, int cacheMinutes)
+		{
+			return Task.FromResult(false);
+		}
+
 		public bool Add(string key, object value, int cacheMinutes)
 		{
 			return false;

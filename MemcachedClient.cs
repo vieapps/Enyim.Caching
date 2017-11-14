@@ -304,7 +304,7 @@ namespace Enyim.Caching
 		}
 		#endregion
 
-		#region Cas
+		#region CAS (Check And Set)
 		/// <summary>
 		/// Inserts an item into the cache with a cache key to reference its location and returns its version.
 		/// </summary>
@@ -452,6 +452,32 @@ namespace Enyim.Caching
 		}
 		#endregion
 
+		#region Set
+		/// <summary>
+		/// Inserts an item into the cache with a cache key to reference its location.
+		/// </summary>
+		/// <param name="key"></param>
+		/// <param name="value"></param>
+		/// <param name="cacheMinutes"></param>
+		/// <returns>true if the item was successfully added in the cache; false otherwise.</returns>
+		public bool Set(string key, object value, int cacheMinutes)
+		{
+			return this.Store(StoreMode.Set, key, value, TimeSpan.FromMinutes(cacheMinutes));
+		}
+
+		/// <summary>
+		/// Inserts an item into the cache with a cache key to reference its location.
+		/// </summary>
+		/// <param name="key"></param>
+		/// <param name="value"></param>
+		/// <param name="cacheMinutes"></param>
+		/// <returns>true if the item was successfully added in the cache; false otherwise.</returns>
+		public Task<bool> SetAsync(string key, object value, int cacheMinutes)
+		{
+			return this.StoreAsync(StoreMode.Set, key, value, TimeSpan.FromMinutes(cacheMinutes));
+		}
+		#endregion
+
 		#region Add
 		/// <summary>
 		/// Inserts an item into the cache with a cache key to reference its location.
@@ -462,7 +488,7 @@ namespace Enyim.Caching
 		/// <returns>true if the item was successfully added in the cache; false otherwise.</returns>
 		public bool Add(string key, object value, int cacheMinutes)
 		{
-			return this.Store(StoreMode.Add, key, value, new TimeSpan(0, cacheMinutes, 0));
+			return this.Store(StoreMode.Add, key, value, TimeSpan.FromMinutes(cacheMinutes));
 		}
 
 		/// <summary>
@@ -474,7 +500,7 @@ namespace Enyim.Caching
 		/// <returns>true if the item was successfully added in the cache; false otherwise.</returns>
 		public Task<bool> AddAsync(string key, object value, int cacheMinutes)
 		{
-			return this.StoreAsync(StoreMode.Add, key, value, new TimeSpan(0, cacheMinutes, 0));
+			return this.StoreAsync(StoreMode.Add, key, value, TimeSpan.FromMinutes(cacheMinutes));
 		}
 		#endregion
 
@@ -488,7 +514,7 @@ namespace Enyim.Caching
 		/// <returns>true if the item was successfully replaced in the cache; false otherwise.</returns>
 		public bool Replace(string key, object value, int cacheMinutes)
 		{
-			return this.Store(StoreMode.Replace, key, value, new TimeSpan(0, cacheMinutes, 0));
+			return this.Store(StoreMode.Replace, key, value, TimeSpan.FromMinutes(cacheMinutes));
 		}
 
 		/// <summary>
@@ -500,7 +526,7 @@ namespace Enyim.Caching
 		/// <returns>true if the item was successfully replaced in the cache; false otherwise.</returns>
 		public Task<bool> ReplaceAsync(string key, object value, int cacheMinutes)
 		{
-			return this.StoreAsync(StoreMode.Replace, key, value, new TimeSpan(0, cacheMinutes, 0));
+			return this.StoreAsync(StoreMode.Replace, key, value, TimeSpan.FromMinutes(cacheMinutes));
 		}
 		#endregion
 
