@@ -1,7 +1,5 @@
 ﻿using System.Collections.Generic;
-
 using Enyim.Caching.Memcached;
-
 using Microsoft.Extensions.Options;
 
 namespace Enyim.Caching.Configuration
@@ -35,11 +33,11 @@ namespace Enyim.Caching.Configuration
 			{
 				Type = typeof(PlainTextAuthenticator).ToString(),
 				Parameters = new Dictionary<string, string>
-			 {
-				{ $"{nameof(zone)}", zone },
-				{ $"{nameof(userName)}", userName},
-				{ $"{nameof(password)}", password}
-			 }
+				 {
+					{ $"{nameof(zone)}", zone },
+					{ $"{nameof(userName)}", userName},
+					{ $"{nameof(password)}", password}
+				 }
 			};
 		}
 	}

@@ -9,8 +9,8 @@ namespace Enyim.Collections
 	/// <typeparam name="T"></typeparam>
 	public class InterlockedQueue<T>
 	{
-		private Node headNode;
-		private Node tailNode;
+		Node headNode;
+		Node tailNode;
 
 		/// <summary>
 		/// Initializes a new instance of the <see cref="T:InterlockedQueue"/> class.
@@ -162,7 +162,7 @@ namespace Enyim.Collections
 		}
 
 		#region [ Node                        ]
-		private class Node
+		class Node
 		{
 			public readonly T Value;
 			public Node Next;

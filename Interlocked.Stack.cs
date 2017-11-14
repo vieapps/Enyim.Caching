@@ -9,7 +9,7 @@ namespace Enyim.Collections
 	/// <typeparam name="TItem"></typeparam>
 	public class InterlockedStack<TItem>
 	{
-		private Node head;
+		Node head;
 
 		public InterlockedStack()
 		{
@@ -19,7 +19,6 @@ namespace Enyim.Collections
 		public void Push(TItem item)
 		{
 			var node = new Node(item);
-
 			do
 			{
 				node.Next = this.head.Next;
@@ -41,13 +40,12 @@ namespace Enyim.Collections
 			while (Interlocked.CompareExchange(ref head.Next, node.Next, node) != node);
 
 			value = node.Value;
-
 			return true;
 		}
 
 		#region [ Node                        ]
 
-		private class Node
+		class Node
 		{
 			public readonly TItem Value;
 			public Node Next;
