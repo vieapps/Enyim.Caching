@@ -1,7 +1,7 @@
 # VIEApps.Enyim.Caching
 The .NET Standard 2.0 memcached client library: 
-- 100% compatible with EnyimMemcached 2.x library, fully async
-- Objects are serializing with various transcoders: BinaryFormatter, Protocol Buffers, Json.NET Bson, MessagePack
+- 100% compatible with [EnyimMemcached 2.x](https://github.com/enyim/EnyimMemcached) library, fully async
+- Object serialization by various transcoders: BinaryFormatter, Protocol Buffers, Json.NET Bson, MessagePack
 - Ready with .NET Core 2.0 and .NET Framework 4.6.1 (and higher) with more useful methods (Add, Replace, Exists)
 ### NuGet
 - Package ID: VIEApps.Enyim.Caching
@@ -70,10 +70,10 @@ public class Startup
 		services.AddMemcached(options => Configuration.GetSection("Memcached").Bind(options));
 	}
 	
-	public void Configure(IApplicationBuilder appBuilder, IHostingEnvironment env, ILoggerFactory loggerFactory)
+	public void Configure(IApplicationBuilder app, IHostingEnvironment env)
 	{ 
 		// ....
-		appBuilder.UseMemcached();
+		app.UseMemcached();
 	}
 }
 ```
@@ -84,10 +84,10 @@ public class TabNavService
 	ITabNavRepository _tabNavRepository;
 	IMemcachedClient _cache;
 
-	public TabNavService(ITabNavRepository tabNavRepository, IMemcachedClient memcachedClient)
+	public TabNavService(ITabNavRepository tabNavRepository, IMemcachedClient cache)
 	{
 		_tabNavRepository = tabNavRepository;
-		_cache = memcachedClient;
+		_cache = cache;
 	}
 
 	public async Task<IEnumerable<TabNav>> GetAll()
@@ -128,9 +128,7 @@ public class CreativeService
 		if (creativesJson == null)
 		{
 			creatives = await _creativeRepository.GetCreatives(unitName).ProjectTo<CreativeDTO>().ToListAsync();
-			var json = string.Empty;
-			if (creatives != null && creatives.Count() > 0)
-				json = JsonConvert.SerializeObject(creatives);
+			var json = creatives != null && creatives.Count() > 0 ? JsonConvert.SerializeObject(creatives) : string.Empty;
 			creativesBytes = System.Text.Encoding.UTF8.GetBytes(json);
 			await _cache.SetAsync(cacheKey, creativesBytes, new DistributedCacheEntryOptions().SetSlidingExpiration(TimeSpan.FromMinutes(30)));
 		}
