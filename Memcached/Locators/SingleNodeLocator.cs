@@ -9,51 +9,32 @@ namespace Enyim.Caching.Memcached
 	/// </summary>
 	public sealed class SingleNodeLocator : IMemcachedNodeLocator
 	{
-		private IMemcachedNode node;
-		private bool isInitialized;
-		private object initLock = new Object();
+		IMemcachedNode _node;
+		bool _isInitialized;
+		object _locker = new Object();
 
 		void IMemcachedNodeLocator.Initialize(IList<IMemcachedNode> nodes)
 		{
 			if (nodes.Count > 0)
-			{
-				node = nodes[0];
-			}
-
-			this.isInitialized = true;
-			/*if (this.isInitialized)
-			    return;
-
-			   // locking on this is rude but easy
-			   lock (initLock)
-			   {
-			    if (this.isInitialized)
-				   return;
-
-			    if (nodes.Count > 0)
-			    {
-				   node = nodes[0];
-			    }
-
-				   this.isInitialized = true;
-			   }*/
+				this._node = nodes[0];
+			this._isInitialized = true;
 		}
 
 		IMemcachedNode IMemcachedNodeLocator.Locate(string key)
 		{
-			if (!this.isInitialized)
+			if (!this._isInitialized)
 				throw new InvalidOperationException("You must call Initialize first");
 
-			if (this.node == null) return null;
-
-			return this.node;
+			return this._node == null
+				? null
+				: this._node;
 		}
 
 		IEnumerable<IMemcachedNode> IMemcachedNodeLocator.GetWorkingNodes()
 		{
-			return this.node.IsAlive
-					? new IMemcachedNode[] { this.node }
-					: Enumerable.Empty<IMemcachedNode>();
+			return this._node.IsAlive
+				? new IMemcachedNode[] { this._node }
+				: Enumerable.Empty<IMemcachedNode>();
 		}
 	}
 }

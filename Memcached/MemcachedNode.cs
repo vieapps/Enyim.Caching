@@ -193,27 +193,26 @@ namespace Enyim.Caching.Memcached
 		#region [ InternalPoolImpl             ]
 		class InternalPoolImpl : IDisposable
 		{
-			private readonly ILogger _logger;
-			private bool _isDebugEnabled;
+			readonly ILogger _logger;
+			bool _isDebugEnabled;
 
 			/// <summary>
 			/// A list of already connected but free to use sockets
 			/// </summary>
-			private InterlockedStack<PooledSocket> freeItems;
+			InterlockedStack<PooledSocket> _freeItems;
 
-			private bool isDisposed;
-			private bool isAlive;
-			private DateTime markedAsDeadUtc;
+			bool _isDisposed;
+			bool _isAlive;
+			DateTime _markedAsDeadUtc;
 
-			private int minItems;
-			private int maxItems;
+			int _minItems, _maxItems;
 
-			private MemcachedNode ownerNode;
-			private EndPoint endPoint;
-			private TimeSpan queueTimeout;
-			private Semaphore semaphore;
+			MemcachedNode _ownerNode;
+			EndPoint _endPoint;
+			TimeSpan _queueTimeout;
+			Semaphore _semaphore;
 
-			private object initLock = new Object();
+			object _locker = new Object();
 
 			internal InternalPoolImpl(MemcachedNode ownerNode, ISocketPoolConfiguration config, ILogger logger)
 			{
@@ -224,16 +223,16 @@ namespace Enyim.Caching.Memcached
 				if (config.QueueTimeout < TimeSpan.Zero)
 					throw new InvalidOperationException("queueTimeout must be >= TimeSpan.Zero", null);
 
-				this.ownerNode = ownerNode;
-				this.isAlive = true;
-				this.endPoint = ownerNode.EndPoint;
-				this.queueTimeout = config.QueueTimeout;
+				this._ownerNode = ownerNode;
+				this._isAlive = true;
+				this._endPoint = ownerNode.EndPoint;
+				this._queueTimeout = config.QueueTimeout;
 
-				this.minItems = config.MinPoolSize;
-				this.maxItems = config.MaxPoolSize;
+				this._minItems = config.MinPoolSize;
+				this._maxItems = config.MaxPoolSize;
 
-				this.semaphore = new Semaphore(maxItems, maxItems);
-				this.freeItems = new InterlockedStack<PooledSocket>();
+				this._semaphore = new Semaphore(_maxItems, _maxItems);
+				this._freeItems = new InterlockedStack<PooledSocket>();
 
 				this._logger = logger;
 				this._isDebugEnabled = this._logger.IsEnabled(LogLevel.Debug);
@@ -243,20 +242,20 @@ namespace Enyim.Caching.Memcached
 			{
 				try
 				{
-					if (this.minItems > 0)
+					if (this._minItems > 0)
 					{
-						for (int i = 0; i < this.minItems; i++)
+						for (int i = 0; i < this._minItems; i++)
 						{
-							this.freeItems.Push(this.CreateSocket());
+							this._freeItems.Push(this.CreateSocket());
 
 							// cannot connect to the server
-							if (!this.isAlive)
+							if (!this._isAlive)
 								break;
 						}
 					}
 
 					if (this._logger.IsEnabled(LogLevel.Debug))
-						this._logger.LogDebug("Pool has been inited for {0} with {1} sockets", this.endPoint, this.minItems);
+						this._logger.LogDebug("Pool has been inited for {0} with {1} sockets", this._endPoint, this._minItems);
 
 				}
 				catch (Exception e)
@@ -267,9 +266,9 @@ namespace Enyim.Caching.Memcached
 				}
 			}
 
-			private PooledSocket CreateSocket()
+			PooledSocket CreateSocket()
 			{
-				var ps = this.ownerNode.CreateSocket();
+				var ps = this._ownerNode.CreateSocket();
 				ps.CleanupCallback = this.ReleaseSocket;
 
 				return ps;
@@ -277,12 +276,12 @@ namespace Enyim.Caching.Memcached
 
 			public bool IsAlive
 			{
-				get { return this.isAlive; }
+				get { return this._isAlive; }
 			}
 
 			public DateTime MarkedAsDeadUtc
 			{
-				get { return this.markedAsDeadUtc; }
+				get { return this._markedAsDeadUtc; }
 			}
 
 			/// <summary>
@@ -295,11 +294,11 @@ namespace Enyim.Caching.Memcached
 				var message = string.Empty;
 
 				if (this._isDebugEnabled)
-					this._logger.LogDebug("Acquiring stream from pool. " + this.endPoint);
+					this._logger.LogDebug("Acquiring stream from pool. " + this._endPoint);
 
-				if (!this.isAlive || this.isDisposed)
+				if (!this._isAlive || this._isDisposed)
 				{
-					message = "Pool is dead or disposed, returning null. " + this.endPoint;
+					message = "Pool is dead or disposed, returning null. " + this._endPoint;
 					result.Fail(message);
 
 					if (this._isDebugEnabled)
@@ -309,9 +308,9 @@ namespace Enyim.Caching.Memcached
 				}
 
 
-				if (!this.semaphore.WaitOne(this.queueTimeout))
+				if (!this._semaphore.WaitOne(this._queueTimeout))
 				{
-					message = "Pool is full, timeouting. " + this.endPoint;
+					message = "Pool is full, timeouting. " + this._endPoint;
 					if (this._isDebugEnabled)
 						this._logger.LogDebug(message);
 					result.Fail(message, new TimeoutException());
@@ -321,9 +320,9 @@ namespace Enyim.Caching.Memcached
 				}
 
 				// maybe we died while waiting
-				if (!this.isAlive)
+				if (!this._isAlive)
 				{
-					message = "Pool is dead, returning null. " + this.endPoint;
+					message = "Pool is dead, returning null. " + this._endPoint;
 					if (this._isDebugEnabled)
 						this._logger.LogDebug(message);
 					result.Fail(message);
@@ -332,7 +331,7 @@ namespace Enyim.Caching.Memcached
 				}
 
 				// do we have free items?
-				if (this.freeItems.TryPop(out PooledSocket retval))
+				if (this._freeItems.TryPop(out PooledSocket retval))
 				{
 					try
 					{
@@ -358,7 +357,7 @@ namespace Enyim.Caching.Memcached
 				}
 
 				// free item pool is empty
-				message = "Could not get a socket from the pool, Creating a new item. " + this.endPoint;
+				message = "Could not get a socket from the pool, Creating a new item. " + this._endPoint;
 				if (this._isDebugEnabled)
 					this._logger.LogDebug(message);
 
@@ -373,14 +372,14 @@ namespace Enyim.Caching.Memcached
 				}
 				catch (Exception e)
 				{
-					message = "Failed to create socket. " + this.endPoint;
+					message = "Failed to create socket. " + this._endPoint;
 					this._logger.LogError(message, e);
 
 					// eventhough this item failed the failure policy may keep the pool alive
 					// so we need to make sure to release the semaphore, so new connections can be
 					// acquired or created (otherwise dead conenctions would "fill up" the pool
 					// while the FP pretends that the pool is healthy)
-					semaphore.Release();
+					this._semaphore.Release();
 
 					this.MarkAsDead();
 					result.Fail(message);
@@ -393,12 +392,12 @@ namespace Enyim.Caching.Memcached
 				return result;
 			}
 
-			private void MarkAsDead()
+			void MarkAsDead()
 			{
 				if (this._isDebugEnabled)
-					this._logger.LogDebug("Mark as dead was requested for {0}", this.endPoint);
+					this._logger.LogDebug("Mark as dead was requested for {0}", this._endPoint);
 
-				var shouldFail = ownerNode.FailurePolicy.ShouldFail();
+				var shouldFail = _ownerNode.FailurePolicy.ShouldFail();
 
 				if (this._isDebugEnabled)
 					this._logger.LogDebug("FailurePolicy.ShouldFail(): " + shouldFail);
@@ -406,12 +405,12 @@ namespace Enyim.Caching.Memcached
 				if (shouldFail)
 				{
 					if (this._logger.IsEnabled(LogLevel.Warning))
-						this._logger.LogWarning("Marking node {0} as dead", this.endPoint);
+						this._logger.LogWarning("Marking node {0} as dead", this._endPoint);
 
-					this.isAlive = false;
-					this.markedAsDeadUtc = DateTime.UtcNow;
+					this._isAlive = false;
+					this._markedAsDeadUtc = DateTime.UtcNow;
 
-					this.ownerNode.Failed?.Invoke(this.ownerNode);
+					this._ownerNode.Failed?.Invoke(this._ownerNode);
 				}
 			}
 
@@ -419,24 +418,24 @@ namespace Enyim.Caching.Memcached
 			/// Releases an item back into the pool
 			/// </summary>
 			/// <param name="socket"></param>
-			private void ReleaseSocket(PooledSocket socket)
+			void ReleaseSocket(PooledSocket socket)
 			{
 				if (this._isDebugEnabled)
 				{
 					this._logger.LogDebug("Releasing socket " + socket.InstanceId);
-					this._logger.LogDebug("Are we alive? " + this.isAlive);
+					this._logger.LogDebug("Are we alive? " + this._isAlive);
 				}
 
-				if (this.isAlive)
+				if (this._isAlive)
 				{
 					// is it still working (i.e. the server is still connected)
 					if (socket.IsAlive)
 					{
 						// mark the item as free
-						this.freeItems.Push(socket);
+						this._freeItems.Push(socket);
 
 						// signal the event so if someone is waiting for it can reuse this item
-						this.semaphore.Release();
+						this._semaphore.Release();
 					}
 					else
 					{
@@ -448,7 +447,7 @@ namespace Enyim.Caching.Memcached
 
 						// make sure to signal the Acquire so it can create a new conenction
 						// if the failure policy keeps the pool alive
-						this.semaphore.Release();
+						this._semaphore.Release();
 					}
 				}
 				else
@@ -478,12 +477,12 @@ namespace Enyim.Caching.Memcached
 				// if someone uses a pooled item then 99% that an exception will be thrown
 				// somewhere. But since the dispose is mostly used when everyone else is finished
 				// this should not kill any kittens
-				if (!this.isDisposed)
+				if (!this._isDisposed)
 				{
-					this.isAlive = false;
-					this.isDisposed = true;
+					this._isAlive = false;
+					this._isDisposed = true;
 
-					while (this.freeItems.TryPop(out PooledSocket ps))
+					while (this._freeItems.TryPop(out PooledSocket ps))
 					{
 						try
 						{
@@ -492,10 +491,10 @@ namespace Enyim.Caching.Memcached
 						catch { }
 					}
 
-					this.ownerNode = null;
-					this.semaphore.Dispose();
-					this.semaphore = null;
-					this.freeItems = null;
+					this._ownerNode = null;
+					this._semaphore.Dispose();
+					this._semaphore = null;
+					this._freeItems = null;
 				}
 			}
 
@@ -658,7 +657,7 @@ namespace Enyim.Caching.Memcached
 			}
 		}
 
-		private void LogExecutionTime(string title, DateTime startTime, int thresholdMs)
+		void LogExecutionTime(string title, DateTime startTime, int thresholdMs)
 		{
 			var duration = (DateTime.Now - startTime).TotalMilliseconds;
 			if (duration > thresholdMs)

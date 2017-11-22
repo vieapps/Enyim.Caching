@@ -3,7 +3,7 @@ using System;
 namespace Enyim.Caching.Memcached
 {
 	/// <summary>
-	/// Default <see cref="Enyim.Caching.Memcached.ITranscoder"/> implementation.
+	/// Default <see cref="ITranscoder"/> implementation.
 	/// Primitive types are manually serialized, the rest is serialized using <see cref="System.Runtime.Serialization.Formatters.Binary.BinaryFormatter"/>.
 	/// </summary>
 	public class DefaultTranscoder : ITranscoder
@@ -18,19 +18,23 @@ namespace Enyim.Caching.Memcached
 		{
 			// ArraySegment<byte> is only passed in when a part of buffer is being serialized,
 			// usually from a MemoryStream (to avoid duplicating arrays, the byte[] returned by MemoryStream.GetBuffer is placed into an ArraySegment)
-			if (value is ArraySegment<byte>)
+			if (value != null && value is ArraySegment<byte>)
 				return new CacheItem(CacheUtils.Helper.FlagOfRawData, (ArraySegment<byte>)value);
 
 			// or we just received a byte[], means no further processing is needed
-			else if (value is byte[])
+			else if (value != null && value is byte[])
 				return new CacheItem(CacheUtils.Helper.FlagOfRawData, new ArraySegment<byte>(value as byte[]));
 
 			// serialize object
 			else
 			{
 				var typeCode = value == null ? TypeCode.DBNull : Type.GetTypeCode(value.GetType());
+
+				// object
 				if (typeCode.Equals(TypeCode.Object))
 					return new CacheItem((uint)((int)TypeCode.Object | 0x0100), this.SerializeObject(value));
+
+				// primitive
 				else
 				{
 					var data = CacheUtils.Helper.Serialize(value);
@@ -81,15 +85,20 @@ namespace Enyim.Caching.Memcached
 			if (typeCode.Equals(TypeCode.Empty))
 				return (item.Data.Array == null || item.Data.Count == 0)
 					? null
-					: CacheUtils.Helper.Deserialize(item.Data.Array, (int)TypeCode.String, item.Data.Offset, item.Data.Count);
+					: CacheUtils.Helper.Deserialize(item.Data.Array, (int)TypeCode.String | 0x0100, item.Data.Offset, item.Data.Count);
 
 			// object
 			else if (typeCode.Equals(TypeCode.Object))
 				return this.DeserializeObject(item.Data);
 
-			// other kinds of object
+			// primitive
 			else
 				return CacheUtils.Helper.Deserialize(item.Data.Array, (int)item.Flags, item.Data.Offset, item.Data.Count);
+		}
+
+		object ITranscoder.Deserialize(CacheItem item)
+		{
+			return this.Deserialize(item);
 		}
 
 		T ITranscoder.Deserialize<T>(CacheItem item)
@@ -98,11 +107,6 @@ namespace Enyim.Caching.Memcached
 			return @object != null && @object is T
 				? (T)@object
 				: default(T);
-		}
-
-		object ITranscoder.Deserialize(CacheItem item)
-		{
-			return this.Deserialize(item);
 		}
 	}
 }

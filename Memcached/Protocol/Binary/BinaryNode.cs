@@ -8,17 +8,17 @@ using Microsoft.Extensions.Logging;
 namespace Enyim.Caching.Memcached.Protocol.Binary
 {
 	/// <summary>
-	/// A node which is used by the BinaryPool. It implements the binary protocol's SASL auth. mechanism.
+	/// A node which is used by the BinaryPool. It implements the binary protocol's SASL authentication mechanism.
 	/// </summary>
 	public class BinaryNode : MemcachedNode
 	{
-		private readonly ILogger _logger;
+		readonly ILogger _logger;
 
-		ISaslAuthenticationProvider authenticationProvider;
+		ISaslAuthenticationProvider _authProvider;
 
 		public BinaryNode(EndPoint endpoint, ISocketPoolConfiguration config, ISaslAuthenticationProvider authenticationProvider, ILogger logger) : base(endpoint, config, logger)
 		{
-			this.authenticationProvider = authenticationProvider;
+			this._authProvider = authenticationProvider;
 			this._logger = logger;
 		}
 
@@ -27,16 +27,15 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 		/// </summary>
 		protected internal override PooledSocket CreateSocket()
 		{
-			var retval = base.CreateSocket();
+			var socket = base.CreateSocket();
 
-			if (this.authenticationProvider != null && !this.Auth(retval))
+			if (this._authProvider != null && !this.Auth(socket))
 			{
 				this._logger.LogError("Authentication failed: " + this.EndPoint);
-
-				throw new SecurityException("auth failed: " + this.EndPoint);
+				throw new SecurityException("Authentication failed: " + this.EndPoint);
 			}
 
-			return retval;
+			return socket;
 		}
 
 		/// <summary>
@@ -44,9 +43,9 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 		/// </summary>
 		/// <param name="socket"></param>
 		/// <returns></returns>
-		private bool Auth(PooledSocket socket)
+		bool Auth(PooledSocket socket)
 		{
-			SaslStep currentStep = new SaslStart(this.authenticationProvider);
+			SaslStep currentStep = new SaslStart(this._authProvider);
 
 			socket.Write(currentStep.GetBuffer());
 
@@ -55,7 +54,7 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 				// challenge-response authentication
 				if (currentStep.StatusCode == 0x21)
 				{
-					currentStep = new SaslContinue(this.authenticationProvider, currentStep.Data);
+					currentStep = new SaslContinue(this._authProvider, currentStep.Data);
 					socket.Write(currentStep.GetBuffer());
 				}
 				else

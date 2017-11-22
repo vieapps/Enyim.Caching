@@ -61,7 +61,7 @@ namespace Enyim.Caching
 			if (configuration == null)
 				throw new ArgumentNullException(nameof(configuration));
 
-			this.Prepare(loggerFactory ?? new NullLoggerFactory(), configuration);
+			this.Prepare(loggerFactory, configuration);
 		}
 
 		/// <summary>
@@ -74,14 +74,13 @@ namespace Enyim.Caching
 			if (configuration == null)
 				throw new ArgumentNullException(nameof(configuration));
 
-			loggerFactory = loggerFactory ?? new NullLoggerFactory();
 			this.Prepare(loggerFactory, new MemcachedClientConfiguration(loggerFactory, configuration));
 		}
 
 		#region Prepare
 		void Prepare(ILoggerFactory loggerFactory, IMemcachedClientConfiguration configuration)
 		{
-			this._logger = loggerFactory.CreateLogger<MemcachedClient>();
+			this._logger = (loggerFactory ?? new NullLoggerFactory()).CreateLogger<MemcachedClient>();
 
 			this._keyTransformer = configuration.CreateKeyTransformer() ?? new DefaultKeyTransformer();
 			this._transcoder = configuration.CreateTranscoder() ?? new DefaultTranscoder();
@@ -1838,21 +1837,20 @@ namespace Enyim.Caching
 				throw new ArgumentNullException(nameof(key));
 
 			var expires = options == null ? 0 : options.GetExpiration();
-			this.PerformStore(StoreMode.Set, key, value, expires);
-			if (expires > 0)
-				this.PerformStore(StoreMode.Set, key.GetExpirationKey(), expires, expires);
+			var result = this.PerformStore(StoreMode.Set, key, value, expires);
+			if (result.Success && expires > 0)
+				this.PerformStore(StoreMode.Set, key.GetIDistributedCacheExpirationKey(), expires, expires);
 		}
 
-		Task IDistributedCache.SetAsync(string key, byte[] value, DistributedCacheEntryOptions options, CancellationToken token = default(CancellationToken))
+		async Task IDistributedCache.SetAsync(string key, byte[] value, DistributedCacheEntryOptions options, CancellationToken token = default(CancellationToken))
 		{
 			if (string.IsNullOrWhiteSpace(key))
 				throw new ArgumentNullException(nameof(key));
 
 			var expires = options == null ? 0 : options.GetExpiration();
-			return Task.WhenAll(
-				this.PerformStoreAsync(StoreMode.Set, key, value, expires),
-				expires > 0 ? this.PerformStoreAsync(StoreMode.Set, key.GetExpirationKey(), expires, expires) : Task.CompletedTask
-			);
+			var result = await this.PerformStoreAsync(StoreMode.Set, key, value, expires);
+			if (result.Success && expires > 0)
+				await this.PerformStoreAsync(StoreMode.Set, key.GetIDistributedCacheExpirationKey(), expires, expires);
 		}
 
 		byte[] IDistributedCache.Get(string key)
@@ -1877,11 +1875,12 @@ namespace Enyim.Caching
 				throw new ArgumentNullException(nameof(key));
 
 			var value = this.Get<byte[]>(key);
-			var expires = value != null ? this.Get<uint?>(key.GetExpirationKey()) : null;
+			var expires = value != null ? this.Get<uint?>(key.GetIDistributedCacheExpirationKey()) : null;
 			if (value != null && expires != null && expires.Value > 0)
 			{
-				this.PerformStore(StoreMode.Replace, key, value, expires.Value);
-				this.PerformStore(StoreMode.Replace, key.GetExpirationKey(), expires.Value, expires.Value);
+				var result = this.PerformStore(StoreMode.Replace, key, value, expires.Value);
+				if (result.Success)
+					this.PerformStore(StoreMode.Replace, key.GetIDistributedCacheExpirationKey(), expires.Value, expires.Value);
 			}
 		}
 
@@ -1891,12 +1890,13 @@ namespace Enyim.Caching
 				throw new ArgumentNullException(nameof(key));
 
 			var value = await this.GetAsync<byte[]>(key);
-			var expires = value != null ? await this.GetAsync<uint?>(key.GetExpirationKey()) : null;
+			var expires = value != null ? await this.GetAsync<uint?>(key.GetIDistributedCacheExpirationKey()) : null;
 			if (value != null && expires != null && expires.Value > 0)
-				await Task.WhenAll(
-					this.PerformStoreAsync(StoreMode.Replace, key, value, expires.Value),
-					this.PerformStoreAsync(StoreMode.Replace, key.GetExpirationKey(), expires.Value, expires.Value)
-				);
+			{
+				var result = await this.PerformStoreAsync(StoreMode.Replace, key, value, expires.Value);
+				if (result.Success)
+					await this.PerformStoreAsync(StoreMode.Replace, key.GetIDistributedCacheExpirationKey(), expires.Value, expires.Value);
+			}
 		}
 
 		void IDistributedCache.Remove(string key)
@@ -1905,7 +1905,7 @@ namespace Enyim.Caching
 				throw new ArgumentNullException(nameof(key));
 
 			this.Remove(key);
-			this.Remove(key.GetExpirationKey());
+			this.Remove(key.GetIDistributedCacheExpirationKey());
 		}
 
 		Task IDistributedCache.RemoveAsync(string key, CancellationToken token = default(CancellationToken))
@@ -1915,7 +1915,7 @@ namespace Enyim.Caching
 
 			return Task.WhenAll(
 				this.RemoveAsync(key),
-				this.RemoveAsync(key.GetExpirationKey())
+				this.RemoveAsync(key.GetIDistributedCacheExpirationKey())
 			);
 		}
 		#endregion

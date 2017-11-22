@@ -140,14 +140,17 @@ namespace CacheUtils
 		/// Converts this date-time to time-span
 		/// </summary>
 		/// <param name="datetime"></param>
+		/// <param name="useUTC"></param>
 		/// <returns></returns>
-		public static TimeSpan ToTimeSpan(this DateTime datetime)
+		public static TimeSpan ToTimeSpan(this DateTime datetime, bool useUTC = false)
 		{
 			return datetime == DateTime.MaxValue
 				? TimeSpan.Zero
 				: datetime < DateTime.Now
 					? TimeSpan.FromMilliseconds(1)
-					: datetime - DateTime.Now;
+					: useUTC
+						? datetime.ToUniversalTime() - DateTime.Now.ToUniversalTime()
+						: datetime.ToLocalTime() - DateTime.Now;
 		}
 
 		/// <summary>
@@ -200,9 +203,14 @@ namespace CacheUtils
 					: DateTime.Now.Add(options.SlidingExpiration.Value)).GetExpiration();
 		}
 
-		internal static string GetExpirationKey(this string key)
+		/// <summary>
+		/// Gets the key for storing related information of an IDistributedCache item
+		/// </summary>
+		/// <param name="key"></param>
+		/// <returns></returns>
+		public static string GetIDistributedCacheExpirationKey(this string key)
 		{
-			return $"distributed-expiration-key@{key}";
+			return $"i-distributed-cache#{key}";
 		}
 
 		/// <summary>
@@ -226,11 +234,6 @@ namespace CacheUtils
 		/// Gets the flag of raw data
 		/// </summary>
 		public const int FlagOfRawData = 0xfa52;
-
-		/// <summary>
-		/// Gets the flag of fragmented data
-		/// </summary>
-		public const int FlagOfFragmentedData = 0xfb52;
 
 		/// <summary>
 		/// Serialize an object to array of bytes

@@ -4,14 +4,14 @@ using System.Collections.Generic;
 namespace Enyim.Caching.Configuration
 {
 	/// <summary>
-	/// Defines an interface for configuring the authentication paramaters the <see cref="T:MemcachedClient"/>.
+	/// Defines an interface for configuring the authentication paramaters the <see cref="MemcachedClient"/>.
 	/// </summary>
 	public interface IAuthenticationConfiguration
 	{
 		/// <summary>
-		/// Gets or sets the type of the <see cref="T:Enyim.Caching.Memcached.IAuthenticationProvider"/> which will be used authehticate the connections to the Memcached nodes.
+		/// Gets or sets the type of the <see cref="Enyim.Caching.Memcached.ISaslAuthenticationProvider"/> which will be used authehticate the connections to the Memcached nodes.
 		/// </summary>
-		Type Type { get; set; }
+		string Type { get; set; }
 
 		/// <summary>
 		/// Gets or sets the parameters passed to the authenticator instance.

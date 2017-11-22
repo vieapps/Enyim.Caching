@@ -202,9 +202,9 @@ namespace Enyim.Caching.Memcached
 		void IServerPool.Start()
 		{
 			this._allNodes = this._configuration.Servers
-				.Select(ip =>
+				.Select(endpoint =>
 				{
-					var node = this.CreateNode(ip);
+					var node = this.CreateNode(endpoint);
 					node.Failed += this.NodeFail;
 					return node;
 				})

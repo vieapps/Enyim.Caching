@@ -1,6 +1,7 @@
 using System;
 using System.Net;
 
+using Enyim.Reflection;
 using Enyim.Caching.Configuration;
 
 using Microsoft.Extensions.Logging;
@@ -14,11 +15,11 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 	{
 		ISaslAuthenticationProvider authenticationProvider;
 		IMemcachedClientConfiguration configuration;
-		private readonly ILogger _logger;
+		readonly ILogger _logger;
 
 		public BinaryPool(IMemcachedClientConfiguration configuration, ILogger logger) : base(configuration, new BinaryOperationFactory(logger), logger)
 		{
-			this.authenticationProvider = GetProvider(configuration);
+			this.authenticationProvider = BinaryPool.GetProvider(configuration);
 			this.configuration = configuration;
 			this._logger = logger;
 		}
@@ -28,24 +29,13 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 			return new BinaryNode(endpoint, this.configuration.SocketPool, this.authenticationProvider, this._logger);
 		}
 
-		private static ISaslAuthenticationProvider GetProvider(IMemcachedClientConfiguration configuration)
+		static ISaslAuthenticationProvider GetProvider(IMemcachedClientConfiguration configuration)
 		{
-			// create&initialize the authenticator, if any
-			// we'll use this single instance everywhere, so it must be thread safe
-			if (configuration.Authentication != null)
-			{
-				var provider = configuration.Authentication.Type == null
-					? null
-					: Reflection.FastActivator.Create(configuration.Authentication.Type) as ISaslAuthenticationProvider;
-
-				if (provider != null)
-				{
-					provider.Initialize(configuration.Authentication.Parameters);
-					return provider;
-				}
-			}
-
-			return null;
+			var provider = configuration.Authentication != null && !string.IsNullOrWhiteSpace(configuration.Authentication.Type)
+				? FastActivator.Create(Type.GetType(configuration.Authentication.Type)) as ISaslAuthenticationProvider
+				: null;
+			provider?.Initialize(configuration.Authentication.Parameters);
+			return provider;
 		}
 	}
 }

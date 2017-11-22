@@ -7,22 +7,26 @@ namespace Enyim.Caching.Configuration
 {
 	public class AuthenticationConfiguration : IAuthenticationConfiguration
 	{
-		private Type authenticator;
-		private Dictionary<string, object> parameters;
+		string _type;
+		Dictionary<string, object> _parameters;
 
-		Type IAuthenticationConfiguration.Type
+		public string Type
 		{
-			get { return this.authenticator; }
+			get { return this._type; }
 			set
 			{
-				ConfigurationHelper.CheckForInterface(value, typeof(ISaslAuthenticationProvider));
-				this.authenticator = value;
+				if (!string.IsNullOrWhiteSpace(value))
+					ConfigurationHelper.CheckForInterface(System.Type.GetType(value), typeof(ISaslAuthenticationProvider));
+				this._type = value;
 			}
 		}
 
-		Dictionary<string, object> IAuthenticationConfiguration.Parameters
+		public Dictionary<string, object> Parameters
 		{
-			get { return this.parameters ?? (this.parameters = new Dictionary<string, object>()); }
+			get
+			{
+				return this._parameters ?? (this._parameters = new Dictionary<string, object>());
+			}
 		}
 	}
 }
