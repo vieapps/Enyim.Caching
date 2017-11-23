@@ -165,7 +165,7 @@ namespace Enyim.Caching.Memcached
 				}
 				catch (Exception e)
 				{
-					this._logger.LogError(nameof(PooledSocket), e);
+					this._logger.LogError(e, "Error occured while disposing socket");
 				}
 			}
 			else
@@ -187,32 +187,24 @@ namespace Enyim.Caching.Memcached
 		/// Reads the next byte from the server's response.
 		/// </summary>
 		/// <remarks>This method blocks and will not return until the value is read.</remarks>
-		public int ReadByte()
+		public int Read()
 		{
 			this.CheckDisposed();
+
 			try
 			{
 				return this._input.ReadByte();
 			}
-			catch (IOException)
+			catch (Exception e)
 			{
+				this._logger.LogError(e, "Error occured while reading from socket");
 				this._isAlive = false;
 				throw;
 			}
 		}
 
-		public async Task<byte[]> ReadBytesAsync(int count)
-		{
-			using (var awaitable = new SocketAwaitable())
-			{
-				awaitable.Buffer = new ArraySegment<byte>(new byte[count], 0, count);
-				await this._socket.ReceiveAsync(awaitable);
-				return awaitable.Transferred.Array;
-			}
-		}
-
 		/// <summary>
-		/// Reads data from the server into the specified buffer.
+		/// Reads data from the server's response.into the specified buffer.
 		/// </summary>
 		/// <param name="buffer">An array of <see cref="System.Byte"/> that is the storage location for the received data.</param>
 		/// <param name="offset">The location in buffer to store the received data.</param>
@@ -236,8 +228,35 @@ namespace Enyim.Caching.Memcached
 					offset += currentRead;
 					shouldRead -= currentRead;
 				}
-				catch (IOException)
+				catch (Exception e)
 				{
+					this._logger.LogError(e, "Error occured while reading from socket");
+					this._isAlive = false;
+					throw;
+				}
+			}
+		}
+
+		/// <summary>
+		/// Reads data from the server's response.
+		/// </summary>
+		/// <param name="count"></param>
+		/// <returns></returns>
+		public async Task<byte[]> ReadAsync(int count)
+		{
+			this.CheckDisposed();
+
+			using (var awaitable = new SocketAwaitable())
+			{
+				try
+				{
+					awaitable.Buffer = new ArraySegment<byte>(new byte[count], 0, count);
+					await this._socket.ReceiveAsync(awaitable);
+					return awaitable.Transferred.Array;
+				}
+				catch (Exception e)
+				{
+					this._logger.LogError(e, "Error occured while reading from socket");
 					this._isAlive = false;
 					throw;
 				}
@@ -252,7 +271,7 @@ namespace Enyim.Caching.Memcached
 			if (status != SocketError.Success)
 			{
 				this._isAlive = false;
-				throw new Exception($"Failed to write to the socket '{this._endpoint}'. Error: {status}");
+				throw new IOException($"Failed to write to the socket '{this._endpoint}'. Error: {status}");
 			}
 		}
 
@@ -264,12 +283,14 @@ namespace Enyim.Caching.Memcached
 			if (status != SocketError.Success)
 			{
 				this._isAlive = false;
-				throw new Exception($"Failed to write to the socket '{this._endpoint}'. Error: {status}");
+				throw new IOException($"Failed to write to the socket '{this._endpoint}'. Error: {status}");
 			}
 		}
 
 		public async Task WriteSync(IList<ArraySegment<byte>> buffers)
 		{
+			this.CheckDisposed();
+
 			using (var awaitable = new SocketAwaitable())
 			{
 				awaitable.Arguments.BufferList = buffers;
@@ -277,16 +298,17 @@ namespace Enyim.Caching.Memcached
 				{
 					await this._socket.SendAsync(awaitable);
 				}
-				catch
+				catch (Exception ex)
 				{
+					this._logger.LogError(ex, "Error occured while writting into socket");
 					this._isAlive = false;
-					throw new Exception($"Failed to write to the socket '{this._endpoint}'. Error: {awaitable.Arguments.SocketError}");
+					throw new IOException($"Failed to write to the socket '{this._endpoint}'. Error: {awaitable.Arguments.SocketError}", ex);
 				}
 
 				if (awaitable.Arguments.SocketError != SocketError.Success)
 				{
 					this._isAlive = false;
-					throw new Exception($"Failed to write to the socket '{this._endpoint}'. Error: {awaitable.Arguments.SocketError}");
+					throw new IOException($"Failed to write to the socket '{this._endpoint}'. Error: {awaitable.Arguments.SocketError}");
 				}
 			}
 		}

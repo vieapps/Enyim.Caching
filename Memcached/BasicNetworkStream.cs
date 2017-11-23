@@ -6,13 +6,13 @@ namespace Enyim.Caching.Memcached
 {
 	public partial class PooledSocket
 	{
-		private class BasicNetworkStream : Stream
+		class BasicNetworkStream : Stream
 		{
-			private Socket socket;
+			Socket _socket;
 
 			public BasicNetworkStream(Socket socket)
 			{
-				this.socket = socket;
+				this._socket = socket;
 			}
 
 			public override bool CanRead
@@ -62,34 +62,34 @@ namespace Enyim.Caching.Memcached
 
 			public override int Read(byte[] buffer, int offset, int count)
 			{
-				int result = this.socket.Receive(buffer, offset, count, SocketFlags.None, out SocketError errorCode);
+				var result = this._socket.Receive(buffer, offset, count, SocketFlags.None, out SocketError errorCode);
 
 				// actually "0 bytes read" could mean an error as well
 				if (errorCode == SocketError.Success && result > 0)
 					return result;
 
-				throw new IOException(String.Format("Failed to read from the socket '{0}'. Error: {1}", this.socket.RemoteEndPoint, errorCode == SocketError.Success ? "?" : errorCode.ToString()));
+				throw new IOException(String.Format("Failed to read from the socket '{0}'. Error: {1}", this._socket.RemoteEndPoint, errorCode == SocketError.Success ? "?" : errorCode.ToString()));
 			}
 
 			public override IAsyncResult BeginRead(byte[] buffer, int offset, int count, AsyncCallback callback, object state)
 			{
-				var result = this.socket.BeginReceive(buffer, offset, count, SocketFlags.None, out SocketError errorCode, callback, state);
+				var result = this._socket.BeginReceive(buffer, offset, count, SocketFlags.None, out SocketError errorCode, callback, state);
 
 				if (errorCode == SocketError.Success)
 					return result;
 
-				throw new IOException(String.Format("Failed to read from the socket '{0}'. Error: {1}", this.socket.RemoteEndPoint, errorCode));
+				throw new IOException(String.Format("Failed to read from the socket '{0}'. Error: {1}", this._socket.RemoteEndPoint, errorCode));
 			}
 
 			public override int EndRead(IAsyncResult asyncResult)
 			{
-				var result = this.socket.EndReceive(asyncResult, out SocketError errorCode);
+				var result = this._socket.EndReceive(asyncResult, out SocketError errorCode);
 
 				// actually "0 bytes read" could mean an error as well
 				if (errorCode == SocketError.Success && result > 0)
 					return result;
 
-				throw new IOException(String.Format("Failed to read from the socket '{0}'. Error: {1}", this.socket.RemoteEndPoint, errorCode));
+				throw new IOException(String.Format("Failed to read from the socket '{0}'. Error: {1}", this._socket.RemoteEndPoint, errorCode));
 			}
 		}
 	}

@@ -363,7 +363,7 @@ namespace Enyim.Caching.Memcached
 					var startTime = DateTime.Now;
 					socket = this.CreateSocket();
 					if (this._isDebugEnabled)
-						this._logger.LogInformation("MemcachedAcquire-CreateSocket: {0}ms", (DateTime.Now - startTime).TotalMilliseconds);
+						this._logger.LogInformation($"Cost for creating socket when acquire: {(DateTime.Now - startTime).TotalMilliseconds}ms");
 					result.Value = socket;
 					result.Pass();
 				}
@@ -402,7 +402,7 @@ namespace Enyim.Caching.Memcached
 				if (shouldFail)
 				{
 					if (this._logger.IsEnabled(LogLevel.Warning))
-						this._logger.LogWarning($"Marking node {this._endPoint} as dead node");
+						this._logger.LogWarning($"Marking node {this._endPoint} is dead");
 
 					this._isAlive = false;
 					this._markedAsDeadUtc = DateTime.UtcNow;
@@ -521,7 +521,7 @@ namespace Enyim.Caching.Memcached
 			}
 			catch (Exception ex)
 			{
-				this._logger.LogError(new EventId(this.GetHashCode(), nameof(MemcachedNode)), ex, $"Cannot create pooled socket ({this._endpoint})");
+				this._logger.LogError(new EventId(this.GetHashCode(), nameof(MemcachedNode)), ex, $"Cannot create socket ({this._endpoint})");
 				throw ex;
 			}
 		}
@@ -542,7 +542,7 @@ namespace Enyim.Caching.Memcached
 					{
 						var duration = (DateTime.Now - startTime).TotalMilliseconds;
 						if (duration > 50)
-							this._logger.LogWarning($"MemcachedNode-ExecuteOperation (write into socket): {duration}ms");
+							this._logger.LogWarning($"Cost for writting into socket when execute operation: {duration}ms");
 					}
 
 					var readResult = op.ReadResponse(socket);
@@ -553,7 +553,7 @@ namespace Enyim.Caching.Memcached
 
 					return result;
 				}
-				catch (IOException e)
+				catch (Exception e)
 				{
 					this._logger.LogError(e, $"{nameof(ExecuteOperation)} failed");
 					result.Fail("Exception reading response", e);
@@ -589,11 +589,10 @@ namespace Enyim.Caching.Memcached
 					{
 						var duration = (DateTime.Now - startTime).TotalMilliseconds;
 						if (duration > 50)
-							this._logger.LogWarning($"MemcachedNode-ExecuteOperationAsync (write into socket): {duration}ms");
+							this._logger.LogWarning($"Cost for writting into socket when execute operation: {duration}ms");
 					}
 
-					var readResult = op.ReadResponse(socket);
-					//var readResult = await op.ReadResponseAsync(socket);
+					var readResult = await op.ReadResponseAsync(socket);
 					if (readResult.Success)
 						result.Pass();
 					else
@@ -601,7 +600,7 @@ namespace Enyim.Caching.Memcached
 
 					return result;
 				}
-				catch (IOException e)
+				catch (Exception e)
 				{
 					this._logger.LogError(e, $"{nameof(ExecuteOperationAsync)} failed");
 					result.Fail("Exception reading response", e);
@@ -636,7 +635,7 @@ namespace Enyim.Caching.Memcached
 					next(readSuccess);
 				});
 			}
-			catch (IOException e)
+			catch (Exception e)
 			{
 				this._logger.LogError(e, "Error occurred while executing an operation (with next action)");
 				((IDisposable)socket).Dispose();

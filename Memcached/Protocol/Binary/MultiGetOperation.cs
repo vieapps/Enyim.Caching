@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Threading;
 using System.Threading.Tasks;
 
 using Enyim.Caching.Memcached.Results;
@@ -19,9 +18,9 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 		int _noopId;
 
 		PooledSocket _socket;
-		BinaryResponse _reader;
+		BinaryResponse _response;
 		bool? _loopState;
-		Action<bool> _afterRead;
+		Action<bool> _next;
 
 		public MultiGetOperation(IList<string> keys) : base(keys)
 		{
@@ -73,92 +72,6 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 			return buffer;
 		}
 
-		protected internal override Task<IOperationResult> ReadResponseAsync(PooledSocket socket)
-		{
-			var tcs = new TaskCompletionSource<IOperationResult>();
-			ThreadPool.QueueUserWorkItem(_ =>
-			{
-				try
-				{
-					var result = this.ReadResponse(socket);
-					tcs.SetResult(result);
-				}
-				catch (Exception ex)
-				{
-					tcs.SetException(ex);
-				}
-			});
-			return tcs.Task;
-		}
-
-		protected internal override bool ReadResponseAsync(PooledSocket socket, Action<bool> next)
-		{
-			this._result = new Dictionary<string, CacheItem>();
-			this.Cas = new Dictionary<string, ulong>();
-
-			this._socket = socket;
-			this._reader = new BinaryResponse();
-			this._loopState = null;
-			this._afterRead = next;
-
-			return this.DoReadAsync();
-		}
-
-		bool DoReadAsync()
-		{
-			var reader = this._reader;
-
-			while (this._loopState == null)
-			{
-				var readSuccess = reader.ReadAsync(this._socket, this.EndReadAsync, out bool ioPending);
-				this.StatusCode = reader.StatusCode;
-
-				if (ioPending)
-					return readSuccess;
-
-				if (!readSuccess)
-					this._loopState = false;
-				else if (reader.CorrelationId == this._noopId)
-					this._loopState = true;
-				else
-					this.StoreResult(reader);
-			}
-
-			this._afterRead((bool)this._loopState);
-
-			return true;
-		}
-
-		void EndReadAsync(bool readSuccess)
-		{
-			if (!readSuccess)
-				this._loopState = false;
-			else if (this._reader.CorrelationId == this._noopId)
-				this._loopState = true;
-			else
-				this.StoreResult(this._reader);
-
-			this.DoReadAsync();
-		}
-
-		void StoreResult(BinaryResponse reader)
-		{
-			// find the key to the response
-			if (!this._idToKey.TryGetValue(reader.CorrelationId, out string key))
-				this._logger.LogWarning($"Multi-Get: Found response with correlation ID ({reader.CorrelationId}), but no key is matching it."); // we're not supposed to get here
-
-			else
-			{
-				// deserialize the response
-				var flags = (ushort)BinaryConverter.DecodeInt32(reader.Extra, 0);
-				this._result[key] = new CacheItem(flags, reader.Data);
-				this.Cas[key] = reader.CAS;
-
-				if (this._logger.IsEnabled(LogLevel.Debug))
-					this._logger.LogDebug($"Multi-Get: Reading data of '{key}' (StoreResult) - CAS: {reader.CAS} - Flags: {flags}");
-			}
-		}
-
 		protected internal override IOperationResult ReadResponse(PooledSocket socket)
 		{
 			this._result = new Dictionary<string, CacheItem>();
@@ -174,7 +87,6 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 				// found the noop, quit
 				if (response.CorrelationId == this._noopId)
 					return result.Pass();
-
 
 				// find the key to the response
 				if (!this._idToKey.TryGetValue(response.CorrelationId, out string key))
@@ -195,6 +107,111 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 
 			// finished reading but we did not find the NOOP
 			return result.Fail($"Found response with correlation ID {response.CorrelationId}, but no key is matching it");
+		}
+
+		protected internal override async Task<IOperationResult> ReadResponseAsync(PooledSocket socket)
+		{
+			this._result = new Dictionary<string, CacheItem>();
+			this.Cas = new Dictionary<string, ulong>();
+			var result = new TextOperationResult();
+
+			var response = new BinaryResponse();
+
+			while (await response.ReadAsync(socket))
+			{
+				this.StatusCode = response.StatusCode;
+
+				// found the noop, quit
+				if (response.CorrelationId == this._noopId)
+					return result.Pass();
+
+				// find the key to the response
+				if (!this._idToKey.TryGetValue(response.CorrelationId, out string key))
+				{
+					// we're not supposed to get here
+					this._logger.LogWarning($"Multi-Get: Found response with correlation ID ({response.CorrelationId}), but no key is matching it");
+					continue;
+				}
+
+				// deserialize the response
+				var flags = BinaryConverter.DecodeInt32(response.Extra, 0);
+				this._result[key] = new CacheItem((ushort)flags, response.Data);
+				this.Cas[key] = response.CAS;
+
+				if (this._logger.IsEnabled(LogLevel.Debug))
+					this._logger.LogDebug($"Multi-Get: Reading data of '{key}' (ReadResponse) - CAS: {response.CAS} - Flags: {flags}");
+			}
+
+			// finished reading but we did not find the NOOP
+			return result.Fail($"Found response with correlation ID {response.CorrelationId}, but no key is matching it");
+		}
+
+		protected internal override bool ReadResponseAsync(PooledSocket socket, Action<bool> next)
+		{
+			this._result = new Dictionary<string, CacheItem>();
+			this.Cas = new Dictionary<string, ulong>();
+
+			this._socket = socket;
+			this._response = new BinaryResponse();
+			this._loopState = null;
+			this._next = next;
+
+			return this.DoReadAsync();
+		}
+
+		bool DoReadAsync()
+		{
+			var reader = this._response;
+
+			while (this._loopState == null)
+			{
+				var readSuccess = reader.ReadAsync(this._socket, this.EndReadAsync, out bool ioPending);
+				this.StatusCode = reader.StatusCode;
+
+				if (ioPending)
+					return readSuccess;
+
+				if (!readSuccess)
+					this._loopState = false;
+				else if (reader.CorrelationId == this._noopId)
+					this._loopState = true;
+				else
+					this.StoreResult(reader);
+			}
+
+			this._next((bool)this._loopState);
+
+			return true;
+		}
+
+		void EndReadAsync(bool readSuccess)
+		{
+			if (!readSuccess)
+				this._loopState = false;
+			else if (this._response.CorrelationId == this._noopId)
+				this._loopState = true;
+			else
+				this.StoreResult(this._response);
+
+			this.DoReadAsync();
+		}
+
+		void StoreResult(BinaryResponse reader)
+		{
+			// find the key to the response
+			if (!this._idToKey.TryGetValue(reader.CorrelationId, out string key))
+				this._logger.LogWarning($"Multi-Get: Found response with correlation ID ({reader.CorrelationId}), but no key is matching it."); // we're not supposed to get here
+
+			else
+			{
+				// deserialize the response
+				var flags = (ushort)BinaryConverter.DecodeInt32(reader.Extra, 0);
+				this._result[key] = new CacheItem(flags, reader.Data);
+				this.Cas[key] = reader.CAS;
+
+				if (this._logger.IsEnabled(LogLevel.Debug))
+					this._logger.LogDebug($"Multi-Get: Reading data of '{key}' (StoreResult) - CAS: {reader.CAS} - Flags: {flags}");
+			}
 		}
 
 		public Dictionary<string, CacheItem> Result

@@ -42,13 +42,10 @@ namespace Enyim.Caching.Memcached.Protocol.Text
 			if (response.Length >= ErrorResponseLength)
 			{
 				if (String.Compare(response, 0, ClientErrorResponse, 0, ErrorResponseLength, StringComparison.Ordinal) == 0)
-				{
 					throw new MemcachedClientException(response.Remove(0, ErrorResponseLength));
-				}
+
 				else if (String.Compare(response, 0, ServerErrorResponse, 0, ErrorResponseLength, StringComparison.Ordinal) == 0)
-				{
 					throw new MemcachedException(response.Remove(0, ErrorResponseLength));
-				}
 			}
 
 			return response;
@@ -61,41 +58,42 @@ namespace Enyim.Caching.Memcached.Protocol.Text
 		/// <returns></returns>
 		static string ReadLine(PooledSocket socket)
 		{
-			MemoryStream ms = new MemoryStream(50);
-
-			bool gotR = false;
-			int data;
-
-			while (true)
+			using (var stream = new MemoryStream(50))
 			{
-				data = socket.ReadByte();
+				var gotR = false;
+				int data;
 
-				if (data == 13)
+				while (true)
 				{
-					gotR = true;
-					continue;
+					data = socket.Read();
+
+					if (data == 13)
+					{
+						gotR = true;
+						continue;
+					}
+
+					if (gotR)
+					{
+						if (data == 10)
+							break;
+
+						stream.WriteByte(13);
+
+						gotR = false;
+					}
+
+					stream.WriteByte((byte)data);
 				}
 
-				if (gotR)
-				{
-					if (data == 10)
-						break;
+				var result = Encoding.ASCII.GetString(stream.ToArray(), 0, (int)stream.Length);
 
-					ms.WriteByte(13);
+				Logger = Logger ?? LogManager.CreateLogger(typeof(TextSocketHelper));
+				if (Logger.IsEnabled(LogLevel.Debug))
+					Logger.LogDebug("ReadLine: " + result);
 
-					gotR = false;
-				}
-
-				ms.WriteByte((byte)data);
+				return result;
 			}
-
-			string retval = Encoding.ASCII.GetString(ms.ToArray(), 0, (int)ms.Length);
-
-			Logger = Logger ?? LogManager.CreateLogger(typeof(TextSocketHelper));
-			if (Logger.IsEnabled(LogLevel.Debug))
-				Logger.LogDebug("ReadLine: " + retval);
-
-			return retval;
 		}
 
 		/// <summary>
@@ -121,7 +119,6 @@ namespace Enyim.Caching.Memcached.Protocol.Text
 
 			return list;
 		}
-
 	}
 }
 

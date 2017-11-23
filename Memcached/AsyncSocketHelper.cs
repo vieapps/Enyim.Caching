@@ -10,23 +10,20 @@ namespace Enyim.Caching.Memcached
 		/// <summary>
 		/// Supports exactly one reader and writer, but they can do IO concurrently
 		/// </summary>
-		private class AsyncSocketHelper
+		class AsyncSocketHelper
 		{
-			private const int ChunkSize = 65536;
+			const int ChunkSize = 65536;
 
-			private PooledSocket socket;
-			private SlidingBuffer asyncBuffer;
+			PooledSocket socket;
+			SlidingBuffer asyncBuffer;
 
-			private SocketAsyncEventArgs readEvent;
-#if DEBUG_IO
-			private int doingIO;
-#endif
-			private int remainingRead;
-			private int expectedToRead;
-			private AsyncIOArgs pendingArgs;
+			SocketAsyncEventArgs readEvent;
+			int remainingRead;
+			int expectedToRead;
+			AsyncIOArgs pendingArgs;
 
-			private int isAborted;
-			private ManualResetEvent readInProgressEvent;
+			int isAborted;
+			ManualResetEvent readInProgressEvent;
 
 			public AsyncSocketHelper(PooledSocket socket)
 			{
@@ -48,11 +45,8 @@ namespace Enyim.Caching.Memcached
 			public bool Read(AsyncIOArgs p)
 			{
 				var count = p.Count;
-				if (count < 1) throw new ArgumentOutOfRangeException("count", "count must be > 0");
-#if DEBUG_IO
-				if (Interlocked.CompareExchange(ref this.doingIO, 1, 0) != 0)
-					throw new InvalidOperationException("Receive is already in progress");
-#endif
+				if (count < 1)
+					throw new ArgumentOutOfRangeException("count", "count must be > 0");
 				this.expectedToRead = p.Count;
 				this.pendingArgs = p;
 
@@ -81,7 +75,7 @@ namespace Enyim.Caching.Memcached
 				this.asyncBuffer.UnsafeClear();
 			}
 
-			private void BeginReceive()
+			void BeginReceive()
 			{
 				while (this.remainingRead > 0)
 				{
@@ -108,7 +102,7 @@ namespace Enyim.Caching.Memcached
 					this.BeginReceive();
 			}
 
-			private void AbortReadAndTryPublishError(bool markAsDead)
+			void AbortReadAndTryPublishError(bool markAsDead)
 			{
 				if (markAsDead)
 					this.socket._isAlive = false;
@@ -121,11 +115,6 @@ namespace Enyim.Caching.Memcached
 
 				this.remainingRead = 0;
 				var p = this.pendingArgs;
-#if DEBUG_IO
-				Thread.MemoryBarrier();
-
-				this.doingIO = 0;
-#endif
 
 				p.Fail = true;
 				p.Result = null;
@@ -137,14 +126,14 @@ namespace Enyim.Caching.Memcached
 			/// returns true when io is pending
 			/// </summary>
 			/// <returns></returns>
-			private bool EndReceive()
+			bool EndReceive()
 			{
 				this.readInProgressEvent.Set();
 
 				var read = this.readEvent.BytesTransferred;
 				if (this.readEvent.SocketError != SocketError.Success || read == 0)
 				{
-					this.AbortReadAndTryPublishError(true);//new IOException("Remote end has been closed"));
+					this.AbortReadAndTryPublishError(true);
 
 					return false;
 				}
@@ -162,17 +151,13 @@ namespace Enyim.Caching.Memcached
 				return true;
 			}
 
-			private void PublishResult(bool isAsync)
+			void PublishResult(bool isAsync)
 			{
 				var retval = this.pendingArgs;
 
 				var data = new byte[this.expectedToRead];
 				this.asyncBuffer.Read(data, 0, retval.Count);
 				pendingArgs.Result = data;
-#if DEBUG_IO
-				Thread.MemoryBarrier();
-				this.doingIO = 0;
-#endif
 
 				if (isAsync)
 					pendingArgs.Next(pendingArgs);

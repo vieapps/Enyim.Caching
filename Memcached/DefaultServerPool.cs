@@ -102,7 +102,7 @@ namespace Enyim.Caching.Memcached
 							changed = true;
 							aliveList.Add(node);
 							if (isDebug)
-								this._logger.LogDebug("Ping ok.");
+								this._logger.LogDebug("Ping OK, go back alive.");
 						}
 						else
 						{
@@ -125,13 +125,13 @@ namespace Enyim.Caching.Memcached
 				if (deadCount == 0)
 				{
 					if (isDebug)
-						this._logger.LogDebug("deadCount == 0, stopping the timer.");
+						this._logger.LogDebug("Count of dead is 0, stopping the timer.");
 					this._isTimerActive = false;
 				}
 				else
 				{
 					if (isDebug)
-						this._logger.LogDebug("deadCount == {0}, starting the timer.", deadCount);
+						this._logger.LogDebug("Count of dead is {0}, starting the timer.", deadCount);
 					this._resurrectTimer.Change(this._deadTimeoutMsec, Timeout.Infinite);
 				}
 			}

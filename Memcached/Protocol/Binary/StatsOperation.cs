@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Net;
-using System.Threading;
 using System.Threading.Tasks;
 
 using Enyim.Caching.Memcached.Results;
@@ -33,11 +32,11 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 		{
 			var response = new BinaryResponse();
 			var serverData = new Dictionary<string, string>();
-			var retval = false;
+			var success = false;
 
 			while (response.Read(socket) && response.KeyLength > 0)
 			{
-				retval = true;
+				success = true;
 
 				var data = response.Data;
 				var key = BinaryConverter.DecodeKey(data.Array, data.Offset, response.KeyLength);
@@ -54,26 +53,37 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 				StatusCode = StatusCode
 			};
 
-			result.PassOrFail(retval, "Failed to read response");
+			result.PassOrFail(success, "Failed to read response");
 			return result;
 		}
 
-        protected internal override Task<IOperationResult> ReadResponseAsync(PooledSocket socket)
+        protected internal override async Task<IOperationResult> ReadResponseAsync(PooledSocket socket)
         {
-			var tcs = new TaskCompletionSource<IOperationResult>();
-			ThreadPool.QueueUserWorkItem(_ =>
+			var response = new BinaryResponse();
+			var serverData = new Dictionary<string, string>();
+			var success = false;
+
+			while (await response.ReadAsync(socket) && response.KeyLength > 0)
 			{
-				try
-				{
-					var result = this.ReadResponse(socket);
-					tcs.SetResult(result);
-				}
-				catch (Exception ex)
-				{
-					tcs.SetException(ex);
-				}
-			});
-			return tcs.Task;
+				success = true;
+
+				var data = response.Data;
+				var key = BinaryConverter.DecodeKey(data.Array, data.Offset, response.KeyLength);
+				var value = BinaryConverter.DecodeKey(data.Array, data.Offset + response.KeyLength, data.Count - response.KeyLength);
+
+				serverData[key] = value;
+			}
+
+			this._result = serverData;
+			this.StatusCode = response.StatusCode;
+
+			var result = new BinaryOperationResult()
+			{
+				StatusCode = StatusCode
+			};
+
+			result.PassOrFail(success, "Failed to read response");
+			return result;
 		}
 
 		Dictionary<string, string> IStatsOperation.Result

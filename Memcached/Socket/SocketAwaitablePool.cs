@@ -13,8 +13,7 @@ namespace Dawn.Net.Sockets
 	///     Represents a thread-safe pool of awaitable socket arguments.
 	/// </summary>
 	[DebuggerDisplay("Count: {Count}")]
-	public sealed class SocketAwaitablePool
-	    : ICollection, IDisposable, IEnumerable<SocketAwaitable>
+	public sealed class SocketAwaitablePool : ICollection, IDisposable, IEnumerable<SocketAwaitable>
 	{
 		#region Fields
 		/// <summary>
