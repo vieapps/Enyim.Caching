@@ -1,6 +1,9 @@
 using System;
-using System.Collections.Generic;
 using System.Text;
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
+
 using Enyim.Caching.Memcached.Results;
 using Enyim.Caching.Memcached.Results.Extensions;
 
@@ -31,9 +34,22 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 			return result;
 		}
 
-		protected internal override System.Threading.Tasks.Task<IOperationResult> ReadResponseAsync(PooledSocket socket)
+		protected internal override Task<IOperationResult> ReadResponseAsync(PooledSocket socket)
 		{
-			throw new NotImplementedException();
+			var tcs = new TaskCompletionSource<IOperationResult>();
+			ThreadPool.QueueUserWorkItem(_ =>
+			{
+				try
+				{
+					var result = this.ReadResponse(socket);
+					tcs.SetResult(result);
+				}
+				catch (Exception ex)
+				{
+					tcs.SetException(ex);
+				}
+			});
+			return tcs.Task;
 		}
 
 		public byte[] Data { get; private set; }

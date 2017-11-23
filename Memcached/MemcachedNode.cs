@@ -555,8 +555,7 @@ namespace Enyim.Caching.Memcached
 				}
 				catch (IOException e)
 				{
-					this._logger.LogError(e, "Error occurred while executing an operation");
-
+					this._logger.LogError(e, $"{nameof(ExecuteOperation)} failed");
 					result.Fail("Exception reading response", e);
 					return result;
 				}
@@ -593,8 +592,8 @@ namespace Enyim.Caching.Memcached
 							this._logger.LogWarning($"MemcachedNode-ExecuteOperationAsync (write into socket): {duration}ms");
 					}
 
-					var readResult = await op.ReadResponseAsync(socket);
-					//var readResult = op.ReadResponse(socket);
+					var readResult = op.ReadResponse(socket);
+					//var readResult = await op.ReadResponseAsync(socket);
 					if (readResult.Success)
 						result.Pass();
 					else
@@ -604,7 +603,7 @@ namespace Enyim.Caching.Memcached
 				}
 				catch (IOException e)
 				{
-					this._logger.LogError(e, "Error occurred while executing an operation");
+					this._logger.LogError(e, $"{nameof(ExecuteOperationAsync)} failed");
 					result.Fail("Exception reading response", e);
 					return result;
 				}

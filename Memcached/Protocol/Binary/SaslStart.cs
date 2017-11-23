@@ -19,7 +19,7 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 				Key = this.Provider.Type,
 				Data = new ArraySegment<byte>(this.Provider.Authenticate())
 			};
-		}       
+		}
 	}
 }
 

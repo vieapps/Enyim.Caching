@@ -65,7 +65,6 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 					return result.Fail("Result must be 8 bytes long, received: " + data.Count, new InvalidOperationException());
 
 				this._result = BinaryConverter.DecodeUInt64(data.Array, data.Offset);
-
 				return result.Pass();
 			}
 

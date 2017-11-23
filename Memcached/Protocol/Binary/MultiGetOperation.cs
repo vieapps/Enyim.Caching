@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 
 using Enyim.Caching.Memcached.Results;
@@ -16,6 +17,11 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 		Dictionary<string, CacheItem> _result;
 		Dictionary<int, string> _idToKey;
 		int _noopId;
+
+		PooledSocket _socket;
+		BinaryResponse _reader;
+		bool? _loopState;
+		Action<bool> _afterRead;
 
 		public MultiGetOperation(IList<string> keys) : base(keys)
 		{
@@ -46,11 +52,11 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 			this._idToKey = new Dictionary<int, string>();
 
 			// get ops have 2 segments, header + key
-			var buffers = new List<ArraySegment<byte>>(keys.Count * 2);
+			var buffer = new List<ArraySegment<byte>>(keys.Count * 2);
 			foreach (var key in keys)
 			{
 				var request = this.Build(key);
-				request.CreateBuffer(buffers);
+				request.CreateBuffer(buffer);
 
 				// we use this to map the responses to the keys
 				this._idToKey[request.CorrelationId] = key;
@@ -59,22 +65,30 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 			// uncork the server
 			var noop = new BinaryRequest(OpCode.NoOp);
 			this._noopId = noop.CorrelationId;
-			noop.CreateBuffer(buffers);
+			noop.CreateBuffer(buffer);
 
 			if (this._logger.IsEnabled(LogLevel.Debug))
 				this._logger.LogInformation($"Multi-Get: Building {keys.Count} keys - Correlation ID: {noop.CorrelationId}");
 
-			return buffers;
+			return buffer;
 		}
-
-		PooledSocket _socket;
-		BinaryResponse _reader;
-		bool? _loopState;
-		Action<bool> _afterRead;
 
 		protected internal override Task<IOperationResult> ReadResponseAsync(PooledSocket socket)
 		{
-			throw new NotImplementedException();
+			var tcs = new TaskCompletionSource<IOperationResult>();
+			ThreadPool.QueueUserWorkItem(_ =>
+			{
+				try
+				{
+					var result = this.ReadResponse(socket);
+					tcs.SetResult(result);
+				}
+				catch (Exception ex)
+				{
+					tcs.SetException(ex);
+				}
+			});
+			return tcs.Task;
 		}
 
 		protected internal override bool ReadResponseAsync(PooledSocket socket, Action<bool> next)

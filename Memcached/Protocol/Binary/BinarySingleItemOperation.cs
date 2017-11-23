@@ -23,14 +23,14 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 		protected internal override IOperationResult ReadResponse(PooledSocket socket)
 		{
 			var response = new BinaryResponse();
-			var retval = response.Read(socket);
+			var success = response.Read(socket);
 
 			this.Cas = response.CAS;
 			this.StatusCode = response.StatusCode;
 
 			var result = new BinaryOperationResult()
 			{
-				Success = retval,
+				Success = success,
 				Cas = this.Cas,
 				StatusCode = this.StatusCode
 			};
@@ -48,14 +48,14 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 		protected internal override async Task<IOperationResult> ReadResponseAsync(PooledSocket socket)
 		{
 			var response = new BinaryResponse();
-			var retval = await response.ReadAsync(socket);
+			var success = await response.ReadAsync(socket);
 
 			this.Cas = response.CAS;
 			this.StatusCode = response.StatusCode;
 
 			var result = new BinaryOperationResult()
 			{
-				Success = retval,
+				Success = success,
 				Cas = this.Cas,
 				StatusCode = this.StatusCode
 			};

@@ -107,7 +107,7 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 
 			if (extraLength > 0) result.Add(extras);
 
-			// NOTE key must be already encoded and should not contain any invalid characters which are not allowed by the protocol
+			// key must be already encoded and should not contain any invalid characters which are not allowed by the protocol
 			if (keyLength > 0)
 				result.Add(new ArraySegment<byte>(keyData));
 			if (bodyLength > 0)

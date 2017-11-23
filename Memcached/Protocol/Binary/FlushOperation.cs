@@ -15,16 +15,16 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 		protected internal override IOperationResult ReadResponse(PooledSocket socket)
 		{
 			var response = new BinaryResponse();
-			var retval = response.Read(socket);
+			var success = response.Read(socket);
 
 			this.StatusCode = StatusCode;
 			var result = new BinaryOperationResult()
 			{
-				Success = retval,
+				Success = success,
 				StatusCode = this.StatusCode
 			};
 
-			result.PassOrFail(retval, "Failed to read response");
+			result.PassOrFail(success, "Failed to read response");
 			return result;
 		}
 	}

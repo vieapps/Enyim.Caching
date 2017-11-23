@@ -139,8 +139,8 @@ namespace Enyim.Caching
 				}
 				catch (Exception ex)
 				{
-					this._logger.LogError(new EventId(), ex, $"{nameof(this.PerformStore)} for '{key}' key");
-					result.Fail("PerformStore failed", ex);
+					this._logger.LogError(ex, $"{nameof(this.PerformStore)} for '{key}' key failed");
+					result.Fail($"{nameof(this.PerformStore)} for '{key}' key failed", ex);
 					return result;
 				}
 
@@ -160,6 +160,7 @@ namespace Enyim.Caching
 				return result;
 			}
 
+			this._logger.LogError("Unable to locate node");
 			result.Fail("Unable to locate node");
 			return result;
 		}
@@ -242,8 +243,8 @@ namespace Enyim.Caching
 				}
 				catch (Exception ex)
 				{
-					this._logger.LogError(new EventId(), ex, $"{nameof(this.PerformStoreAsync)} for '{key}' key");
-					result.Fail("PerformStoreAsync failed", ex);
+					this._logger.LogError(ex, $"{nameof(this.PerformStoreAsync)} for '{key}' key failed");
+					result.Fail($"{nameof(this.PerformStoreAsync)} for '{key}' key failed", ex);
 					return result;
 				}
 
@@ -263,7 +264,8 @@ namespace Enyim.Caching
 				return result;
 			}
 
-			result.Fail("Unable to locate memcached node");
+			this._logger.LogError("Unable to locate node");
+			result.Fail("Unable to locate node");
 			return result;
 		}
 
@@ -562,6 +564,7 @@ namespace Enyim.Caching
 			}
 
 			// TODO: not sure about the return value when the command fails
+			this._logger.LogError("Unable to locate node");
 			result.Fail("Unable to locate node");
 			return result;
 		}
@@ -805,6 +808,7 @@ namespace Enyim.Caching
 			}
 
 			// TODO: not sure about the return value when the command fails
+			this._logger.LogError("Unable to locate node");
 			result.Fail("Unable to locate node");
 			return result;
 		}
@@ -1048,6 +1052,7 @@ namespace Enyim.Caching
 				return result;
 			}
 
+			this._logger.LogError("Unable to locate node");
 			result.Fail("Unable to locate node");
 			return result;
 		}
@@ -1136,6 +1141,7 @@ namespace Enyim.Caching
 				return result;
 			}
 
+			this._logger.LogError("Unable to locate node");
 			result.Fail("Unable to locate node");
 			return result;
 		}
@@ -1228,6 +1234,7 @@ namespace Enyim.Caching
 			result.Value = value;
 			result.Cas = cas;
 
+			this._logger.LogError("Unable to locate node");
 			result.Fail("Unable to locate node");
 			return result;
 		}
@@ -1262,13 +1269,11 @@ namespace Enyim.Caching
 		public T Get<T>(string key)
 		{
 			var value = this.Get(key);
-			return value == null
-				? default(T)
-				: typeof(T) == typeof(Guid) && value is string
+			return value != null
+				? value is string && typeof(T) == typeof(Guid)
 					? (T)(object)new Guid(value as string)
-					: value is T
-						? (T)value
-						: default(T);
+					: (T)value
+				: default(T);
 		}
 
 		/// <summary>
@@ -1348,6 +1353,7 @@ namespace Enyim.Caching
 			result.Value = null;
 			result.Cas = 0;
 
+			this._logger.LogError("Unable to locate node");
 			result.Fail("Unable to locate node");
 			return result;
 		}
@@ -1372,13 +1378,11 @@ namespace Enyim.Caching
 		public async Task<T> GetAsync<T>(string key)
 		{
 			var value = await this.GetAsync(key);
-			return value == null
-				? default(T)
-				: typeof(T) == typeof(Guid) && value is string
+			return value != null
+				? value is string && typeof(T) == typeof(Guid)
 					? (T)(object)new Guid(value as string)
-					: value is T
-						? (T)value
-						: default(T);
+					: (T)value
+				: default(T);
 		}
 
 		/// <summary>
@@ -1442,7 +1446,7 @@ namespace Enyim.Caching
 			var values = new Dictionary<string, T>(hashed.Count);
 
 			// action to execute command in parallel
-			Func<IMemcachedNode, IList<string>, Task> actionAsync = (node, nodeKeys) =>
+			Func<IMemcachedNode, IList<string>, Task> func = (node, nodeKeys) =>
 			{
 				return Task.Run(() =>
 				{
@@ -1466,14 +1470,14 @@ namespace Enyim.Caching
 					}
 					catch (Exception ex)
 					{
-						this._logger.LogError("PerformMultiGet", ex);
+						this._logger.LogError(ex, $"{nameof(PerformMultiGet)} for {keys.Count()} keys failed");
 					}
 				});
 			};
 
 			// execute each list of keys on their respective node (in parallel)
 			var tasks = this.GroupByServer(hashed.Keys)
-				.Select(slice => actionAsync(slice.Key, slice.Value))
+				.Select(slice => func(slice.Key, slice.Value))
 				.ToList();
 
 			// wait for all nodes to finish
@@ -1526,7 +1530,7 @@ namespace Enyim.Caching
 			var values = new Dictionary<string, T>(hashed.Count);
 
 			// action to execute command in parallel
-			Func<IMemcachedNode, IList<string>, Task> actionAsync = async (node, nodeKeys) =>
+			Func<IMemcachedNode, IList<string>, Task> func = async (node, nodeKeys) =>
 			{
 				try
 				{
@@ -1548,13 +1552,13 @@ namespace Enyim.Caching
 				}
 				catch (Exception ex)
 				{
-					this._logger.LogError("PerformMultiGetAsync", ex);
+					this._logger.LogError(ex, $"{nameof(PerformMultiGetAsync)} for {keys.Count()} keys failed");
 				}
 			};
 
 			// execute each list of keys on their respective node (in parallel)
 			var tasks = this.GroupByServer(hashed.Keys)
-				.Select(slice => actionAsync(slice.Key, slice.Value))
+				.Select(slice => func(slice.Key, slice.Value))
 				.ToList();
 
 			// wait for all nodes to finish
@@ -1625,6 +1629,7 @@ namespace Enyim.Caching
 				return result;
 			}
 
+			this._logger.LogError("Unable to locate node");
 			result.Fail("Unable to locate node");
 			return result;
 		}
@@ -1663,7 +1668,8 @@ namespace Enyim.Caching
 				return result;
 			}
 
-			result.Fail("Unable to locate memcached node");
+			this._logger.LogError("Unable to locate node");
+			result.Fail("Unable to locate node");
 			return result;
 		}
 
@@ -1725,8 +1731,7 @@ namespace Enyim.Caching
 		/// </summary>
 		public Task FlushAllAsync()
 		{
-			var tasks = this._serverPool.GetWorkingNodes().Select(node => node.ExecuteAsync(this._serverPool.OperationFactory.Flush()));
-			return Task.WhenAll(tasks);
+			return Task.WhenAll(this._serverPool.GetWorkingNodes().Select(node => node.ExecuteAsync(this._serverPool.OperationFactory.Flush())));
 		}
 		#endregion
 
@@ -1740,7 +1745,7 @@ namespace Enyim.Caching
 		{
 			var results = new Dictionary<EndPoint, Dictionary<string, string>>();
 
-			Func<IMemcachedNode, IStatsOperation, EndPoint, Task> actionAsync = (node, command, endpoint) =>
+			Func<IMemcachedNode, IStatsOperation, EndPoint, Task> func = (node, command, endpoint) =>
 			{
 				return Task.Run(() =>
 				{
@@ -1750,7 +1755,7 @@ namespace Enyim.Caching
 				});
 			};
 
-			var tasks = this._serverPool.GetWorkingNodes().Select(node => actionAsync(node, this._serverPool.OperationFactory.Stats(type), node.EndPoint)).ToArray();
+			var tasks = this._serverPool.GetWorkingNodes().Select(node => func(node, this._serverPool.OperationFactory.Stats(type), node.EndPoint)).ToArray();
 			if (tasks.Length > 0)
 				Task.WaitAll(tasks, TimeSpan.FromSeconds(13));
 
@@ -1775,14 +1780,14 @@ namespace Enyim.Caching
 		{
 			var results = new Dictionary<EndPoint, Dictionary<string, string>>();
 
-			Func<IMemcachedNode, IStatsOperation, EndPoint, Task> actionAsync = async (node, command, endpoint) =>
+			Func<IMemcachedNode, IStatsOperation, EndPoint, Task> func = async (node, command, endpoint) =>
 			{
 				await node.ExecuteAsync(command);
 				lock (results)
 					results[endpoint] = command.Result;
 			};
 
-			var tasks = this._serverPool.GetWorkingNodes().Select(node => actionAsync(node, this._serverPool.OperationFactory.Stats(type), node.EndPoint)).ToList();
+			var tasks = this._serverPool.GetWorkingNodes().Select(node => func(node, this._serverPool.OperationFactory.Stats(type), node.EndPoint)).ToList();
 			if (tasks.Count > 0)
 				await Task.WhenAll(tasks);
 

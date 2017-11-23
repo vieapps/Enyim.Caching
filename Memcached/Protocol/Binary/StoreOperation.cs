@@ -8,39 +8,49 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 {
 	public class StoreOperation : BinarySingleItemOperation, IStoreOperation
 	{
-		private StoreMode mode;
-		private CacheItem value;
-		private uint expires;
+		StoreMode _mode;
+		CacheItem _value;
+		uint _expires;
 
 		public StoreOperation(StoreMode mode, string key, CacheItem value, uint expires) : base(key)
 		{
-			this.mode = mode;
-			this.value = value;
-			this.expires = expires;
+			this._mode = mode;
+			this._value = value;
+			this._expires = expires;
 		}
 
 		protected override BinaryRequest Build()
 		{
 			OpCode op;
-			switch (this.mode)
+			switch (this._mode)
 			{
-				case StoreMode.Add: op = OpCode.Add; break;
-				case StoreMode.Set: op = OpCode.Set; break;
-				case StoreMode.Replace: op = OpCode.Replace; break;
-				default: throw new ArgumentOutOfRangeException("mode", mode + " is not supported");
+				case StoreMode.Add:
+					op = OpCode.Add;
+					break;
+
+				case StoreMode.Set:
+					op = OpCode.Set;
+					break;
+
+				case StoreMode.Replace:
+					op = OpCode.Replace;
+					break;
+
+				default:
+					throw new ArgumentOutOfRangeException("mode", $"{this._mode} is not supported");
 			}
 
 			var extra = new byte[8];
 
-			BinaryConverter.EncodeUInt32((uint)this.value.Flags, extra, 0);
-			BinaryConverter.EncodeUInt32(expires, extra, 4);
+			BinaryConverter.EncodeUInt32((uint)this._value.Flags, extra, 0);
+			BinaryConverter.EncodeUInt32(this._expires, extra, 4);
 
 			var request = new BinaryRequest(op)
 			{
 				Key = this.Key,
 				Cas = this.Cas,
 				Extra = new ArraySegment<byte>(extra),
-				Data = this.value.Data
+				Data = this._value.Data
 			};
 
 			return request;
@@ -64,7 +74,7 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 
 		StoreMode IStoreOperation.Mode
 		{
-			get { return this.mode; }
+			get { return this._mode; }
 		}
 
 		protected internal override bool ReadResponseAsync(PooledSocket socket, Action<bool> next)

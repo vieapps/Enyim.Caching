@@ -9,6 +9,10 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 	public class BinaryResponse
 	{
 		ILogger _logger;
+		PooledSocket _socket;
+		int _dataLength, _extraLength;
+		bool _shouldCallNext;
+		Action<bool> _nextAction;
 
 		const byte MAGIC_VALUE = 0x81;
 		const int HeaderLength = 24;
@@ -106,8 +110,8 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 		public bool ReadAsync(PooledSocket socket, Action<bool> next, out bool ioPending)
 		{
 			this.StatusCode = -1;
-			this.currentSocket = socket;
-			this.next = next;
+			this._socket = socket;
+			this._nextAction = next;
 
 			var asyncEvent = new AsyncIOArgs
 			{
@@ -115,8 +119,7 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 				Next = this.DoDecodeHeaderAsync
 			};
 
-			this.shouldCallNext = true;
-
+			this._shouldCallNext = true;
 			if (socket.ReceiveAsync(asyncEvent))
 			{
 				ioPending = true;
@@ -124,51 +127,43 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 			}
 
 			ioPending = false;
-			this.shouldCallNext = false;
+			this._shouldCallNext = false;
 
 			return asyncEvent.Fail
 				? false
 				: this.DoDecodeHeader(asyncEvent, out ioPending);
 		}
 
-		PooledSocket currentSocket;
-		int dataLength;
-		int extraLength;
-		bool shouldCallNext;
-		Action<bool> next;
-
 		void DoDecodeHeaderAsync(AsyncIOArgs asyncEvent)
 		{
-			this.shouldCallNext = true;
-
+			this._shouldCallNext = true;
 			this.DoDecodeHeader(asyncEvent, out bool tmp);
 		}
 
 		bool DoDecodeHeader(AsyncIOArgs asyncEvent, out bool pendingIO)
 		{
 			pendingIO = false;
-
 			if (asyncEvent.Fail)
 			{
-				if (this.shouldCallNext)
-					this.next(false);
-
+				if (this._shouldCallNext)
+					this._nextAction(false);
 				return false;
 			}
 
-			this.DeserializeHeader(asyncEvent.Result, out this.dataLength, out this.extraLength);
-			var retval = this.StatusCode == 0;
+			this.DeserializeHeader(asyncEvent.Result, out this._dataLength, out this._extraLength);
+			var result = this.StatusCode == 0;
 
-			if (this.dataLength == 0)
+			if (this._dataLength == 0)
 			{
-				if (this.shouldCallNext) this.next(retval);
+				if (this._shouldCallNext)
+					this._nextAction(result);
 			}
 			else
 			{
-				asyncEvent.Count = this.dataLength;
+				asyncEvent.Count = this._dataLength;
 				asyncEvent.Next = this.DoDecodeBodyAsync;
 
-				if (this.currentSocket.ReceiveAsync(asyncEvent))
+				if (this._socket.ReceiveAsync(asyncEvent))
 				{
 					pendingIO = true;
 				}
@@ -176,17 +171,16 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 				{
 					if (asyncEvent.Fail)
 						return false;
-
 					this.DoDecodeBody(asyncEvent);
 				}
 			}
 
-			return retval;
+			return result;
 		}
 
 		void DoDecodeBodyAsync(AsyncIOArgs asyncEvent)
 		{
-			this.shouldCallNext = true;
+			this._shouldCallNext = true;
 			DoDecodeBody(asyncEvent);
 		}
 
@@ -194,16 +188,16 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 		{
 			if (asyncEvent.Fail)
 			{
-				if (this.shouldCallNext)
-					this.next(false);
-
+				if (this._shouldCallNext)
+					this._nextAction(false);
 				return;
 			}
 
-			this.Extra = new ArraySegment<byte>(asyncEvent.Result, 0, this.extraLength);
-			this.Data = new ArraySegment<byte>(asyncEvent.Result, this.extraLength, this.dataLength - this.extraLength);
+			this.Extra = new ArraySegment<byte>(asyncEvent.Result, 0, this._extraLength);
+			this.Data = new ArraySegment<byte>(asyncEvent.Result, this._extraLength, this._dataLength - this._extraLength);
 
-			if (this.shouldCallNext) this.next(true);
+			if (this._shouldCallNext)
+				this._nextAction(true);
 		}
 
 		unsafe void DeserializeHeader(byte[] header, out int dataLength, out int extraLength)
@@ -224,13 +218,6 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 				dataLength = BinaryConverter.DecodeInt32(buffer, HEADER_BODY);
 				extraLength = buffer[HEADER_EXTRA];
 			}
-		}
-
-		void LogExecutionTime(string title, DateTime startTime, int thresholdMs)
-		{
-			var duration = (DateTime.Now - startTime).TotalMilliseconds;
-			if (duration > thresholdMs)
-				_logger.LogWarning("MemcachedBinaryResponse-{0}: {1}ms", title, duration);
 		}
 	}
 }

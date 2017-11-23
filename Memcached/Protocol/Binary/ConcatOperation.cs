@@ -9,22 +9,22 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 	/// </summary>
 	public class ConcatOperation : BinarySingleItemOperation, IConcatOperation
 	{
-		ArraySegment<byte> data;
-		ConcatenationMode mode;
+		ArraySegment<byte> _data;
+		ConcatenationMode _mode;
 
 		public ConcatOperation(ConcatenationMode mode, string key, ArraySegment<byte> data) : base(key)
 		{
-			this.data = data;
-			this.mode = mode;
+			this._data = data;
+			this._mode = mode;
 		}
 
 		protected override BinaryRequest Build()
 		{
-			return new BinaryRequest((OpCode)this.mode)
+			return new BinaryRequest((OpCode)this._mode)
 			{
 				Key = this.Key,
 				Cas = this.Cas,
-				Data = this.data
+				Data = this._data
 			};
 		}
 
@@ -35,7 +35,7 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 
 		ConcatenationMode IConcatOperation.Mode
 		{
-			get { return this.mode; }
+			get { return this._mode; }
 		}
 	}
 }
