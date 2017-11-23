@@ -12,7 +12,7 @@
 	}
 
 	/// <summary>
-	/// Creates instances of <see cref="T:FailImmediatelyPolicy"/>.
+	/// Creates instances of <see cref="FailImmediatelyPolicy"/>.
 	/// </summary>
 	public class FailImmediatelyPolicyFactory : INodeFailurePolicyFactory
 	{

@@ -1,3 +1,4 @@
+#region Related components
 using System;
 using System.Net;
 using System.Collections.Generic;
@@ -6,10 +7,12 @@ using System.Xml;
 
 using Enyim.Reflection;
 using Enyim.Caching.Memcached;
+using Enyim.Caching.Memcached.Protocol.Text;
 using Enyim.Caching.Memcached.Protocol.Binary;
 
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+#endregion
 
 namespace Enyim.Caching.Configuration
 {
@@ -22,7 +25,7 @@ namespace Enyim.Caching.Configuration
 		Type _nodeLocatorType;
 		ITranscoder _transcoder;
 		IMemcachedKeyTransformer _keyTransformer;
-		ILogger<MemcachedClientConfiguration> _logger;
+		ILogger _logger;
 
 		/// <summary>
 		/// Initializes a new instance of the <see cref="MemcachedClientConfiguration"/> class.
@@ -30,7 +33,7 @@ namespace Enyim.Caching.Configuration
 		/// <param name="loggerFactory"></param>
 		public MemcachedClientConfiguration(ILoggerFactory loggerFactory = null)
 		{
-			this._logger = (loggerFactory ?? new NullLoggerFactory()).CreateLogger<MemcachedClientConfiguration>();
+			this.PrepareLogger(loggerFactory);
 
 			this.Protocol = MemcachedProtocol.Binary;
 			this.Servers = new List<EndPoint>();
@@ -48,7 +51,7 @@ namespace Enyim.Caching.Configuration
 			if (options == null)
 				throw new ArgumentNullException(nameof(options));
 
-			this._logger = (loggerFactory ?? new NullLoggerFactory()).CreateLogger<MemcachedClientConfiguration>();
+			this.PrepareLogger(loggerFactory);
 
 			var configuration = options.Value;
 
@@ -70,7 +73,8 @@ namespace Enyim.Caching.Configuration
 					var authenticationType = Type.GetType(configuration.Authentication.Type);
 					if (authenticationType != null)
 					{
-						this._logger.LogDebug($"Authentication type is {authenticationType}");
+						if (this._logger.IsEnabled(LogLevel.Debug))
+							this._logger.LogDebug($"Authentication type is {authenticationType}");
 
 						this.Authentication = new AuthenticationConfiguration()
 						{
@@ -79,7 +83,8 @@ namespace Enyim.Caching.Configuration
 						foreach (var parameter in configuration.Authentication.Parameters)
 						{
 							this.Authentication.Parameters[parameter.Key] = parameter.Value;
-							this._logger.LogDebug($"Authentication {parameter.Key} is '{parameter.Value}'.");
+							if (this._logger.IsEnabled(LogLevel.Debug))
+								this._logger.LogDebug($"Authentication {parameter.Key} is '{parameter.Value}'.");
 						}
 					}
 					else
@@ -101,7 +106,8 @@ namespace Enyim.Caching.Configuration
 					if (keyTransformerType != null)
 					{
 						this.KeyTransformer = FastActivator.Create(keyTransformerType) as IMemcachedKeyTransformer;
-						this._logger.LogDebug($"Use '{configuration.KeyTransformer}' of key-transformer");
+						if (this._logger.IsEnabled(LogLevel.Debug))
+							this._logger.LogDebug($"Use '{configuration.KeyTransformer}' of key-transformer");
 					}
 				}
 				catch (Exception ex)
@@ -127,7 +133,7 @@ namespace Enyim.Caching.Configuration
 			if (configuration == null)
 				throw new ArgumentNullException(nameof(configuration));
 
-			this._logger = (loggerFactory ?? new NullLoggerFactory()).CreateLogger<MemcachedClientConfiguration>();
+			this.PrepareLogger(loggerFactory);
 
 			if (!Enum.TryParse<MemcachedProtocol>(configuration.Section.Attributes["protocol"]?.Value ?? "Binary", out MemcachedProtocol protocol))
 				protocol = MemcachedProtocol.Binary;
@@ -176,7 +182,8 @@ namespace Enyim.Caching.Configuration
 						var authenticationType = Type.GetType(authentication.Attributes["type"].Value);
 						if (authenticationType != null)
 						{
-							this._logger.LogDebug($"Authentication type is {authenticationType}");
+							if (this._logger.IsEnabled(LogLevel.Debug))
+								this._logger.LogDebug($"Authentication type is {authenticationType}");
 
 							this.Authentication = new AuthenticationConfiguration()
 							{
@@ -204,7 +211,8 @@ namespace Enyim.Caching.Configuration
 					try
 					{
 						this._keyTransformer = FastActivator.Create(Type.GetType(keyTransformer.Attributes["type"].Value)) as IMemcachedKeyTransformer;
-						this._logger.LogDebug($"Use '{keyTransformer.Attributes["type"].Value}' of key-transformer");
+						if (this._logger.IsEnabled(LogLevel.Debug))
+							this._logger.LogDebug($"Use '{keyTransformer.Attributes["type"].Value}' of key-transformer");
 					}
 					catch (Exception ex)
 					{
@@ -216,7 +224,8 @@ namespace Enyim.Caching.Configuration
 					try
 					{
 						this._transcoder = FastActivator.Create(Type.GetType(transcoder.Attributes["type"].Value)) as ITranscoder;
-						this._logger.LogDebug($"Use '{transcoder.Attributes["type"].Value}' transcoder");
+						if (this._logger.IsEnabled(LogLevel.Debug))
+							this._logger.LogDebug($"Use '{transcoder.Attributes["type"].Value}' transcoder");
 					}
 					catch (Exception ex)
 					{
@@ -228,12 +237,19 @@ namespace Enyim.Caching.Configuration
 					try
 					{
 						this._nodeLocatorType = Type.GetType(nodeLocator.Attributes["type"].Value);
-						this._logger.LogDebug($"Use '{nodeLocator.Attributes["type"].Value}' node-locator");
+						if (this._logger.IsEnabled(LogLevel.Debug))
+							this._logger.LogDebug($"Use '{nodeLocator.Attributes["type"].Value}' node-locator");
 					}
 					catch (Exception ex)
 					{
 						this._logger.LogError(new EventId(), ex, $"Unable to load node-locator [{nodeLocator.Attributes["type"].Value}]");
 					}
+		}
+
+		void PrepareLogger(ILoggerFactory loggerFactory)
+		{
+			LogManager.AssignLoggerFactory(loggerFactory);
+			this._logger = LogManager.CreateLogger<MemcachedClientConfiguration>();
 		}
 
 		/// <summary>
@@ -305,7 +321,7 @@ namespace Enyim.Caching.Configuration
 		/// <summary>
 		/// Gets or sets the NodeLocatorFactory instance which will be used to create a new IMemcachedNodeLocator instances.
 		/// </summary>
-		/// <remarks>If both <see cref="M:NodeLocator"/> and  <see cref="M:NodeLocatorFactory"/> are assigned then the latter takes precedence.</remarks>
+		/// <remarks>If both <see cref="NodeLocator"/> and  <see cref="NodeLocatorFactory"/> are assigned then the latter takes precedence.</remarks>
 		public IProviderFactory<IMemcachedNodeLocator> NodeLocatorFactory { get; set; }
 
 		/// <summary>
@@ -369,10 +385,10 @@ namespace Enyim.Caching.Configuration
 			switch (this.Protocol)
 			{
 				case MemcachedProtocol.Text:
-					return new DefaultServerPool(this, new Memcached.Protocol.Text.TextOperationFactory(), this._logger);
+					return new DefaultServerPool(this, new TextOperationFactory());
 
 				case MemcachedProtocol.Binary:
-					return new BinaryPool(this, this._logger);
+					return new BinaryPool(this);
 			}
 			throw new ArgumentOutOfRangeException($"Unknown protocol: [{this.Protocol}]");
 		}
@@ -429,7 +445,7 @@ namespace Enyim.Caching.Configuration
 #region [ License information          ]
 /* ************************************************************
  * 
- *    Copyright (c) 2010 Attila Kisk? enyim.com
+ *    © 2010 Attila Kiskó (aka Enyim), © 2016 CNBlogs, © 2017 VIEApps.net
  *    
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.

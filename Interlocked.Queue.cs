@@ -12,9 +12,6 @@ namespace Enyim.Collections
 		Node headNode;
 		Node tailNode;
 
-		/// <summary>
-		/// Initializes a new instance of the <see cref="T:InterlockedQueue"/> class.
-		/// </summary>
 		public InterlockedQueue()
 		{
 			Node node = new Node(default(T));
@@ -23,11 +20,6 @@ namespace Enyim.Collections
 			this.tailNode = node;
 		}
 
-		/// <summary>
-		/// Removes and returns the item at the beginning of the <see cref="T:InterlockedQueue"/>.
-		/// </summary>
-		/// <param name="value">The object that is removed from the beginning of the <see cref="T:InterlockedQueue"/>.</param>
-		/// <returns><value>true</value> if an item was successfully dequeued; otherwise <value>false</value>.</returns>
 		public bool Dequeue(out T value)
 		{
 			Node head;
@@ -81,10 +73,7 @@ namespace Enyim.Collections
 
 		public bool Peek(out T value)
 		{
-			Node head;
-			Node tail;
-			Node next;
-
+			Node head, tail, next;
 			while (true)
 			{
 				// read head
@@ -107,12 +96,10 @@ namespace Enyim.Collections
 							return false;
 						}
 
-						Interlocked.CompareExchange<Node>(
-							ref this.tailNode,
-							next,
-							tail);
+						Interlocked.CompareExchange<Node>(ref this.tailNode, next, tail);
 					}
-					else // No need to deal with tail
+					// No need to deal with tail
+					else
 					{
 						// read value before CAS otherwise another deque might try to free the next node
 						value = next.Value;
@@ -122,19 +109,14 @@ namespace Enyim.Collections
 			}
 		}
 
-		/// <summary>
-		/// Adds an object to the end of the <see cref="T:InterlockedQueue"/>.
-		/// </summary>
-		/// <param name="value">The item to be added to the <see cref="T:InterlockedQueue"/>. The value can be <value>null</value>.</param>
 		public void Enqueue(T value)
 		{
 			// Allocate a new node from the free list
-			Node valueNode = new Node(value);
-
+			var valueNode = new Node(value);
 			while (true)
 			{
-				Node tail = this.tailNode;
-				Node next = tail.Next;
+				var tail = this.tailNode;
+				var next = tail.Next;
 
 				// are tail and next consistent
 				if (Object.ReferenceEquals(tail, this.tailNode))
@@ -142,17 +124,15 @@ namespace Enyim.Collections
 					// was tail pointing to the last node?
 					if (Object.ReferenceEquals(next, null))
 					{
-						if (Object.ReferenceEquals(
-								Interlocked.CompareExchange(ref tail.Next, valueNode, next),
-								next
-								)
-							)
+						if (Object.ReferenceEquals(Interlocked.CompareExchange(ref tail.Next, valueNode, next), next))
 						{
 							Interlocked.CompareExchange(ref this.tailNode, valueNode, tail);
 							break;
 						}
 					}
-					else // tail was not pointing to last node
+
+					// tail was not pointing to last node
+					else
 					{
 						// try to swing Tail to the next node
 						Interlocked.CompareExchange<Node>(ref this.tailNode, next, tail);
@@ -180,7 +160,7 @@ namespace Enyim.Collections
 #region [ License information          ]
 /* ************************************************************
  * 
- *    Copyright (c) 2010 Attila Kiskó, enyim.com
+ *    © 2010 Attila Kiskó (aka Enyim), © 2016 CNBlogs, © 2017 VIEApps.net
  *    
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.

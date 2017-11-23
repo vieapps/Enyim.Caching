@@ -6,8 +6,7 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 {
 	public class BinaryRequest
 	{
-		private static readonly Enyim.Caching.ILog log = Enyim.Caching.LogManager.GetLogger(typeof(BinaryRequest));
-		private static int InstanceCounter;
+		static int InstanceCounter;
 
 		public byte Operation;
 		public readonly int CorrelationId;
@@ -15,13 +14,16 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 		public string Key;
 		public ulong Cas;
 
+		public ushort Reserved;
+		public ArraySegment<byte> Extra;
+		public ArraySegment<byte> Data;
+
 		public BinaryRequest(OpCode operation) : this((byte)operation) { }
 
 		public BinaryRequest(byte commandCode)
 		{
 			this.Operation = commandCode;
-			// session id
-			this.CorrelationId = Interlocked.Increment(ref InstanceCounter);
+			this.CorrelationId = Interlocked.Increment(ref InstanceCounter); // session id
 		}
 
 		public unsafe IList<ArraySegment<byte>> CreateBuffer()
@@ -35,12 +37,14 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 			byte[] keyData = BinaryConverter.EncodeKey(this.Key);
 			int keyLength = keyData == null ? 0 : keyData.Length;
 
-			if (keyLength > 0xffff) throw new InvalidOperationException("KeyTooLong");
+			if (keyLength > 0xffff)
+				throw new InvalidOperationException("KeyTooLong");
 
 			// extra size
 			ArraySegment<byte> extras = this.Extra;
 			int extraLength = extras.Array == null ? 0 : extras.Count;
-			if (extraLength > 0xff) throw new InvalidOperationException("ExtraTooLong");
+			if (extraLength > 0xff)
+				throw new InvalidOperationException("ExtraTooLong");
 
 			// body size
 			ArraySegment<byte> body = this.Data;
@@ -97,49 +101,27 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 				}
 			}
 
-			var retval = appendTo ?? new List<ArraySegment<byte>>(4);
+			var result = appendTo ?? new List<ArraySegment<byte>>(4);
 
-			retval.Add(new ArraySegment<byte>(header));
+			result.Add(new ArraySegment<byte>(header));
 
-			if (extraLength > 0) retval.Add(extras);
+			if (extraLength > 0) result.Add(extras);
 
 			// NOTE key must be already encoded and should not contain any invalid characters which are not allowed by the protocol
 			if (keyLength > 0)
-				retval.Add(new ArraySegment<byte>(keyData));
+				result.Add(new ArraySegment<byte>(keyData));
 			if (bodyLength > 0)
-				retval.Add(body);
+				result.Add(body);
 
-#if DEBUG_PROTOCOL
-			if (log.IsDebugEnabled)
-			{
-				log.Debug("Building binary request");
-				StringBuilder sb = new StringBuilder(128).AppendLine();
-
-				for (int i = 0; i < header.Length; i++)
-				{
-					byte value = header[i];
-					sb.Append(value < 16 ? "0x0" : "0x").Append(value.ToString("X"));
-
-					if (i % 4 == 3) sb.AppendLine(); else sb.Append(" ");
-				}
-
-				log.Debug(sb.ToString());
-			}
-#endif
-
-			return retval;
+			return result;
 		}
-
-		public ushort Reserved;
-		public ArraySegment<byte> Extra;
-		public ArraySegment<byte> Data;
 	}
 }
 
 #region [ License information          ]
 /* ************************************************************
  * 
- *    Copyright (c) 2010 Attila Kisk? enyim.com
+ *    © 2010 Attila Kiskó (aka Enyim), © 2016 CNBlogs, © 2017 VIEApps.net
  *    
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.

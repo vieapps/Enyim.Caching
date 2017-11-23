@@ -5,15 +5,20 @@ using System.Collections.Generic;
 using Enyim.Caching.Memcached.Results;
 using Enyim.Caching.Memcached.Results.Extensions;
 
+using Microsoft.Extensions.Logging;
+
 namespace Enyim.Caching.Memcached.Protocol.Text
 {
 	public class MultiGetOperation : MultiItemOperation, IMultiGetOperation
 	{
-		private static readonly Enyim.Caching.ILog log = Enyim.Caching.LogManager.GetLogger(typeof(MultiGetOperation));
+		ILogger _logger;
 
-		private Dictionary<string, CacheItem> result;
+		Dictionary<string, CacheItem> _result;
 
-		public MultiGetOperation(IList<string> keys) : base(keys) { }
+		public MultiGetOperation(IList<string> keys) : base(keys)
+		{
+			this._logger = LogManager.CreateLogger(typeof(MultiGetOperation));
+		}
 
 		protected internal override IList<ArraySegment<byte>> GetBuffer()
 		{
@@ -47,10 +52,10 @@ namespace Enyim.Caching.Memcached.Protocol.Text
 			}
 			catch (Exception e)
 			{
-				log.Error(e);
+				this._logger.LogError(e, "Error occurred while perform multi-get");
 			}
 
-			this.result = retval;
+			this._result = retval;
 			this.Cas = cas;
 
 			return new TextOperationResult().Pass();
@@ -58,7 +63,7 @@ namespace Enyim.Caching.Memcached.Protocol.Text
 
 		Dictionary<string, CacheItem> IMultiGetOperation.Result
 		{
-			get { return this.result; }
+			get { return this._result; }
 		}
 
 		protected internal override System.Threading.Tasks.Task<IOperationResult> ReadResponseAsync(PooledSocket socket)
@@ -76,7 +81,7 @@ namespace Enyim.Caching.Memcached.Protocol.Text
 #region [ License information          ]
 /* ************************************************************
  * 
- *    Copyright (c) 2010 Attila Kisk? enyim.com
+ *    © 2010 Attila Kiskó (aka Enyim), © 2016 CNBlogs, © 2017 VIEApps.net
  *    
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.

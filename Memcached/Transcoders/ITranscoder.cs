@@ -13,14 +13,14 @@ namespace Enyim.Caching.Memcached
 		CacheItem Serialize(object value);
 
 		/// <summary>
-		/// Deserializes the <see cref="T:CacheItem"/> into an object.
+		/// Deserializes the <see cref="CacheItem"/> into an object.
 		/// </summary>
 		/// <param name="item">The stream that contains the data to deserialize.</param>
 		/// <returns>The deserialized object</returns>
 		object Deserialize(CacheItem item);
 
 		/// <summary>
-		/// Deserializes the <see cref="T:CacheItem"/> into an object.
+		/// Deserializes the <see cref="CacheItem"/> into an object.
 		/// </summary>
 		/// <typeparam name="T"></typeparam>
 		/// <param name="item">The stream that contains the data to deserialize.</param>
@@ -32,7 +32,7 @@ namespace Enyim.Caching.Memcached
 #region [ License information          ]
 /* ************************************************************
  * 
- *    Copyright (c) 2010 Attila Kisk? enyim.com
+ *    © 2010 Attila Kiskó (aka Enyim), © 2016 CNBlogs, © 2017 VIEApps.net
  *    
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.

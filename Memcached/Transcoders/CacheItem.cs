@@ -12,7 +12,7 @@ namespace Enyim.Caching.Memcached
 		uint flags;
 
 		/// <summary>
-		/// Initializes a new instance of <see cref="T:CacheItem"/>.
+		/// Initializes a new instance of <see cref="CacheItem"/>.
 		/// </summary>
 		/// <param name="flags">Custom item data.</param>
 		/// <param name="data">The serialized item.</param>
@@ -45,7 +45,7 @@ namespace Enyim.Caching.Memcached
 #region [ License information          ]
 /* ************************************************************
  * 
- *    Copyright (c) 2010 Attila Kisk? enyim.com
+ *    © 2010 Attila Kiskó (aka Enyim), © 2016 CNBlogs, © 2017 VIEApps.net
  *    
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.

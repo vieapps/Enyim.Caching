@@ -2,23 +2,25 @@ using System;
 using System.Text;
 using System.Threading.Tasks;
 
+using Microsoft.Extensions.Logging;
+
 namespace Enyim.Caching.Memcached.Protocol.Binary
 {
 	public class BinaryResponse
 	{
-		private static readonly ILog log = LogManager.GetLogger(typeof(BinaryResponse));
+		ILogger _logger;
 
-		private const byte MAGIC_VALUE = 0x81;
-		private const int HeaderLength = 24;
+		const byte MAGIC_VALUE = 0x81;
+		const int HeaderLength = 24;
 
-		private const int HEADER_OPCODE = 1;
-		private const int HEADER_KEY = 2; // 2-3
-		private const int HEADER_EXTRA = 4;
-		private const int HEADER_DATATYPE = 5;
-		private const int HEADER_STATUS = 6; // 6-7
-		private const int HEADER_BODY = 8; // 8-11
-		private const int HEADER_OPAQUE = 12; // 12-15
-		private const int HEADER_CAS = 16; // 16-23
+		const int HEADER_OPCODE = 1;
+		const int HEADER_KEY = 2; // 2-3
+		const int HEADER_EXTRA = 4;
+		const int HEADER_DATATYPE = 5;
+		const int HEADER_STATUS = 6; // 6-7
+		const int HEADER_BODY = 8; // 8-11
+		const int HEADER_OPAQUE = 12; // 12-15
+		const int HEADER_CAS = 16; // 16-23
 
 		public byte Opcode;
 		public int KeyLength;
@@ -31,10 +33,11 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 		public ArraySegment<byte> Extra;
 		public ArraySegment<byte> Data;
 
-		private string responseMessage;
+		string responseMessage;
 
 		public BinaryResponse()
 		{
+			this._logger = LogManager.CreateLogger(typeof(BinaryResponse));
 			this.StatusCode = -1;
 		}
 
@@ -128,20 +131,20 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 				: this.DoDecodeHeader(asyncEvent, out ioPending);
 		}
 
-		private PooledSocket currentSocket;
-		private int dataLength;
-		private int extraLength;
-		private bool shouldCallNext;
-		private Action<bool> next;
+		PooledSocket currentSocket;
+		int dataLength;
+		int extraLength;
+		bool shouldCallNext;
+		Action<bool> next;
 
-		private void DoDecodeHeaderAsync(AsyncIOArgs asyncEvent)
+		void DoDecodeHeaderAsync(AsyncIOArgs asyncEvent)
 		{
 			this.shouldCallNext = true;
 
 			this.DoDecodeHeader(asyncEvent, out bool tmp);
 		}
 
-		private bool DoDecodeHeader(AsyncIOArgs asyncEvent, out bool pendingIO)
+		bool DoDecodeHeader(AsyncIOArgs asyncEvent, out bool pendingIO)
 		{
 			pendingIO = false;
 
@@ -181,13 +184,13 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 			return retval;
 		}
 
-		private void DoDecodeBodyAsync(AsyncIOArgs asyncEvent)
+		void DoDecodeBodyAsync(AsyncIOArgs asyncEvent)
 		{
 			this.shouldCallNext = true;
 			DoDecodeBody(asyncEvent);
 		}
 
-		private void DoDecodeBody(AsyncIOArgs asyncEvent)
+		void DoDecodeBody(AsyncIOArgs asyncEvent)
 		{
 			if (asyncEvent.Fail)
 			{
@@ -203,7 +206,7 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 			if (this.shouldCallNext) this.next(true);
 		}
 
-		private unsafe void DeserializeHeader(byte[] header, out int dataLength, out int extraLength)
+		unsafe void DeserializeHeader(byte[] header, out int dataLength, out int extraLength)
 		{
 			fixed (byte* buffer = header)
 			{
@@ -223,13 +226,11 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 			}
 		}
 
-		private void LogExecutionTime(string title, DateTime startTime, int thresholdMs)
+		void LogExecutionTime(string title, DateTime startTime, int thresholdMs)
 		{
 			var duration = (DateTime.Now - startTime).TotalMilliseconds;
 			if (duration > thresholdMs)
-			{
-				log.WarnFormat("MemcachedBinaryResponse-{0}: {1}ms", title, duration);
-			}
+				_logger.LogWarning("MemcachedBinaryResponse-{0}: {1}ms", title, duration);
 		}
 	}
 }
@@ -237,7 +238,7 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 #region [ License information          ]
 /* ************************************************************
  * 
- *    Copyright (c) 2010 Attila Kisk? enyim.com
+ *    © 2010 Attila Kiskó (aka Enyim), © 2016 CNBlogs, © 2017 VIEApps.net
  *    
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.

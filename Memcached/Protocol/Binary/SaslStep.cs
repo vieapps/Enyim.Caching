@@ -18,7 +18,6 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 		protected internal override IOperationResult ReadResponse(PooledSocket socket)
 		{
 			var response = new BinaryResponse();
-
 			var retval = response.Read(socket);
 
 			this.StatusCode = response.StatusCode;
@@ -28,15 +27,14 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 			{
 				StatusCode = this.StatusCode
 			};
-
 			result.PassOrFail(retval, "Failed to read response");
 			return result;
 		}
 
-        protected internal override System.Threading.Tasks.Task<IOperationResult> ReadResponseAsync(PooledSocket socket)
-        {
-            throw new NotImplementedException();
-        }
+		protected internal override System.Threading.Tasks.Task<IOperationResult> ReadResponseAsync(PooledSocket socket)
+		{
+			throw new NotImplementedException();
+		}
 
 		public byte[] Data { get; private set; }
 	}
@@ -45,7 +43,7 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 #region [ License information          ]
 /* ************************************************************
  * 
- *    Copyright (c) 2010 Attila Kisk? enyim.com
+ *    © 2010 Attila Kiskó (aka Enyim), © 2016 CNBlogs, © 2017 VIEApps.net
  *    
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.

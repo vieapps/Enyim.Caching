@@ -8,23 +8,19 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 {
 	public class GetOperation : BinarySingleItemOperation, IGetOperation
 	{
-		private readonly ILogger _logger;
-		private CacheItem result;
+		CacheItem result;
 
-		public GetOperation(string key, ILogger logger) : base(key)
+		public GetOperation(string key) : base(key)
 		{
-			_logger = logger;
 		}
 
 		protected override BinaryRequest Build()
 		{
-			var request = new BinaryRequest(OpCode.Get)
+			return new BinaryRequest(OpCode.Get)
 			{
 				Key = this.Key,
 				Cas = this.Cas
 			};
-
-			return request;
 		}
 
 		protected override IOperationResult ProcessResponse(BinaryResponse response)
@@ -33,7 +29,6 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 			var result = new BinaryOperationResult();
 
 			this.StatusCode = status;
-
 			if (status == 0)
 			{
 				int flags = BinaryConverter.DecodeInt32(response.Extra, 0);
@@ -44,9 +39,7 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 			}
 
 			this.Cas = 0;
-
-			var message = ResultHelper.ProcessResponseData(response.Data);
-			return result.Fail(message);
+			return result.Fail(ResultHelper.ProcessResponseData(response.Data));
 		}
 
 		CacheItem IGetOperation.Result
@@ -59,7 +52,7 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 #region [ License information          ]
 /* ************************************************************
  * 
- *    Copyright (c) 2010 Attila Kisk? enyim.com
+ *    © 2010 Attila Kiskó (aka Enyim), © 2016 CNBlogs, © 2017 VIEApps.net
  *    
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.

@@ -9,21 +9,19 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 {
 	public class StatsOperation : BinaryOperation, IStatsOperation
 	{
-		private static readonly Enyim.Caching.ILog log = Enyim.Caching.LogManager.GetLogger(typeof(StatsOperation));
-
-		private string type;
-		private Dictionary<string, string> result;
+		string _type;
+		Dictionary<string, string> _result;
 
 		public StatsOperation(string type)
 		{
-			this.type = type;
+			this._type = type;
 		}
 
 		protected override BinaryRequest Build()
 		{
 			var request = new BinaryRequest(OpCode.Stat);
-			if (!String.IsNullOrEmpty(this.type))
-				request.Key = this.type;
+			if (!String.IsNullOrEmpty(this._type))
+				request.Key = this._type;
 
 			return request;
 		}
@@ -45,7 +43,7 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 				serverData[key] = value;
 			}
 
-			this.result = serverData;
+			this._result = serverData;
 			this.StatusCode = response.StatusCode;
 
 			var result = new BinaryOperationResult()
@@ -64,7 +62,7 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 
 		Dictionary<string, string> IStatsOperation.Result
 		{
-			get { return this.result; }
+			get { return this._result; }
 		}
 	}
 }
@@ -72,7 +70,7 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 #region [ License information          ]
 /* ************************************************************
  * 
- *    Copyright (c) 2010 Attila Kisk? enyim.com
+ *    © 2010 Attila Kiskó (aka Enyim), © 2016 CNBlogs, © 2017 VIEApps.net
  *    
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.

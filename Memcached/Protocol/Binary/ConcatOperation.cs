@@ -9,8 +9,8 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 	/// </summary>
 	public class ConcatOperation : BinarySingleItemOperation, IConcatOperation
 	{
-		private ArraySegment<byte> data;
-		private ConcatenationMode mode;
+		ArraySegment<byte> data;
+		ConcatenationMode mode;
 
 		public ConcatOperation(ConcatenationMode mode, string key, ArraySegment<byte> data) : base(key)
 		{
@@ -20,14 +20,12 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 
 		protected override BinaryRequest Build()
 		{
-			var request = new BinaryRequest((OpCode)this.mode)
+			return new BinaryRequest((OpCode)this.mode)
 			{
 				Key = this.Key,
 				Cas = this.Cas,
 				Data = this.data
 			};
-
-			return request;
 		}
 
 		protected override IOperationResult ProcessResponse(BinaryResponse response)
@@ -45,7 +43,7 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 #region [ License information          ]
 /* ************************************************************
  * 
- *    Copyright (c) 2010 Attila Kiskó, enyim.com
+ *    © 2010 Attila Kiskó (aka Enyim), © 2016 CNBlogs, © 2017 VIEApps.net
  *    
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.

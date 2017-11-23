@@ -24,7 +24,7 @@ namespace Enyim
 		protected ulong CurrentHashValue;
 
 		/// <summary>
-		/// Initializes a new instance of the <see cref="T:FNV64"/> class.
+		/// Initializes a new instance of the <see cref="FNV64"/> class.
 		/// </summary>
 		public FNV64()
 		{
@@ -32,14 +32,14 @@ namespace Enyim
 		}
 
 		/// <summary>
-		/// Initializes an instance of <see cref="T:FNV64"/>.
+		/// Initializes an instance of <see cref="FNV64"/>.
 		/// </summary>
 		public override void Initialize()
 		{
 			this.CurrentHashValue = Init;
 		}
 
-		/// <summary>Routes data written to the object into the <see cref="T:FNV64" /> hash algorithm for computing the hash.</summary>
+		/// <summary>Routes data written to the object into the <see cref="FNV64" /> hash algorithm for computing the hash.</summary>
 		/// <param name="array">The input data. </param>
 		/// <param name="ibStart">The offset into the byte array from which to begin using data. </param>
 		/// <param name="cbSize">The number of bytes in the array to use as data. </param>
@@ -55,7 +55,7 @@ namespace Enyim
 		}
 
 		/// <summary>
-		/// Returns the computed <see cref="T:FNV64" /> hash value after all data has been written to the object.
+		/// Returns the computed <see cref="FNV64" /> hash value after all data has been written to the object.
 		/// </summary>
 		/// <returns>The computed hash code.</returns>
 		protected override byte[] HashFinal()
@@ -81,7 +81,7 @@ namespace Enyim
 	/// </summary>
 	public sealed class FNV64a : FNV64
 	{
-		/// <summary>Routes data written to the object into the <see cref="T:FNV64" /> hash algorithm for computing the hash.</summary>
+		/// <summary>Routes data written to the object into the <see cref="FNV64" /> hash algorithm for computing the hash.</summary>
 		/// <param name="array">The input data. </param>
 		/// <param name="ibStart">The offset into the byte array from which to begin using data. </param>
 		/// <param name="cbSize">The number of bytes in the array to use as data. </param>
@@ -111,21 +111,21 @@ namespace Enyim
 		protected uint CurrentHashValue;
 
 		/// <summary>
-		/// Initializes a new instance of the <see cref="T:FNV1a"/> class.
+		/// Initializes a new instance of the <see cref="FNV1a"/> class.
 		/// </summary>
 		public FNV1()
 		{
 		}
 
 		/// <summary>
-		/// Initializes an instance of <see cref="T:FNV1a"/>.
+		/// Initializes an instance of <see cref="FNV1a"/>.
 		/// </summary>
 		public override void Initialize()
 		{
 			this.CurrentHashValue = Init;
 		}
 
-		/// <summary>Routes data written to the object into the <see cref="T:FNV1a" /> hash algorithm for computing the hash.</summary>
+		/// <summary>Routes data written to the object into the <see cref="FNV1a" /> hash algorithm for computing the hash.</summary>
 		/// <param name="array">The input data. </param>
 		/// <param name="ibStart">The offset into the byte array from which to begin using data. </param>
 		/// <param name="cbSize">The number of bytes in the array to use as data. </param>
@@ -141,7 +141,7 @@ namespace Enyim
 		}
 
 		/// <summary>
-		/// Returns the computed <see cref="T:FNV1a" /> hash value after all data has been written to the object.
+		/// Returns the computed <see cref="FNV1a" /> hash value after all data has been written to the object.
 		/// </summary>
 		/// <returns>The computed hash code.</returns>
 		protected override byte[] HashFinal()
@@ -167,7 +167,7 @@ namespace Enyim
 	/// </summary>
 	public class FNV1a : FNV1
 	{
-		/// <summary>Routes data written to the object into the <see cref="T:FNV1a" /> hash algorithm for computing the hash.</summary>
+		/// <summary>Routes data written to the object into the <see cref="FNV1a" /> hash algorithm for computing the hash.</summary>
 		/// <param name="array">The input data. </param>
 		/// <param name="ibStart">The offset into the byte array from which to begin using data. </param>
 		/// <param name="cbSize">The number of bytes in the array to use as data. </param>
@@ -190,7 +190,7 @@ namespace Enyim
 	public class ModifiedFNV : FNV1a
 	{
 		/// <summary>
-		/// Returns the computed <see cref="T:ModifiedFNV" /> hash value after all data has been written to the object.
+		/// Returns the computed <see cref="ModifiedFNV" /> hash value after all data has been written to the object.
 		/// </summary>
 		/// <returns>The computed hash code.</returns>
 		protected override byte[] HashFinal()
@@ -575,7 +575,7 @@ namespace Enyim
 		ulong[] block = new ulong[8];
 
 		/// <summary>
-		/// Initializes a new instance of the <see cref="T:TigerHash"/> class.
+		/// Initializes a new instance of the <see cref="TigerHash"/> class.
 		/// </summary>
 		public TigerHash()
 		{
@@ -584,7 +584,7 @@ namespace Enyim
 		}
 
 		/// <summary>
-		/// Initializes an instance of <see cref="T:TigerHash"/>.
+		/// Initializes an instance of <see cref="TigerHash"/>.
 		/// </summary>
 		public override void Initialize()
 		{
@@ -597,7 +597,7 @@ namespace Enyim
 		}
 
 
-		/// <summary>Routes data written to the object into the <see cref="T:TigerHash" /> hash algorithm for computing the hash.</summary>
+		/// <summary>Routes data written to the object into the <see cref="TigerHash" /> hash algorithm for computing the hash.</summary>
 		/// <param name="array">The input data. </param>
 		/// <param name="ibStart">The offset into the byte array from which to begin using data. </param>
 		/// <param name="cbSize">The number of bytes in the array to use as data. </param>
@@ -637,7 +637,7 @@ namespace Enyim
 		}
 
 		/// <summary>
-		/// Returns the computed <see cref="T:TigerHash" /> hash value after all data has been written to the object.
+		/// Returns the computed <see cref="TigerHash" /> hash value after all data has been written to the object.
 		/// </summary>
 		/// <returns>The computed hash code.</returns>
 		protected override byte[] HashFinal()
@@ -1131,7 +1131,7 @@ namespace Enyim
 #region [ License information          ]
 /* ************************************************************
  * 
- *    Copyright (c) 2010 Attila Kiskó, enyim.com
+ *    © 2010 Attila Kiskó (aka Enyim), © 2016 CNBlogs, © 2017 VIEApps.net
  *    
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.

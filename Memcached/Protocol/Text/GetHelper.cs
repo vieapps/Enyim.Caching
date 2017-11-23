@@ -1,12 +1,12 @@
 using System;
 using System.Globalization;
 
+using Microsoft.Extensions.Logging;
+
 namespace Enyim.Caching.Memcached.Protocol.Text
 {
 	internal static class GetHelper
 	{
-		private static readonly Enyim.Caching.ILog log = Enyim.Caching.LogManager.GetLogger(typeof(GetHelper));
-
 		public static void FinishCurrent(PooledSocket socket)
 		{
 			string response = TextSocketHelper.ReadResponse(socket);
@@ -56,8 +56,9 @@ namespace Enyim.Caching.Memcached.Protocol.Text
 
 			GetResponse retval = new GetResponse(parts[1], flags, cas, allData);
 
-			if (log.IsDebugEnabled)
-				log.DebugFormat("Received value. Data type: {0}, size: {1}.", retval.Item.Flags, retval.Item.Data.Count);
+			var logger = LogManager.CreateLogger(typeof(GetHelper));
+			if (logger.IsEnabled(LogLevel.Debug))
+				logger.LogDebug("Received value. Data type: {0}, size: {1}.", retval.Item.Flags, retval.Item.Data.Count);
 
 			return retval;
 		}
@@ -88,7 +89,7 @@ namespace Enyim.Caching.Memcached.Protocol.Text
 #region [ License information          ]
 /* ************************************************************
  * 
- *    Copyright (c) 2010 Attila Kiskó, enyim.com
+ *    © 2010 Attila Kiskó (aka Enyim), © 2016 CNBlogs, © 2017 VIEApps.net
  *    
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.

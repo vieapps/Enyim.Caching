@@ -10,16 +10,13 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 	/// </summary>
 	public class BinaryOperationFactory : IOperationFactory
 	{
-		private readonly ILogger _logger;
-
-		public BinaryOperationFactory(ILogger logger)
+		public BinaryOperationFactory()
 		{
-			this._logger = logger;
 		}
 
 		IGetOperation IOperationFactory.Get(string key)
 		{
-			return new GetOperation(key, _logger);
+			return new GetOperation(key);
 		}
 
 		IMultiGetOperation IOperationFactory.MultiGet(IList<string> keys)
@@ -62,7 +59,7 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 #region [ License information          ]
 /* ************************************************************
  * 
- *    Copyright (c) 2010 Attila Kisk? enyim.com
+ *    © 2010 Attila Kiskó (aka Enyim), © 2016 CNBlogs, © 2017 VIEApps.net
  *    
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.

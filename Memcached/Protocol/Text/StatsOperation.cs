@@ -1,28 +1,32 @@
 using System;
-using System.Collections.Generic;
 using System.Net;
+using System.Collections.Generic;
+
 using Enyim.Caching.Memcached.Results;
 using Enyim.Caching.Memcached.Results.Extensions;
+
+using Microsoft.Extensions.Logging;
 
 namespace Enyim.Caching.Memcached.Protocol.Text
 {
 	public class StatsOperation : Operation, IStatsOperation
 	{
-		private static ILog log = LogManager.GetLogger(typeof(StatsOperation));
+		ILogger _logger;
 
-		private string type;
-		private Dictionary<string, string> result;
+		string _type;
+		Dictionary<string, string> _result;
 
 		public StatsOperation(string type)
 		{
-			this.type = type;
+			this._logger = LogManager.CreateLogger(typeof(StatsOperation));
+			this._type = type;
 		}
 
 		protected internal override IList<ArraySegment<byte>> GetBuffer()
 		{
-			var command = String.IsNullOrEmpty(this.type)
+			var command = String.IsNullOrEmpty(this._type)
 				? "stats" + TextSocketHelper.CommandTerminator
-				: "stats " + this.type + TextSocketHelper.CommandTerminator;
+				: "stats " + this._type + TextSocketHelper.CommandTerminator;
 
 			return TextSocketHelper.GetCommandBuffer(command);
 		}
@@ -42,8 +46,8 @@ namespace Enyim.Caching.Memcached.Protocol.Text
 				// expected response is STAT item_name item_value
 				if (line.Length < 6 || String.Compare(line, 0, "STAT ", 0, 5, StringComparison.Ordinal) != 0)
 				{
-					if (log.IsWarnEnabled)
-						log.Warn("Unknow response: " + line);
+					if (this._logger.IsEnabled(LogLevel.Warning))
+						this._logger.LogWarning("Unknow response: " + line);
 
 					continue;
 				}
@@ -52,8 +56,8 @@ namespace Enyim.Caching.Memcached.Protocol.Text
 				string[] parts = line.Remove(0, 5).Split(' ');
 				if (parts.Length != 2)
 				{
-					if (log.IsWarnEnabled)
-						log.Warn("Unknow response: " + line);
+					if (this._logger.IsEnabled(LogLevel.Warning))
+						this._logger.LogWarning("Unknow response: " + line);
 
 					continue;
 				}
@@ -62,14 +66,14 @@ namespace Enyim.Caching.Memcached.Protocol.Text
 				serverData[parts[0]] = parts[1];
 			}
 
-			this.result = serverData;
+			this._result = serverData;
 
 			return new TextOperationResult().Pass();
 		}
 
 		Dictionary<string, string> IStatsOperation.Result
 		{
-			get { return result; }
+			get { return _result; }
 		}
 
 		protected internal override System.Threading.Tasks.Task<IOperationResult> ReadResponseAsync(PooledSocket socket)
@@ -87,7 +91,7 @@ namespace Enyim.Caching.Memcached.Protocol.Text
 #region [ License information          ]
 /* ************************************************************
  * 
- *    Copyright (c) 2010 Attila Kisk? enyim.com
+ *    © 2010 Attila Kiskó (aka Enyim), © 2016 CNBlogs, © 2017 VIEApps.net
  *    
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.

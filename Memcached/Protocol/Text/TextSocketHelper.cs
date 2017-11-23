@@ -3,18 +3,20 @@ using System.IO;
 using System.Text;
 using System.Collections.Generic;
 
+using Microsoft.Extensions.Logging;
+
 namespace Enyim.Caching.Memcached.Protocol.Text
 {
 	internal static class TextSocketHelper
 	{
-		private const string GenericErrorResponse = "ERROR";
-		private const string ClientErrorResponse = "CLIENT_ERROR ";
-		private const string ServerErrorResponse = "SERVER_ERROR ";
-		private const int ErrorResponseLength = 13;
-
 		public const string CommandTerminator = "\r\n";
 
-		private static readonly Enyim.Caching.ILog log = Enyim.Caching.LogManager.GetLogger(typeof(TextSocketHelper));
+		const string GenericErrorResponse = "ERROR";
+		const string ClientErrorResponse = "CLIENT_ERROR ";
+		const string ServerErrorResponse = "SERVER_ERROR ";
+		const int ErrorResponseLength = 13;
+
+		static ILogger Logger;
 
 		/// <summary>
 		/// Reads the response of the server.
@@ -27,8 +29,9 @@ namespace Enyim.Caching.Memcached.Protocol.Text
 		{
 			string response = TextSocketHelper.ReadLine(socket);
 
-			if (log.IsDebugEnabled)
-				log.Debug("Received response: " + response);
+			Logger = Logger ?? LogManager.CreateLogger(typeof(TextSocketHelper));
+			if (Logger.IsEnabled(LogLevel.Debug))
+				Logger.LogDebug("Received response: " + response);
 
 			if (String.IsNullOrEmpty(response))
 				throw new MemcachedClientException("Empty response received.");
@@ -56,7 +59,7 @@ namespace Enyim.Caching.Memcached.Protocol.Text
 		/// Reads a line from the socket. A line is terninated by \r\n.
 		/// </summary>
 		/// <returns></returns>
-		private static string ReadLine(PooledSocket socket)
+		static string ReadLine(PooledSocket socket)
 		{
 			MemoryStream ms = new MemoryStream(50);
 
@@ -88,8 +91,9 @@ namespace Enyim.Caching.Memcached.Protocol.Text
 
 			string retval = Encoding.ASCII.GetString(ms.ToArray(), 0, (int)ms.Length);
 
-			if (log.IsDebugEnabled)
-				log.Debug("ReadLine: " + retval);
+			Logger = Logger ?? LogManager.CreateLogger(typeof(TextSocketHelper));
+			if (Logger.IsEnabled(LogLevel.Debug))
+				Logger.LogDebug("ReadLine: " + retval);
 
 			return retval;
 		}
@@ -124,7 +128,7 @@ namespace Enyim.Caching.Memcached.Protocol.Text
 #region [ License information          ]
 /* ************************************************************
  * 
- *    Copyright (c) 2010 Attila Kisk? enyim.com
+ *    © 2010 Attila Kiskó (aka Enyim), © 2016 CNBlogs, © 2017 VIEApps.net
  *    
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.

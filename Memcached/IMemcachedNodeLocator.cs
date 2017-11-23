@@ -15,15 +15,14 @@ namespace Enyim.Caching.Memcached
 		/// when a node goes down or comes back. If your locator has its own logic to deal with dead nodes 
 		/// then ignore all calls but the first. Otherwise make sure that your implementation can handle 
 		/// simultaneous calls to Initialize and Locate in a thread safe manner.</remarks>
-		/// <seealso cref="T:DefaultNodeLocator"/>
-		/// <seealso cref="T:KetamaNodeLocator"/>
+		/// <seealso cref="DefaultNodeLocator"/>
 		void Initialize(IList<IMemcachedNode> nodes);
 
 		/// <summary>
 		/// Returns the memcached node the specified key belongs to.
 		/// </summary>
 		/// <param name="key">The key of the item to be located.</param>
-		/// <returns>The <see cref="T:MemcachedNode"/> the specifed item belongs to</returns>
+		/// <returns>The <see cref="MemcachedNode"/> the specifed item belongs to</returns>
 		IMemcachedNode Locate(string key);
 
 		/// <summary>
@@ -38,7 +37,7 @@ namespace Enyim.Caching.Memcached
 #region [ License information          ]
 /* ************************************************************
  * 
- *    Copyright (c) 2010 Attila Kisk? enyim.com
+ *    © 2010 Attila Kiskó (aka Enyim), © 2016 CNBlogs, © 2017 VIEApps.net
  *    
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.

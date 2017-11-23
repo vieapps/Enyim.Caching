@@ -7,21 +7,21 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 {
 	public class MutatorOperation : BinarySingleItemOperation, IMutatorOperation
 	{
-		private ulong defaultValue;
-		private ulong delta;
-		private uint expires;
-		private MutationMode mode;
-		private ulong result;
+		ulong _defaultValue;
+		ulong _delta;
+		uint _expires;
+		MutationMode _mode;
+		ulong _result;
 
-		public MutatorOperation(MutationMode mode, string key, ulong defaultValue, ulong delta, uint expires)
-			: base(key)
+		public MutatorOperation(MutationMode mode, string key, ulong defaultValue, ulong delta, uint expires) : base(key)
 		{
-			if (delta < 0) throw new ArgumentOutOfRangeException("delta", "delta must be >= 0");
+			if (delta < 0)
+				throw new ArgumentOutOfRangeException(nameof(delta), $"{nameof(delta)} must be >= 0");
 
-			this.defaultValue = defaultValue;
-			this.delta = delta;
-			this.expires = expires;
-			this.mode = mode;
+			this._defaultValue = defaultValue;
+			this._delta = delta;
+			this._expires = expires;
+			this._mode = mode;
 		}
 
 		protected unsafe void UpdateExtra(BinaryRequest request)
@@ -30,10 +30,10 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 
 			fixed (byte* buffer = extra)
 			{
-				BinaryConverter.EncodeUInt64(this.delta, buffer, 0);
+				BinaryConverter.EncodeUInt64(this._delta, buffer, 0);
 
-				BinaryConverter.EncodeUInt64(this.defaultValue, buffer, 8);
-				BinaryConverter.EncodeUInt32(this.expires, buffer, 16);
+				BinaryConverter.EncodeUInt64(this._defaultValue, buffer, 8);
+				BinaryConverter.EncodeUInt32(this._expires, buffer, 16);
 			}
 
 			request.Extra = new ArraySegment<byte>(extra);
@@ -41,7 +41,7 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 
 		protected override BinaryRequest Build()
 		{
-			var request = new BinaryRequest((OpCode)this.mode)
+			var request = new BinaryRequest((OpCode)this._mode)
 			{
 				Key = this.Key,
 				Cas = this.Cas
@@ -64,7 +64,7 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 				if (data.Count != 8)
 					return result.Fail("Result must be 8 bytes long, received: " + data.Count, new InvalidOperationException());
 
-				this.result = BinaryConverter.DecodeUInt64(data.Array, data.Offset);
+				this._result = BinaryConverter.DecodeUInt64(data.Array, data.Offset);
 
 				return result.Pass();
 			}
@@ -75,12 +75,12 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 
 		MutationMode IMutatorOperation.Mode
 		{
-			get { return this.mode; }
+			get { return this._mode; }
 		}
 
 		ulong IMutatorOperation.Result
 		{
-			get { return this.result; }
+			get { return this._result; }
 		}
 	}
 }
@@ -88,7 +88,7 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 #region [ License information          ]
 /* ************************************************************
  * 
- *    Copyright (c) 2010 Attila Kiskó, enyim.com
+ *    © 2010 Attila Kiskó (aka Enyim), © 2016 CNBlogs, © 2017 VIEApps.net
  *    
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.

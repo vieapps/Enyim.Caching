@@ -1,49 +1,31 @@
 ﻿using System;
 
+using Microsoft.Extensions.Logging;
+
 namespace Enyim.Caching
 {
 	public static class LogManager
 	{
-		private static ILogFactory factory;
+		static ILoggerFactory LoggerFactory;
 
-		//TODO: Swith to Microsoft.Extensions.Logging
-		static LogManager()
+		public static void AssignLoggerFactory(ILoggerFactory loggerFactory)
 		{
+			if (LogManager.LoggerFactory == null && loggerFactory != null)
 #if DEBUG
-			factory = new ConsoleLogFactory();
+				LogManager.LoggerFactory = loggerFactory;
 #else
-			factory = new NullLoggerFactory();
+				LogManager.LoggerFactory = loggerFactory;
 #endif
 		}
 
-		/// <summary>
-		/// Assigns a new logger factory programmatically.
-		/// </summary>
-		/// <param name="factory"></param>
-		public static void AssignFactory(ILogFactory factory)
+		public static ILogger CreateLogger(Type type)
 		{
-			if (factory == null) throw new ArgumentNullException("factory");
-			LogManager.factory = factory;
+			return (LogManager.LoggerFactory ?? new NullLoggerFactory()).CreateLogger(type);
 		}
 
-		/// <summary>
-		/// Returns a new logger for the specified Type.
-		/// </summary>
-		/// <param name="type"></param>
-		/// <returns></returns>
-		public static ILog GetLogger(Type type)
+		public static ILogger CreateLogger<T>()
 		{
-			return factory.GetLogger(type);
-		}
-
-		/// <summary>
-		/// Returns a logger with the specified name.
-		/// </summary>
-		/// <param name="name"></param>
-		/// <returns></returns>
-		public static ILog GetLogger(string name)
-		{
-			return factory.GetLogger(name);
+			return LogManager.CreateLogger(typeof(T));
 		}
 	}
 }
@@ -51,7 +33,7 @@ namespace Enyim.Caching
 #region [ License information          ]
 /* ************************************************************
  * 
- *    Copyright (c) 2010 Attila Kiskó, enyim.com
+ *    © 2010 Attila Kiskó (aka Enyim), © 2016 CNBlogs, © 2017 VIEApps.net
  *    
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.

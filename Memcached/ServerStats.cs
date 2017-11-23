@@ -3,6 +3,8 @@ using System.Linq;
 using System.Net;
 using System.Collections.Generic;
 
+using Microsoft.Extensions.Logging;
+
 namespace Enyim.Caching.Memcached
 {
 	/// <summary>
@@ -10,8 +12,8 @@ namespace Enyim.Caching.Memcached
 	/// </summary>
 	public sealed class ServerStats
 	{
-		private const int OpAllowsSum = 1;
-		private static readonly Enyim.Caching.ILog log = Enyim.Caching.LogManager.GetLogger(typeof(ServerStats));
+		const int OpAllowsSum = 1;
+		ILogger _logger;
 
 		/// <summary>
 		/// Defines a value which indicates that the statstics should be retrieved for all servers in the pool.
@@ -20,7 +22,7 @@ namespace Enyim.Caching.Memcached
 
 		#region [ readonly int[] Optable       ]
 		// defines which values can be summed and which not
-		private static readonly int[] Optable =
+		static readonly int[] Optable =
 		{
 			0, 0, 0, 1, 1, 1, 1, 1,
 			1, 1, 1, 1, 1, 1, 1, 1
@@ -28,7 +30,7 @@ namespace Enyim.Caching.Memcached
 		#endregion
 
 		#region [ readonly string[] StatKeys   ]
-		private static readonly string[] StatKeys =
+		static readonly string[] StatKeys =
 		{
 			"uptime",
 			"time",
@@ -49,10 +51,11 @@ namespace Enyim.Caching.Memcached
 		};
 		#endregion
 
-		private Dictionary<EndPoint, Dictionary<string, string>> results;
+		Dictionary<EndPoint, Dictionary<string, string>> results;
 
 		internal ServerStats(Dictionary<EndPoint, Dictionary<string, string>> results)
 		{
+			this._logger = LogManager.CreateLogger(typeof(ServerStats));
 			this.results = results;
 		}
 
@@ -133,13 +136,13 @@ namespace Enyim.Caching.Memcached
 				if (serverValues.TryGetValue(key, out string result))
 					return result;
 
-				if (log.IsDebugEnabled)
-					log.DebugFormat("The stat item {0} does not exist for {1}", key, server);
+				if (this._logger.IsEnabled(LogLevel.Debug))
+					this._logger.LogDebug("The stat item {0} does not exist for {1}", key, server);
 			}
 			else
 			{
-				if (log.IsDebugEnabled)
-					log.DebugFormat("No stats are stored for {0}", server);
+				if (this._logger.IsEnabled(LogLevel.Debug))
+					this._logger.LogDebug("No stats are stored for {0}", server);
 			}
 
 			return null;
@@ -169,7 +172,7 @@ namespace Enyim.Caching.Memcached
 #region [ License information          ]
 /* ************************************************************
  * 
- *    Copyright (c) 2010 Attila Kisk? enyim.com
+ *    © 2010 Attila Kiskó (aka Enyim), © 2016 CNBlogs, © 2017 VIEApps.net
  *    
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.

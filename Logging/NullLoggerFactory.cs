@@ -1,21 +1,24 @@
-﻿using System;
+﻿using Microsoft.Extensions.Logging;
 
 namespace Enyim.Caching
 {
-	/// <summary>
-	/// Implement this interface to instantiate your custom ILog implementation
-	/// </summary>
-	public interface ILogFactory
+	public class NullLoggerFactory : ILoggerFactory
 	{
-		ILog GetLogger(string name);
-		ILog GetLogger(Type type);
+		public void AddProvider(ILoggerProvider provider) { }
+
+		public ILogger CreateLogger(string categoryName)
+		{
+			return NullLogger.Instance;
+		}
+
+		public void Dispose() { }
 	}
 }
 
 #region [ License information          ]
 /* ************************************************************
  * 
- *    Copyright (c) 2010 Attila Kiskó, enyim.com
+ *    © 2010 Attila Kiskó (aka Enyim), © 2016 CNBlogs, © 2017 VIEApps.net
  *    
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.

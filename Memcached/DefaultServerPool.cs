@@ -12,7 +12,7 @@ namespace Enyim.Caching.Memcached
 {
 	public class DefaultServerPool : IServerPool, IDisposable
 	{
-		readonly ILogger _logger;
+		ILogger _logger;
 
 		IMemcachedNode[] _allNodes;
 
@@ -22,17 +22,16 @@ namespace Enyim.Caching.Memcached
 
 		object _deadSync = new Object();
 		int _deadTimeoutMsec;
-		System.Threading.Timer _resurrectTimer;
-		bool _isTimerActive;
-		bool _isDisposed;
+		bool _isTimerActive, _isDisposed;
 		event Action<IMemcachedNode> _nodeFailed;
+		System.Threading.Timer _resurrectTimer;
 
-		public DefaultServerPool(IMemcachedClientConfiguration configuration, IOperationFactory opFactory, ILogger logger)
+		public DefaultServerPool(IMemcachedClientConfiguration configuration, IOperationFactory opFactory)
 		{
 			this._configuration = configuration ?? throw new ArgumentNullException(nameof(configuration), "Socket configuration is invalid");
 			this._factory = opFactory ?? throw new ArgumentNullException(nameof(opFactory), "Operation factory is invalid");
 			this._deadTimeoutMsec = (int)this._configuration.SocketPool.DeadTimeout.TotalMilliseconds;
-			this._logger = logger;
+			this._logger = LogManager.CreateLogger<DefaultServerPool>();
 		}
 
 		~DefaultServerPool()
@@ -46,7 +45,7 @@ namespace Enyim.Caching.Memcached
 
 		protected virtual IMemcachedNode CreateNode(EndPoint endpoint)
 		{
-			return new MemcachedNode(endpoint, this._configuration.SocketPool, this._logger);
+			return new MemcachedNode(endpoint, this._configuration.SocketPool);
 		}
 
 		void OnResurrectCallback(object state)
@@ -160,7 +159,7 @@ namespace Enyim.Caching.Memcached
 
 				// re-initialize the locator
 				var newLocator = this._configuration.CreateNodeLocator();
-				newLocator.Initialize(_allNodes.Where(n => n.IsAlive).ToArray());
+				newLocator.Initialize(this._allNodes.Where(n => n.IsAlive).ToArray());
 				Interlocked.Exchange(ref this._nodeLocator, newLocator);
 
 				// the timer is stopped until we encounter the first dead server
@@ -212,7 +211,7 @@ namespace Enyim.Caching.Memcached
 
 			// initialize the locator
 			var locator = this._configuration.CreateNodeLocator();
-			locator.Initialize(_allNodes);
+			locator.Initialize(this._allNodes);
 
 			this._nodeLocator = locator;
 		}
@@ -255,10 +254,10 @@ namespace Enyim.Caching.Memcached
 
 				this._nodeLocator = null;
 
-				for (var i = 0; i < this._allNodes.Length; i++)
+				for (var index = 0; index < this._allNodes.Length; index++)
 					try
 					{
-						this._allNodes[i].Dispose();
+						this._allNodes[index].Dispose();
 					}
 					catch (Exception e)
 					{
@@ -284,7 +283,7 @@ namespace Enyim.Caching.Memcached
 #region [ License information          ]
 /* ************************************************************
  * 
- *    Copyright (c) 2010 Attila Kisk? enyim.com
+ *    © 2010 Attila Kiskó (aka Enyim), © 2016 CNBlogs, © 2017 VIEApps.net
  *    
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.

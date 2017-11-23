@@ -17,17 +17,17 @@ using Microsoft.Extensions.Logging;
 
 namespace Enyim.Caching.Memcached
 {
-	[DebuggerDisplay("[ Address: {endpoint}, IsAlive = {IsAlive} ]")]
+	[DebuggerDisplay("Endpoint: {endpoint}, IsAlive = {IsAlive}")]
 	public partial class PooledSocket : IDisposable
 	{
-		private readonly ILogger _logger;
+		ILogger _logger;
 
-		private bool isAlive;
-		private Socket socket;
-		private EndPoint endpoint;
+		bool _isAlive;
+		Socket _socket;
+		EndPoint _endpoint;
 
-		private Stream inputStream;
-		private AsyncSocketHelper helper;
+		Stream _input;
+		AsyncSocketHelper _helper;
 
 		public PooledSocket(EndPoint endpoint, TimeSpan connectionTimeout, TimeSpan receiveTimeout, ILogger logger)
 		{
@@ -44,24 +44,24 @@ namespace Enyim.Caching.Memcached
 
 			this.TryConnect(socket, endpoint, connectionTimeout == TimeSpan.MaxValue ? Timeout.Infinite : (int)connectionTimeout.TotalMilliseconds);
 
-			this.socket = socket;
-			this.endpoint = endpoint;
-			this.inputStream = new BasicNetworkStream(socket);
-			this.isAlive = true;
+			this._socket = socket;
+			this._endpoint = endpoint;
+			this._input = new BasicNetworkStream(socket);
+			this._isAlive = true;
 
-			this._logger = logger;
+			this._logger = logger ?? LogManager.CreateLogger<PooledSocket>();
 		}
 
-		private void TryConnect(Socket socket, EndPoint endpoint, int timeout)
+		void TryConnect(Socket socket, EndPoint endpoint, int timeout)
 		{
 			if (endpoint is DnsEndPoint && !RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
 			{
-				var dnsEndPoint = ((DnsEndPoint)endpoint);
+				var dnsEndPoint = endpoint as DnsEndPoint;
 				var host = dnsEndPoint.Host;
 				var addresses = Dns.GetHostAddresses(dnsEndPoint.Host);
 				var address = addresses.FirstOrDefault(ip => ip.AddressFamily == AddressFamily.InterNetwork);
 				if (address == null)
-					throw new ArgumentException(String.Format("Could not resolve host '{0}'.", host));
+					throw new ArgumentException($"Could not resolve host '{host}'.");
 
 				this._logger.LogDebug($"Resolved '{host}' to '{address}'");
 				endpoint = new IPEndPoint(address, dnsEndPoint.Port);
@@ -82,7 +82,7 @@ namespace Enyim.Caching.Memcached
 			if (!completed.WaitOne(timeout) || !socket.Connected)
 				using (socket)
 				{
-					throw new TimeoutException("Could not connect to " + endpoint);
+					throw new TimeoutException($"Could not connect to {endpoint}");
 				}
 		}
 
@@ -90,22 +90,22 @@ namespace Enyim.Caching.Memcached
 
 		public int Available
 		{
-			get { return this.socket.Available; }
+			get { return this._socket.Available; }
 		}
 
 		public void Reset()
 		{
 			// discard any buffered data
-			this.inputStream.Flush();
+			this._input.Flush();
 
-			if (this.helper != null)
-				this.helper.DiscardBuffer();
+			if (this._helper != null)
+				this._helper.DiscardBuffer();
 
-			var available = this.socket.Available;
+			var available = this._socket.Available;
 			if (available > 0)
 			{
 				if (this._logger.IsEnabled(LogLevel.Warning))
-					this._logger.LogWarning("Socket bound to {0} has {1} unread data! This is probably a bug in the code. InstanceID was {2}.", this.socket.RemoteEndPoint, available, this.InstanceId);
+					this._logger.LogWarning("Socket bound to {0} has {1} unread data! This is probably a bug in the code. InstanceID was {2}.", this._socket.RemoteEndPoint, available, this.InstanceId);
 
 				var data = new byte[available];
 				this.Read(data, 0, available);
@@ -119,17 +119,17 @@ namespace Enyim.Caching.Memcached
 		}
 
 		/// <summary>
-		/// The ID of this instance. Used by the <see cref="T:MemcachedServer"/> to identify the instance in its inner lists.
+		/// The ID of this instance. Used by the <see cref="IServerPool"/> to identify the instance in its inner lists.
 		/// </summary>
 		public readonly Guid InstanceId = Guid.NewGuid();
 
 		public bool IsAlive
 		{
-			get { return this.isAlive; }
+			get { return this._isAlive; }
 		}
 
 		/// <summary>
-		/// Releases all resources used by this instance and shuts down the inner <see cref="T:Socket"/>. This instance will not be usable anymore.
+		/// Releases all resources used by this instance and shuts down the inner <see cref="Socket"/>. This instance will not be usable anymore.
 		/// </summary>
 		/// <remarks>Use the IDisposable.Dispose method if you want to release this instance back into the pool.</remarks>
 		public void Destroy()
@@ -154,18 +154,16 @@ namespace Enyim.Caching.Memcached
 
 				try
 				{
-					if (socket != null)
-						try
-						{
-							this.socket.Dispose();
-						}
-						catch { }
+					try
+					{
+						this._socket?.Dispose();
+					}
+					catch { }
 
-					if (this.inputStream != null)
-						this.inputStream.Dispose();
+					this._input?.Dispose();
 
-					this.inputStream = null;
-					this.socket = null;
+					this._input = null;
+					this._socket = null;
 					this.CleanupCallback = null;
 				}
 				catch (Exception e)
@@ -182,9 +180,9 @@ namespace Enyim.Caching.Memcached
 			this.Dispose(false);
 		}
 
-		private void CheckDisposed()
+		void CheckDisposed()
 		{
-			if (this.socket == null)
+			if (this._socket == null)
 				throw new ObjectDisposedException("PooledSocket");
 		}
 
@@ -197,11 +195,11 @@ namespace Enyim.Caching.Memcached
 			this.CheckDisposed();
 			try
 			{
-				return this.inputStream.ReadByte();
+				return this._input.ReadByte();
 			}
 			catch (IOException)
 			{
-				this.isAlive = false;
+				this._isAlive = false;
 				throw;
 			}
 		}
@@ -211,7 +209,7 @@ namespace Enyim.Caching.Memcached
 			using (var awaitable = new SocketAwaitable())
 			{
 				awaitable.Buffer = new ArraySegment<byte>(new byte[count], 0, count);
-				await this.socket.ReceiveAsync(awaitable);
+				await this._socket.ReceiveAsync(awaitable);
 				return awaitable.Transferred.Array;
 			}
 		}
@@ -219,7 +217,7 @@ namespace Enyim.Caching.Memcached
 		/// <summary>
 		/// Reads data from the server into the specified buffer.
 		/// </summary>
-		/// <param name="buffer">An array of <see cref="T:System.Byte"/> that is the storage location for the received data.</param>
+		/// <param name="buffer">An array of <see cref="System.Byte"/> that is the storage location for the received data.</param>
 		/// <param name="offset">The location in buffer to store the received data.</param>
 		/// <param name="count">The number of bytes to read.</param>
 		/// <remarks>This method blocks and will not return until the specified amount of bytes are read.</remarks>
@@ -233,7 +231,7 @@ namespace Enyim.Caching.Memcached
 			{
 				try
 				{
-					var currentRead = this.inputStream.Read(buffer, offset, shouldRead);
+					var currentRead = this._input.Read(buffer, offset, shouldRead);
 					if (currentRead < 1)
 						continue;
 
@@ -243,7 +241,7 @@ namespace Enyim.Caching.Memcached
 				}
 				catch (IOException)
 				{
-					this.isAlive = false;
+					this._isAlive = false;
 					throw;
 				}
 			}
@@ -253,14 +251,11 @@ namespace Enyim.Caching.Memcached
 		{
 			this.CheckDisposed();
 
-			SocketError status;
-
-			this.socket.Send(data, offset, length, SocketFlags.None, out status);
-
+			this._socket.Send(data, offset, length, SocketFlags.None, out SocketError status);
 			if (status != SocketError.Success)
 			{
-				this.isAlive = false;
-				ThrowHelper.ThrowSocketWriteError(this.endpoint, status);
+				this._isAlive = false;
+				throw new Exception(String.Format("Failed to write to the socket '{0}'. Error: {1}", this._endpoint, status));
 			}
 		}
 
@@ -268,11 +263,11 @@ namespace Enyim.Caching.Memcached
 		{
 			this.CheckDisposed();
 
-			this.socket.Send(buffers, SocketFlags.None, out SocketError status);
+			this._socket.Send(buffers, SocketFlags.None, out SocketError status);
 			if (status != SocketError.Success)
 			{
-				this.isAlive = false;
-				ThrowHelper.ThrowSocketWriteError(this.endpoint, status);
+				this._isAlive = false;
+				throw new Exception(String.Format("Failed to write to the socket '{0}'. Error: {1}", this._endpoint, status));
 			}
 		}
 
@@ -283,18 +278,18 @@ namespace Enyim.Caching.Memcached
 				awaitable.Arguments.BufferList = buffers;
 				try
 				{
-					await this.socket.SendAsync(awaitable);
+					await this._socket.SendAsync(awaitable);
 				}
 				catch
 				{
-					this.isAlive = false;
-					ThrowHelper.ThrowSocketWriteError(this.endpoint, awaitable.Arguments.SocketError);
+					this._isAlive = false;
+					throw new Exception(String.Format("Failed to write to the socket '{0}'. Error: {1}", this._endpoint, awaitable.Arguments.SocketError));
 				}
 
 				if (awaitable.Arguments.SocketError != SocketError.Success)
 				{
-					this.isAlive = false;
-					ThrowHelper.ThrowSocketWriteError(this.endpoint, awaitable.Arguments.SocketError);
+					this._isAlive = false;
+					throw new Exception(String.Format("Failed to write to the socket '{0}'. Error: {1}", this._endpoint, awaitable.Arguments.SocketError));
 				}
 			}
 		}
@@ -317,10 +312,10 @@ namespace Enyim.Caching.Memcached
 				return false;
 			}
 
-			if (this.helper == null)
-				this.helper = new AsyncSocketHelper(this);
+			if (this._helper == null)
+				this._helper = new AsyncSocketHelper(this);
 
-			return this.helper.Read(args);
+			return this._helper.Read(args);
 		}
 	}
 }
@@ -328,7 +323,7 @@ namespace Enyim.Caching.Memcached
 #region [ License information          ]
 /* ************************************************************
  * 
- *    Copyright (c) 2010 Attila Kisk? enyim.com
+ *    © 2010 Attila Kiskó (aka Enyim), © 2016 CNBlogs, © 2017 VIEApps.net
  *    
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.

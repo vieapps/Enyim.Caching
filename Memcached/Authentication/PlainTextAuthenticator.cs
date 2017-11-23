@@ -8,7 +8,7 @@ namespace Enyim.Caching.Memcached
 	/// <remarks>Either use the parametrized constructor, or pass the "userName" and "password" parameters during initalization.</remarks>
 	public sealed class PlainTextAuthenticator : ISaslAuthenticationProvider
 	{
-		private byte[] authData;
+		byte[] authData;
 
 		public PlainTextAuthenticator() { }
 
@@ -30,7 +30,7 @@ namespace Enyim.Caching.Memcached
 			}
 		}
 
-		private string GetParameter(Dictionary<string, object> parameters, string key)
+		string GetParameter(Dictionary<string, object> parameters, string key)
 		{
 			if (parameters.ContainsKey(key))
 			{
@@ -52,7 +52,7 @@ namespace Enyim.Caching.Memcached
 			return null;
 		}
 
-		private static byte[] CreateAuthData(string zone, string userName, string password)
+		static byte[] CreateAuthData(string zone, string userName, string password)
 		{
 			//message   = [authzid] UTF8NUL authcid UTF8NUL passwd
 			//authcid   = 1*SAFE ; MUST accept up to 255 octets
@@ -67,7 +67,7 @@ namespace Enyim.Caching.Memcached
 #region [ License information          ]
 /* ************************************************************
  * 
- *    Copyright (c) 2010 Attila Kisk? enyim.com
+ *    © 2010 Attila Kiskó (aka Enyim), © 2016 CNBlogs, © 2017 VIEApps.net
  *    
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.

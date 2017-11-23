@@ -13,20 +13,18 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 	/// </summary>
 	public class BinaryPool : DefaultServerPool
 	{
-		ISaslAuthenticationProvider authenticationProvider;
-		IMemcachedClientConfiguration configuration;
-		readonly ILogger _logger;
+		ISaslAuthenticationProvider _authenticationProvider;
+		IMemcachedClientConfiguration _configuration;
 
-		public BinaryPool(IMemcachedClientConfiguration configuration, ILogger logger) : base(configuration, new BinaryOperationFactory(logger), logger)
+		public BinaryPool(IMemcachedClientConfiguration configuration) : base(configuration, new BinaryOperationFactory())
 		{
-			this.authenticationProvider = BinaryPool.GetProvider(configuration);
-			this.configuration = configuration;
-			this._logger = logger;
+			this._authenticationProvider = BinaryPool.GetProvider(configuration);
+			this._configuration = configuration;
 		}
 
 		protected override IMemcachedNode CreateNode(EndPoint endpoint)
 		{
-			return new BinaryNode(endpoint, this.configuration.SocketPool, this.authenticationProvider, this._logger);
+			return new BinaryNode(endpoint, this._configuration.SocketPool, this._authenticationProvider);
 		}
 
 		static ISaslAuthenticationProvider GetProvider(IMemcachedClientConfiguration configuration)
@@ -43,7 +41,7 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 #region [ License information          ]
 /* ************************************************************
  * 
- *    Copyright (c) 2010 Attila Kisk? enyim.com
+ *    © 2010 Attila Kiskó (aka Enyim), © 2016 CNBlogs, © 2017 VIEApps.net
  *    
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.

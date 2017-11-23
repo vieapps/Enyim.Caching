@@ -102,11 +102,11 @@ namespace Microsoft.AspNetCore.Builder
 		{
 			try
 			{
-				appBuilder.ApplicationServices.GetService<ILogger<IMemcachedClient>>().LogInformation(new EventId(), null, $"Memcached is {(appBuilder.ApplicationServices.GetService<IMemcachedClient>() != null ? "" : "not-")}started");
+				appBuilder.ApplicationServices.GetService<ILogger<IMemcachedClient>>().LogInformation($"Memcached is {(appBuilder.ApplicationServices.GetService<IMemcachedClient>() != null ? "" : "not-")}started");
 			}
 			catch (Exception ex)
 			{
-				appBuilder.ApplicationServices.GetService<ILogger<IMemcachedClient>>().LogError(new EventId(), ex, "Memcached is failed to start");
+				appBuilder.ApplicationServices.GetService<ILogger<IMemcachedClient>>().LogError(ex, "Memcached is failed to start");
 			}
 			return appBuilder;
 		}
@@ -444,7 +444,7 @@ namespace CacheUtils
 #region [ License information          ]
 /* ************************************************************
  * 
- *    Copyright (c) 2010 Attila Kisk? enyim.com
+ *    © 2010 Attila Kiskó (aka Enyim), © 2016 CNBlogs, © 2017 VIEApps.net
  *    
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.

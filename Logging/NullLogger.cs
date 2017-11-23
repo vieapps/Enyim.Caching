@@ -1,23 +1,33 @@
-using System;
-using System.Net;
-using System.Net.Sockets;
+﻿using System;
 
-namespace Enyim.Caching.Memcached
+using Microsoft.Extensions.Logging;
+
+namespace Enyim.Caching
 {
-	internal static class ThrowHelper
+	public class NullLogger : ILogger
 	{
-		public static void ThrowSocketWriteError(EndPoint endpoint, SocketError error)
+		internal static NullLogger Instance = new NullLogger();
+
+		private NullLogger() { }
+
+		public IDisposable BeginScope<TState>(TState state)
 		{
-			// move the string into resource file
-			throw new Exception(String.Format("Failed to write to the socket '{0}'. Error: {1}", endpoint, error));
+			return null;
 		}
+
+		public bool IsEnabled(LogLevel logLevel)
+		{
+			return false;
+		}
+
+		public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception exception, Func<TState, Exception, string> formatter) { }
 	}
 }
 
 #region [ License information          ]
 /* ************************************************************
  * 
- *    Copyright (c) 2010 Attila Kisk? enyim.com
+ *    © 2010 Attila Kiskó (aka Enyim), © 2016 CNBlogs, © 2017 VIEApps.net
  *    
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.

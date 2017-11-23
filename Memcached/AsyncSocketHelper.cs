@@ -87,12 +87,12 @@ namespace Enyim.Caching.Memcached
 				{
 					this.readInProgressEvent.Reset();
 
-					if (this.socket.socket.ReceiveAsync(this.readEvent))
+					if (this.socket._socket.ReceiveAsync(this.readEvent))
 					{
 						// wait until the timeout elapses, then abort this reading process
 						// EndREceive will be triggered sooner or later but its timeout
 						// may be higher than our read timeout, so it's not reliable
-						if (!readInProgressEvent.WaitOne(this.socket.socket.ReceiveTimeout))
+						if (!readInProgressEvent.WaitOne(this.socket._socket.ReceiveTimeout))
 							this.AbortReadAndTryPublishError(false);
 
 						return;
@@ -111,7 +111,7 @@ namespace Enyim.Caching.Memcached
 			private void AbortReadAndTryPublishError(bool markAsDead)
 			{
 				if (markAsDead)
-					this.socket.isAlive = false;
+					this.socket._isAlive = false;
 
 				// we've been already aborted, so quit
 				// both the EndReceive and the wait on the event can abort the read
@@ -184,7 +184,7 @@ namespace Enyim.Caching.Memcached
 #region [ License information          ]
 /* ************************************************************
  * 
- *    Copyright (c) 2010 Attila Kisk? enyim.com
+ *    © 2010 Attila Kiskó (aka Enyim), © 2016 CNBlogs, © 2017 VIEApps.net
  *    
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.

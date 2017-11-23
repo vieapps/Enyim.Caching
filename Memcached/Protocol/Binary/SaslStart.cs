@@ -14,13 +14,11 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 		protected override BinaryRequest Build()
 		{
 			// create a Sasl Start command
-			var request = new BinaryRequest(OpCode.SaslStart)
+			return new BinaryRequest(OpCode.SaslStart)
 			{
 				Key = this.Provider.Type,
 				Data = new ArraySegment<byte>(this.Provider.Authenticate())
 			};
-
-			return request;
 		}       
 	}
 }
@@ -28,7 +26,7 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 #region [ License information          ]
 /* ************************************************************
  * 
- *    Copyright (c) 2010 Attila Kisk? enyim.com
+ *    © 2010 Attila Kiskó (aka Enyim), © 2016 CNBlogs, © 2017 VIEApps.net
  *    
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.

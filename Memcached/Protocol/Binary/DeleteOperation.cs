@@ -6,32 +6,23 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 {
 	public class DeleteOperation : BinarySingleItemOperation, IDeleteOperation
 	{
-		private static readonly Enyim.Caching.ILog log = Enyim.Caching.LogManager.GetLogger(typeof(DeleteOperation));
 		public DeleteOperation(string key) : base(key) { }
 
 		protected override BinaryRequest Build()
 		{
-			var request = new BinaryRequest(OpCode.Delete)
+			return new BinaryRequest(OpCode.Delete)
 			{
 				Key = this.Key,
 				Cas = this.Cas
 			};
-
-			return request;
 		}
 
 		protected override IOperationResult ProcessResponse(BinaryResponse response)
 		{
 			var result = new BinaryOperationResult();
-			if (response.StatusCode == 0)
-			{
-				return result.Pass();
-			}
-			else
-			{
-				var message = ResultHelper.ProcessResponseData(response.Data);
-				return result.Fail(message);
-			}
+			return response.StatusCode == 0
+				? result.Pass()
+				: result.Fail(ResultHelper.ProcessResponseData(response.Data));
 		}
 	}
 }
@@ -39,7 +30,7 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 #region [ License information          ]
 /* ************************************************************
  * 
- *    Copyright (c) 2010 Attila Kiskó, enyim.com
+ *    © 2010 Attila Kiskó (aka Enyim), © 2016 CNBlogs, © 2017 VIEApps.net
  *    
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
