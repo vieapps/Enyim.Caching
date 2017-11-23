@@ -1,7 +1,7 @@
 # VIEApps.Enyim.Caching
 The .NET Standard 2.0 memcached client library: 
 - 100% compatible with [EnyimMemcached 2.x](https://github.com/enyim/EnyimMemcached) and [EnyimMemcachedCore](https://github.com/cnblogs/EnyimMemcachedCore)
-- Fully async with multiple nodes supported like original EnyimMemcached (EnyimMemcachedCore only support single node)
+- Fully async with multiple nodes supported just like the original EnyimMemcached does (EnyimMemcachedCore is only support single node)
 - Object serialization by various transcoders: Binary Formatter, Protocol Buffers, Json.NET Bson, MessagePack
 - Ready with .NET Core 2.0 and .NET Framework 4.6.1 (and higher) with more useful methods (Set, Add, Replace, Exists)
 ### NuGet
@@ -19,7 +19,11 @@ The .NET Standard 2.0 memcached client library:
 	"Memcached": {
 		"Servers": [
 			{
-				"Address": "127.0.0.1",
+				"Address": "192.168.0.2",
+				"Port": 11211
+			},
+			{
+				"Address": "192.168.0.3",
 				"Port": 11211
 			}
 		],
@@ -39,7 +43,11 @@ The .NET Standard 2.0 memcached client library:
 	"Memcached": {
 		"Servers": [
 			{
-				"Address": "127.0.0.1",
+				"Address": "192.168.0.2",
+				"Port": 11211
+			},
+			{
+				"Address": "192.168.0.3",
 				"Port": 11211
 			}
 		],
@@ -150,7 +158,8 @@ public class CreativeService
 	</configSections>
 	<memcached>
 		<servers>
-			<add address="127.0.0.1" port="11211" />
+			<add address="192.168.0.2" port="11211" />
+			<add address="192.168.0.3" port="11211" />
 		</servers>
 		<socketPool minPoolSize="10" maxPoolSize="100" deadTimeout="00:01:00" connectionTimeout="00:00:05" receiveTimeout="00:00:01" />
 	</memcached>
@@ -165,7 +174,8 @@ public class CreativeService
 	</configSections>
 	<memcached>
 		<servers>
-			<add address="127.0.0.1" port="11211" />
+			<add address="192.168.0.2" port="11211" />
+			<add address="192.168.0.3" port="11211" />
 		</servers>
 		<socketPool minPoolSize="10" maxPoolSize="100" deadTimeout="00:01:00" connectionTimeout="00:00:05" receiveTimeout="00:00:01" />
 		<authentication type="Enyim.Caching.Memcached.PlainTextAuthenticator, Enyim.Caching" zone="" userName="username" password="password" />
@@ -191,3 +201,5 @@ public class CreativeService
 ```
 ## Other transcoders (Protocol Buffers, Json.NET Bson, MessagePack)
 See [VIEApps.Enyim.Caching.Transcoders](https://github.com/vieapps/Enyim.Caching.Transcoders)
+## Wrapper library for working with other distributed cache (Redis) in the same time
+See [VIEApps.Components.Caching](https://github.com/vieapps/Components.Caching)
