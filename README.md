@@ -1,7 +1,7 @@
 # VIEApps.Enyim.Caching
 The .NET Standard 2.0 memcached client library: 
 - 100% compatible with [EnyimMemcached 2.x](https://github.com/enyim/EnyimMemcached) and [EnyimMemcachedCore](https://github.com/cnblogs/EnyimMemcachedCore)
-- Fully async with multiple nodes supported just like the original EnyimMemcached does (EnyimMemcachedCore is only support single node)
+- Fully async with multiple nodes supported (just like the original EnyimMemcached does - EnyimMemcachedCore is only support single node)
 - Object serialization by various transcoders: Binary Formatter, Protocol Buffers, Json.NET Bson, MessagePack
 - Ready with .NET Core 2.0 and .NET Framework 4.6.1 (and higher) with more useful methods (Set, Add, Replace, Exists)
 ### NuGet
@@ -99,7 +99,7 @@ public class TabNavService
 		_cache = cache;
 	}
 
-	public async Task<IEnumerable<TabNav>> GetAll()
+	public async Task<IEnumerable<TabNav>> GetAllAsync()
 	{
 		var cacheKey = "aboutus_tabnavs_all";
 		var result = await _cache.GetAsync<IEnumerable<TabNav>>(cacheKey);
@@ -127,7 +127,7 @@ public class CreativeService
 		_cache = cache;
 	}
 
-	public async Task<IList<CreativeDTO>> GetCreatives(string unitName)
+	public async Task<IList<CreativeDTO>> GetCreativesAsync(string unitName)
 	{
 		var cacheKey = $"creatives_{unitName}";
 		IList<CreativeDTO> creatives = null;
@@ -193,7 +193,7 @@ public class CreativeService
 		_cache = new MemcachedClient(ConfigurationManager.GetSection("memcached") as MemcachedClientConfigurationSectionHandler);
 	}
 
-	public async Task<IList<CreativeDTO>> GetCreatives(string unitName)
+	public async Task<IList<CreativeDTO>> GetCreativesAsync(string unitName)
 	{
 		return await _cache.GetAsync<IList<CreativeDTO>>($"creatives_{unitName}");
 	}
@@ -201,5 +201,5 @@ public class CreativeService
 ```
 ## Other transcoders (Protocol Buffers, Json.NET Bson, MessagePack)
 See [VIEApps.Enyim.Caching.Transcoders](https://github.com/vieapps/Enyim.Caching.Transcoders)
-## Wrapper library for working with other distributed cache (Redis) in the same time
+## Need a library for working with other distributed cache (Redis) in the same time?
 See [VIEApps.Components.Caching](https://github.com/vieapps/Components.Caching)
