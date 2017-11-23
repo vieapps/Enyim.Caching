@@ -29,8 +29,10 @@ namespace Enyim.Caching.Memcached
 		Stream _input;
 		AsyncSocketHelper _helper;
 
-		public PooledSocket(EndPoint endpoint, TimeSpan connectionTimeout, TimeSpan receiveTimeout, ILogger logger)
+		public PooledSocket(EndPoint endpoint, TimeSpan connectionTimeout, TimeSpan receiveTimeout)
 		{
+			this._logger = LogManager.CreateLogger<PooledSocket>();
+
 			var timeout = receiveTimeout == TimeSpan.MaxValue
 			    ? Timeout.Infinite
 			    : (int)receiveTimeout.TotalMilliseconds;
@@ -48,8 +50,6 @@ namespace Enyim.Caching.Memcached
 			this._endpoint = endpoint;
 			this._input = new BasicNetworkStream(socket);
 			this._isAlive = true;
-
-			this._logger = logger ?? LogManager.CreateLogger<PooledSocket>();
 		}
 
 		void TryConnect(Socket socket, EndPoint endpoint, int timeout)
@@ -97,15 +97,13 @@ namespace Enyim.Caching.Memcached
 		{
 			// discard any buffered data
 			this._input.Flush();
-
-			if (this._helper != null)
-				this._helper.DiscardBuffer();
+			this._helper?.DiscardBuffer();
 
 			var available = this._socket.Available;
 			if (available > 0)
 			{
 				if (this._logger.IsEnabled(LogLevel.Warning))
-					this._logger.LogWarning("Socket bound to {0} has {1} unread data! This is probably a bug in the code. InstanceID was {2}.", this._socket.RemoteEndPoint, available, this.InstanceId);
+					this._logger.LogWarning($"Socket bound to {this._socket.RemoteEndPoint} has {available} unread data! This is probably a bug in the code. InstanceID was {this.InstanceId}.");
 
 				var data = new byte[available];
 				this.Read(data, 0, available);
@@ -115,7 +113,7 @@ namespace Enyim.Caching.Memcached
 			}
 
 			if (this._logger.IsEnabled(LogLevel.Debug))
-				this._logger.LogDebug("Socket {0} was reset", this.InstanceId);
+				this._logger.LogDebug($"Socket was reset ({this.InstanceId})");
 		}
 
 		/// <summary>
@@ -151,7 +149,6 @@ namespace Enyim.Caching.Memcached
 			if (disposing)
 			{
 				GC.SuppressFinalize(this);
-
 				try
 				{
 					try
@@ -255,7 +252,7 @@ namespace Enyim.Caching.Memcached
 			if (status != SocketError.Success)
 			{
 				this._isAlive = false;
-				throw new Exception(String.Format("Failed to write to the socket '{0}'. Error: {1}", this._endpoint, status));
+				throw new Exception($"Failed to write to the socket '{this._endpoint}'. Error: {status}");
 			}
 		}
 
@@ -267,7 +264,7 @@ namespace Enyim.Caching.Memcached
 			if (status != SocketError.Success)
 			{
 				this._isAlive = false;
-				throw new Exception(String.Format("Failed to write to the socket '{0}'. Error: {1}", this._endpoint, status));
+				throw new Exception($"Failed to write to the socket '{this._endpoint}'. Error: {status}");
 			}
 		}
 
@@ -283,13 +280,13 @@ namespace Enyim.Caching.Memcached
 				catch
 				{
 					this._isAlive = false;
-					throw new Exception(String.Format("Failed to write to the socket '{0}'. Error: {1}", this._endpoint, awaitable.Arguments.SocketError));
+					throw new Exception($"Failed to write to the socket '{this._endpoint}'. Error: {awaitable.Arguments.SocketError}");
 				}
 
 				if (awaitable.Arguments.SocketError != SocketError.Success)
 				{
 					this._isAlive = false;
-					throw new Exception(String.Format("Failed to write to the socket '{0}'. Error: {1}", this._endpoint, awaitable.Arguments.SocketError));
+					throw new Exception($"Failed to write to the socket '{this._endpoint}'. Error: {awaitable.Arguments.SocketError}");
 				}
 			}
 		}

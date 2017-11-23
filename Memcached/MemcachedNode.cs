@@ -21,7 +21,7 @@ namespace Enyim.Caching.Memcached
 	[DebuggerDisplay("Address: {EndPoint}, IsAlive = {IsAlive}")]
 	public class MemcachedNode : IMemcachedNode
 	{
-		static readonly object SyncRoot = new Object();
+		static object locker = new Object();
 
 		ILogger _logger;
 		bool _isDisposed, _isInitialized;
@@ -35,13 +35,13 @@ namespace Enyim.Caching.Memcached
 
 		public MemcachedNode(EndPoint endpoint, ISocketPoolConfiguration socketPoolConfig)
 		{
-			this._endpoint = endpoint;
-			this._config = socketPoolConfig;
-
 			if (socketPoolConfig.ConnectionTimeout.TotalMilliseconds >= Int32.MaxValue)
 				throw new InvalidOperationException($"ConnectionTimeout must be < {Int32.MaxValue}");
 
 			this._logger = LogManager.CreateLogger<MemcachedNode>();
+
+			this._endpoint = endpoint;
+			this._config = socketPoolConfig;
 			this._internalPoolImpl = new InternalPoolImpl(this, socketPoolConfig);
 		}
 
@@ -86,7 +86,7 @@ namespace Enyim.Caching.Memcached
 			try
 			{
 				// we could connect to the server, let's recreate the socket pool
-				lock (SyncRoot)
+				lock (locker)
 				{
 					if (this._isDisposed)
 						return false;
@@ -177,7 +177,7 @@ namespace Enyim.Caching.Memcached
 			// if someone uses a pooled item then it's 99% that an exception will be thrown
 			// somewhere. But since the dispose is mostly used when everyone else is finished
 			// this should not kill any kittens
-			lock (SyncRoot)
+			lock (locker)
 			{
 				if (this._isDisposed)
 					return;
@@ -517,7 +517,7 @@ namespace Enyim.Caching.Memcached
 		{
 			try
 			{
-				return new PooledSocket(this._endpoint, this._config.ConnectionTimeout, this._config.ReceiveTimeout, this._logger);
+				return new PooledSocket(this._endpoint, this._config.ConnectionTimeout, this._config.ReceiveTimeout);
 			}
 			catch (Exception ex)
 			{

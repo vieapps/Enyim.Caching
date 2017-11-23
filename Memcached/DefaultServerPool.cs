@@ -177,7 +177,7 @@ namespace Enyim.Caching.Memcached
 					this._isTimerActive = true;
 
 					if (isDebug)
-						this._logger.LogDebug("Timer started.");
+						this._logger.LogDebug("Recovery timer is started.");
 				}
 			}
 		}
