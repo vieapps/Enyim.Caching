@@ -1,3 +1,4 @@
+#region Related components
 using System;
 using System.IO;
 using System.Net;
@@ -12,6 +13,7 @@ using Enyim.Caching.Memcached.Results;
 using Enyim.Caching.Memcached.Results.Extensions;
 
 using Microsoft.Extensions.Logging;
+#endregion
 
 namespace Enyim.Caching.Memcached
 {
@@ -418,7 +420,7 @@ namespace Enyim.Caching.Memcached
 			void ReleaseSocket(PooledSocket socket)
 			{
 				if (this._isDebugEnabled)
-					this._logger.LogDebug($"Releasing socket ({socket.InstanceId}) - Are we alive? {this._isAlive}");
+					this._logger.LogDebug($"Releasing socket ({socket.InstanceId}) - Alive: {this._isAlive}");
 
 				if (this._isAlive)
 				{
