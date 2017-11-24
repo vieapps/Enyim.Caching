@@ -2,6 +2,7 @@ using System;
 using System.Text;
 using System.Globalization;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 using Enyim.Caching.Memcached.Results;
 
@@ -24,7 +25,7 @@ namespace Enyim.Caching.Memcached.Protocol.Text
 			this.cas = cas;
 		}
 
-		protected internal override System.Collections.Generic.IList<ArraySegment<byte>> GetBuffer()
+		protected internal override IList<ArraySegment<byte>> GetBuffer()
 		{
 			// todo adjust the size to fit a request using a fnv hashed key
 			var sb = new StringBuilder(128);
@@ -74,9 +75,9 @@ namespace Enyim.Caching.Memcached.Protocol.Text
 			};
 		}
 
-		protected internal override System.Threading.Tasks.Task<IOperationResult> ReadResponseAsync(PooledSocket socket)
+		protected internal override Task<IOperationResult> ReadResponseAsync(PooledSocket socket)
 		{
-			throw new NotImplementedException();
+			return Task.FromResult(this.ReadResponse(socket));
 		}
 
 		protected internal override bool ReadResponseAsync(PooledSocket socket, System.Action<bool> next)

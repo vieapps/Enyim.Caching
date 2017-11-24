@@ -1,6 +1,7 @@
 using System;
 using System.Net;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 using Enyim.Caching.Memcached.Results;
 using Enyim.Caching.Memcached.Results.Extensions;
@@ -18,7 +19,7 @@ namespace Enyim.Caching.Memcached.Protocol.Text
 
 		public StatsOperation(string type)
 		{
-			this._logger = LogManager.CreateLogger(typeof(StatsOperation));
+			this._logger = LogManager.CreateLogger<StatsOperation>();
 			this._type = type;
 		}
 
@@ -27,7 +28,6 @@ namespace Enyim.Caching.Memcached.Protocol.Text
 			var command = String.IsNullOrEmpty(this._type)
 				? "stats" + TextSocketHelper.CommandTerminator
 				: "stats " + this._type + TextSocketHelper.CommandTerminator;
-
 			return TextSocketHelper.GetCommandBuffer(command);
 		}
 
@@ -76,9 +76,9 @@ namespace Enyim.Caching.Memcached.Protocol.Text
 			get { return _result; }
 		}
 
-		protected internal override System.Threading.Tasks.Task<IOperationResult> ReadResponseAsync(PooledSocket socket)
+		protected internal override Task<IOperationResult> ReadResponseAsync(PooledSocket socket)
 		{
-			throw new NotImplementedException();
+			return Task.FromResult(this.ReadResponse(socket));
 		}
 
 		protected internal override bool ReadResponseAsync(PooledSocket socket, System.Action<bool> next)

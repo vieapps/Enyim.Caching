@@ -55,6 +55,8 @@ namespace Enyim.Caching.Configuration
 
 			var configuration = options.Value;
 
+			this.Protocol = configuration.Protocol;
+
 			this.Servers = new List<EndPoint>();
 			foreach (var server in configuration.Servers)
 				if (server.Address.IndexOf(":") > 0)
@@ -63,8 +65,6 @@ namespace Enyim.Caching.Configuration
 					this.AddServer(server.Address, server.Port);
 
 			this.SocketPool = configuration.SocketPool;
-
-			this.Protocol = configuration.Protocol;
 
 			if (configuration.Authentication != null && !string.IsNullOrEmpty(configuration.Authentication.Type))
 			{

@@ -10,18 +10,27 @@ namespace Enyim.Caching.Memcached.Protocol.Text
 {
 	public class MutatorOperation : SingleItemOperation, IMutatorOperation
 	{
-		private MutationMode mode;
-		private ulong delta;
-		private ulong result;
+		MutationMode mode;
+		ulong delta;
+		ulong result;
 
-		internal MutatorOperation(MutationMode mode, string key, ulong delta)
-			: base(key)
+		internal MutatorOperation(MutationMode mode, string key, ulong delta) : base(key)
 		{
 			this.delta = delta;
 			this.mode = mode;
 		}
 
 		public ulong Result
+		{
+			get { return this.result; }
+		}
+
+		MutationMode IMutatorOperation.Mode
+		{
+			get { return this.mode; }
+		}
+
+		ulong IMutatorOperation.Result
 		{
 			get { return this.result; }
 		}
@@ -50,19 +59,9 @@ namespace Enyim.Caching.Memcached.Protocol.Text
 			return result;
 		}
 
-		MutationMode IMutatorOperation.Mode
-		{
-			get { return this.mode; }
-		}
-
-		ulong IMutatorOperation.Result
-		{
-			get { return this.result; }
-		}
-
 		protected internal override Task<IOperationResult> ReadResponseAsync(PooledSocket socket)
 		{
-			throw new NotImplementedException();
+			return Task.FromResult(this.ReadResponse(socket));
 		}
 
 		protected internal override bool ReadResponseAsync(PooledSocket socket, Action<bool> next)

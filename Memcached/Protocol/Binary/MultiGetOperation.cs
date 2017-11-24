@@ -139,7 +139,7 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 				this.Cas[key] = response.CAS;
 
 				if (this._logger.IsEnabled(LogLevel.Debug))
-					this._logger.LogDebug($"Multi-Get: Reading data of '{key}' (ReadResponse) - CAS: {response.CAS} - Flags: {flags}");
+					this._logger.LogDebug($"Multi-Get: Reading data of '{key}' (ReadResponseAsync) - CAS: {response.CAS} - Flags: {flags}");
 			}
 
 			// finished reading but we did not find the NOOP

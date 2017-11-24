@@ -1,4 +1,7 @@
+using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
+
 using Enyim.Caching.Memcached.Results;
 using Enyim.Caching.Memcached.Results.Extensions;
 
@@ -19,14 +22,14 @@ namespace Enyim.Caching.Memcached.Protocol.Text
 			return new TextOperationResult().Pass();
 		}
 
-		protected internal override System.Threading.Tasks.Task<IOperationResult> ReadResponseAsync(PooledSocket socket)
+		protected internal override Task<IOperationResult> ReadResponseAsync(PooledSocket socket)
 		{
-			throw new System.NotImplementedException();
+			return Task.FromResult(this.ReadResponse(socket));
 		}
 
 		protected internal override bool ReadResponseAsync(PooledSocket socket, System.Action<bool> next)
 		{
-			throw new System.NotSupportedException();
+			throw new NotSupportedException();
 		}
 	}
 }

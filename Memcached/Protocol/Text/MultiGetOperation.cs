@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 using Enyim.Caching.Memcached.Results;
 using Enyim.Caching.Memcached.Results.Extensions;
@@ -17,33 +18,28 @@ namespace Enyim.Caching.Memcached.Protocol.Text
 
 		public MultiGetOperation(IList<string> keys) : base(keys)
 		{
-			this._logger = LogManager.CreateLogger(typeof(MultiGetOperation));
+			this._logger = LogManager.CreateLogger<MultiGetOperation>();
 		}
 
 		protected internal override IList<ArraySegment<byte>> GetBuffer()
 		{
-			// gets key1 key2 key3 ... keyN\r\n
-
 			var command = "gets " + String.Join(" ", Keys.ToArray()) + TextSocketHelper.CommandTerminator;
-
 			return TextSocketHelper.GetCommandBuffer(command);
 		}
 
 		protected internal override IOperationResult ReadResponse(PooledSocket socket)
 		{
-			var retval = new Dictionary<string, CacheItem>();
+			var result = new Dictionary<string, CacheItem>();
 			var cas = new Dictionary<string, ulong>();
-
 			try
 			{
-				GetResponse r;
-
-				while ((r = GetHelper.ReadItem(socket)) != null)
+				GetResponse response;
+				while ((response = GetHelper.ReadItem(socket)) != null)
 				{
-					var key = r.Key;
+					var key = response.Key;
 
-					retval[key] = r.Item;
-					cas[key] = r.CasValue;
+					result[key] = response.Item;
+					cas[key] = response.CasValue;
 				}
 			}
 			catch (NotSupportedException)
@@ -52,10 +48,10 @@ namespace Enyim.Caching.Memcached.Protocol.Text
 			}
 			catch (Exception e)
 			{
-				this._logger.LogError(e, "Error occurred while perform multi-get");
+				this._logger.LogError(e, "Error occurred while performing multi-get");
 			}
 
-			this._result = retval;
+			this._result = result;
 			this.Cas = cas;
 
 			return new TextOperationResult().Pass();
@@ -66,9 +62,9 @@ namespace Enyim.Caching.Memcached.Protocol.Text
 			get { return this._result; }
 		}
 
-		protected internal override System.Threading.Tasks.Task<IOperationResult> ReadResponseAsync(PooledSocket socket)
+		protected internal override Task<IOperationResult> ReadResponseAsync(PooledSocket socket)
 		{
-			throw new NotImplementedException();
+			return Task.FromResult(this.ReadResponse(socket));
 		}
 
 		protected internal override bool ReadResponseAsync(PooledSocket socket, Action<bool> next)

@@ -22,22 +22,22 @@ namespace Enyim.Caching.Memcached.Protocol.Text
 		/// Reads the response of the server.
 		/// </summary>
 		/// <returns>The data sent by the memcached server.</returns>
-		/// <exception cref="T:System.InvalidOperationException">The server did not sent a response or an empty line was returned.</exception>
-		/// <exception cref="T:Enyim.Caching.Memcached.MemcachedException">The server did not specified any reason just returned the string ERROR. - or - The server returned a SERVER_ERROR, in this case the Message of the exception is the message returned by the server.</exception>
-		/// <exception cref="T:Enyim.Caching.Memcached.MemcachedClientException">The server did not recognize the request sent by the client. The Message of the exception is the message returned by the server.</exception>
+		/// <exception cref="System.InvalidOperationException">The server did not sent a response or an empty line was returned.</exception>
+		/// <exception cref="Enyim.Caching.Memcached.MemcachedException">The server did not specified any reason just returned the string ERROR. - or - The server returned a SERVER_ERROR, in this case the Message of the exception is the message returned by the server.</exception>
+		/// <exception cref="Enyim.Caching.Memcached.MemcachedClientException">The server did not recognize the request sent by the client. The Message of the exception is the message returned by the server.</exception>
 		public static string ReadResponse(PooledSocket socket)
 		{
 			string response = TextSocketHelper.ReadLine(socket);
-
-			Logger = Logger ?? LogManager.CreateLogger(typeof(TextSocketHelper));
-			if (Logger.IsEnabled(LogLevel.Debug))
-				Logger.LogDebug("Received response: " + response);
 
 			if (String.IsNullOrEmpty(response))
 				throw new MemcachedClientException("Empty response received.");
 
 			if (String.Compare(response, GenericErrorResponse, StringComparison.Ordinal) == 0)
 				throw new NotSupportedException("Operation is not supported by the server or the request was malformed. If the latter please report the bug to the developers.");
+
+			TextSocketHelper.Logger = TextSocketHelper.Logger ?? LogManager.CreateLogger(typeof(TextSocketHelper));
+			if (TextSocketHelper.Logger.IsEnabled(LogLevel.Debug))
+				TextSocketHelper.Logger.LogDebug("Received response: " + response);
 
 			if (response.Length >= ErrorResponseLength)
 			{

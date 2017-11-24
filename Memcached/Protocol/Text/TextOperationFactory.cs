@@ -25,21 +25,24 @@ namespace Enyim.Caching.Memcached.Protocol.Text
 
 		IDeleteOperation IOperationFactory.Delete(string key, ulong cas)
 		{
-			if (cas > 0) throw new NotSupportedException("Text protocol does not support delete with cas.");
+			if (cas > 0)
+				throw new NotSupportedException("Text protocol does not support delete with cas.");
 
 			return new DeleteOperation(key);
 		}
 
 		IMutatorOperation IOperationFactory.Mutate(MutationMode mode, string key, ulong defaultValue, ulong delta, uint expires, ulong cas)
 		{
-			if (cas > 0) throw new NotSupportedException("Text protocol does not support " + mode + " with cas.");
+			if (cas > 0)
+				throw new NotSupportedException("Text protocol does not support " + mode + " with cas.");
 
 			return new MutatorOperation(mode, key, delta);
 		}
 
 		IConcatOperation IOperationFactory.Concat(ConcatenationMode mode, string key, ulong cas, ArraySegment<byte> data)
 		{
-			if (cas > 0) throw new NotSupportedException("Text protocol does not support " + mode + " with cas.");
+			if (cas > 0)
+				throw new NotSupportedException("Text protocol does not support " + mode + " with cas.");
 
 			return new ConcateOperation(mode, key, data);
 		}

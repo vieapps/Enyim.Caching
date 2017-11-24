@@ -1844,10 +1844,8 @@ namespace Enyim.Caching
 		{
 			if (string.IsNullOrWhiteSpace(key))
 				throw new ArgumentNullException(nameof(key));
-
 			var expires = options == null ? 0 : options.GetExpiration();
-			var result = this.PerformStore(StoreMode.Set, key, value, expires);
-			if (result.Success && expires > 0)
+			if (this.PerformStore(StoreMode.Set, key, value, expires).Success && expires > 0)
 				this.PerformStore(StoreMode.Set, key.GetIDistributedCacheExpirationKey(), expires, expires);
 		}
 
@@ -1857,62 +1855,50 @@ namespace Enyim.Caching
 				throw new ArgumentNullException(nameof(key));
 
 			var expires = options == null ? 0 : options.GetExpiration();
-			var result = await this.PerformStoreAsync(StoreMode.Set, key, value, expires);
-			if (result.Success && expires > 0)
+			if ((await this.PerformStoreAsync(StoreMode.Set, key, value, expires)).Success && expires > 0)
 				await this.PerformStoreAsync(StoreMode.Set, key.GetIDistributedCacheExpirationKey(), expires, expires);
 		}
 
 		byte[] IDistributedCache.Get(string key)
 		{
-			if (string.IsNullOrWhiteSpace(key))
-				throw new ArgumentNullException(nameof(key));
-
-			return this.Get<byte[]>(key);
+			return string.IsNullOrWhiteSpace(key)
+				? throw new ArgumentNullException(nameof(key))
+				: this.Get<byte[]>(key);
 		}
 
 		Task<byte[]> IDistributedCache.GetAsync(string key, CancellationToken token = default(CancellationToken))
 		{
-			if (string.IsNullOrWhiteSpace(key))
-				throw new ArgumentNullException(nameof(key));
-
-			return this.GetAsync<byte[]>(key);
+			return string.IsNullOrWhiteSpace(key)
+				? throw new ArgumentNullException(nameof(key))
+				: this.GetAsync<byte[]>(key);
 		}
 
 		void IDistributedCache.Refresh(string key)
 		{
 			if (string.IsNullOrWhiteSpace(key))
 				throw new ArgumentNullException(nameof(key));
-
 			var value = this.Get<byte[]>(key);
 			var expires = value != null ? this.Get<uint?>(key.GetIDistributedCacheExpirationKey()) : null;
 			if (value != null && expires != null && expires.Value > 0)
-			{
-				var result = this.PerformStore(StoreMode.Replace, key, value, expires.Value);
-				if (result.Success)
+				if (this.PerformStore(StoreMode.Replace, key, value, expires.Value).Success)
 					this.PerformStore(StoreMode.Replace, key.GetIDistributedCacheExpirationKey(), expires.Value, expires.Value);
-			}
 		}
 
 		async Task IDistributedCache.RefreshAsync(string key, CancellationToken token = default(CancellationToken))
 		{
 			if (string.IsNullOrWhiteSpace(key))
 				throw new ArgumentNullException(nameof(key));
-
 			var value = await this.GetAsync<byte[]>(key);
 			var expires = value != null ? await this.GetAsync<uint?>(key.GetIDistributedCacheExpirationKey()) : null;
 			if (value != null && expires != null && expires.Value > 0)
-			{
-				var result = await this.PerformStoreAsync(StoreMode.Replace, key, value, expires.Value);
-				if (result.Success)
+				if ((await this.PerformStoreAsync(StoreMode.Replace, key, value, expires.Value)).Success)
 					await this.PerformStoreAsync(StoreMode.Replace, key.GetIDistributedCacheExpirationKey(), expires.Value, expires.Value);
-			}
 		}
 
 		void IDistributedCache.Remove(string key)
 		{
 			if (string.IsNullOrWhiteSpace(key))
 				throw new ArgumentNullException(nameof(key));
-
 			this.Remove(key);
 			this.Remove(key.GetIDistributedCacheExpirationKey());
 		}
@@ -1921,7 +1907,6 @@ namespace Enyim.Caching
 		{
 			if (string.IsNullOrWhiteSpace(key))
 				throw new ArgumentNullException(nameof(key));
-
 			return Task.WhenAll(
 				this.RemoveAsync(key),
 				this.RemoveAsync(key.GetIDistributedCacheExpirationKey())

@@ -1,8 +1,8 @@
 using System;
+using System.IO;
+using System.Net;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Net;
-using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -530,7 +530,6 @@ namespace Enyim.Caching.Memcached
 		{
 			var result = this.Acquire();
 			if (result.Success && result.HasValue)
-			{
 				try
 				{
 					var startTime = DateTime.Now;
@@ -563,21 +562,16 @@ namespace Enyim.Caching.Memcached
 				{
 					((IDisposable)result.Value).Dispose();
 				}
-			}
-			else
-			{
-				this._logger.LogError("Failed to obtain socket from pool");
-				result.Fail("Failed to obtain socket from pool");
-				return result;
-			}
 
+			this._logger.LogError("Failed to obtain socket from pool");
+			result.Fail("Failed to obtain socket from pool");
+			return result;
 		}
 
 		protected async virtual Task<IPooledSocketResult> ExecuteOperationAsync(IOperation op)
 		{
 			var result = this.Acquire();
 			if (result.Success && result.HasValue)
-			{
 				try
 				{
 					var startTime = DateTime.Now;
@@ -610,13 +604,10 @@ namespace Enyim.Caching.Memcached
 				{
 					((IDisposable)result.Value).Dispose();
 				}
-			}
-			else
-			{
-				this._logger.LogError("Failed to obtain socket from pool");
-				result.Fail("Failed to obtain socket from pool");
-				return result;
-			}
+
+			this._logger.LogError("Failed to obtain socket from pool");
+			result.Fail("Failed to obtain socket from pool");
+			return result;
 		}
 
 		protected virtual bool ExecuteOperationAsync(IOperation op, Action<bool> next)

@@ -6,12 +6,9 @@ namespace Enyim.Caching.Memcached.Results.Helpers
 
 	public static class ResultHelper
 	{
-
 		public static string ProcessResponseData(ArraySegment<byte> data, string message = "")
 		{
-
 			if (data != null && data.Count > 0)
-			{
 				try
 				{
 					return message + (!string.IsNullOrEmpty(message) ? ": " : "") + Encoding.UTF8.GetString(data.Array, data.Offset, data.Count);
@@ -20,7 +17,6 @@ namespace Enyim.Caching.Memcached.Results.Helpers
 				{
 					return ex.GetBaseException().Message;
 				}
-			}
 
 			return string.Empty;
 		}
