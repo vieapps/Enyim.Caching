@@ -37,7 +37,7 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 		public ArraySegment<byte> Extra;
 		public ArraySegment<byte> Data;
 
-		string responseMessage;
+		string _responseMessage;
 
 		public BinaryResponse()
 		{
@@ -49,9 +49,14 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 		{
 			return this.Data.Array == null
 				? null
-				: (this.responseMessage ?? (this.responseMessage = Encoding.ASCII.GetString(this.Data.Array, this.Data.Offset, this.Data.Count)));
+				: (this._responseMessage ?? (this._responseMessage = Encoding.ASCII.GetString(this.Data.Array, this.Data.Offset, this.Data.Count)));
 		}
 
+		/// <summary>
+		/// Reads the response from the socket
+		/// </summary>
+		/// <param name="socket"></param>
+		/// <returns></returns>
 		public unsafe bool Read(PooledSocket socket)
 		{
 			this.StatusCode = -1;
@@ -59,23 +64,36 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 			if (!socket.IsAlive)
 				return false;
 
-			var header = new byte[HeaderLength];
-			socket.Read(header, 0, header.Length);
-
-			this.DeserializeHeader(header, out int dataLength, out int extraLength);
-
-			if (dataLength > 0)
+			try
 			{
-				var data = new byte[dataLength];
-				socket.Read(data, 0, dataLength);
+				var header = new byte[HeaderLength];
+				socket.Read(header, 0, header.Length);
 
-				this.Extra = new ArraySegment<byte>(data, 0, extraLength);
-				this.Data = new ArraySegment<byte>(data, extraLength, data.Length - extraLength);
+				this.DeserializeHeader(header, out int dataLength, out int extraLength);
+
+				if (dataLength > 0)
+				{
+					var data = new byte[dataLength];
+					socket.Read(data, 0, dataLength);
+
+					this.Extra = new ArraySegment<byte>(data, 0, extraLength);
+					this.Data = new ArraySegment<byte>(data, extraLength, data.Length - extraLength);
+				}
+
+				return this.StatusCode == 0;
 			}
-
-			return this.StatusCode == 0;
+			catch (Exception ex)
+			{
+				this._logger.LogError(ex, "Read: Error occurred while reading socket");
+				throw ex;
+			}
 		}
 
+		/// <summary>
+		/// Reads the response from the socket
+		/// </summary>
+		/// <param name="socket"></param>
+		/// <returns></returns>
 		public async Task<bool> ReadAsync(PooledSocket socket)
 		{
 			this.StatusCode = -1;
@@ -83,26 +101,37 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 			if (!socket.IsAlive)
 				return false;
 
-			var header = await socket.ReadAsync(HeaderLength);
-			this.DeserializeHeader(header, out int dataLength, out int extraLength);
-
-			if (dataLength > 0)
+			try
 			{
-				var data = await socket.ReadAsync(dataLength);
+				var header = new byte[HeaderLength];
+				await socket.ReadAsync(header, 0, header.Length);
 
-				this.Extra = new ArraySegment<byte>(data, 0, extraLength);
-				this.Data = new ArraySegment<byte>(data, extraLength, data.Length - extraLength);
+				this.DeserializeHeader(header, out int dataLength, out int extraLength);
+
+				if (dataLength > 0)
+				{
+					var data = new byte[dataLength];
+					await socket.ReadAsync(data, 0, dataLength);
+
+					this.Extra = new ArraySegment<byte>(data, 0, extraLength);
+					this.Data = new ArraySegment<byte>(data, extraLength, data.Length - extraLength);
+				}
+
+				return this.StatusCode == 0;
 			}
-
-			return this.StatusCode == 0;
+			catch (Exception ex)
+			{
+				this._logger.LogError(ex, "ReadAsync: Error occurred while reading socket");
+				throw ex;
+			}
 		}
 
 		/// <summary>
 		/// Reads the response from the socket asynchronously.
 		/// </summary>
 		/// <param name="socket">The socket to read from.</param>
-		/// <param name="next">The delegate whihc will continue processing the response. This is only called if the read completes asynchronoulsy.</param>
-		/// <param name="ioPending">Set totrue if the read is still pending when ReadASync returns. In this case 'next' will be called when the read is finished.</param>
+		/// <param name="next">The delegate which will continue processing the response. This is only called if the read completes asynchronoulsy.</param>
+		/// <param name="ioPending">Set to true if the read is still pending when ReadASync returns. In this case 'next' will be called when the read is finished.</param>
 		/// <returns>
 		/// If the socket is already dead, ReadAsync returns false, next is not called, ioPending = false
 		/// If the read completes synchronously (e.g. data is received from the buffer), it returns true/false depending on the StatusCode, and ioPending is set to true, 'next' will not be called.
@@ -206,7 +235,7 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 			fixed (byte* buffer = header)
 			{
 				if (buffer[0] != MAGIC_VALUE)
-					throw new InvalidOperationException($"Expected magic value '{MAGIC_VALUE}' but received '{buffer[0]}'");
+					throw new InvalidOperationException($"DeserializeHeader: Expected magic value '{MAGIC_VALUE}' but received '{buffer[0]}'");
 
 				this.DataType = buffer[HEADER_DATATYPE];
 				this.Opcode = buffer[HEADER_OPCODE];

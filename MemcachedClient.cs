@@ -102,7 +102,7 @@ namespace Enyim.Caching
 			this.RemoveOperationResultFactory = new DefaultRemoveOperationResultFactory();
 
 			if (this._logger.IsEnabled(LogLevel.Debug))
-				this._logger.LogInformation("An instance of memcached client was created successful");
+				this._logger.LogInformation("An instance of Memcached client was created successful");
 		}
 
 		static MemcachedClient _Instance = null;

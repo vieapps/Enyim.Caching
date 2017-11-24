@@ -9,13 +9,13 @@ namespace Enyim.Caching.Memcached
 {
 	public interface IOperation
 	{
+		int StatusCode { get; }
+
 		IList<ArraySegment<byte>> GetBuffer();
 
 		IOperationResult ReadResponse(PooledSocket socket);
 
 		Task<IOperationResult> ReadResponseAsync(PooledSocket socket);
-
-		int StatusCode { get; }
 
 		/// <summary>
 		/// 'next' is called when the operation completes. The bool parameter indicates the success of the operation.

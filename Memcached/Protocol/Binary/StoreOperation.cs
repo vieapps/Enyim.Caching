@@ -24,12 +24,12 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 			OpCode op;
 			switch (this._mode)
 			{
-				case StoreMode.Add:
-					op = OpCode.Add;
-					break;
-
 				case StoreMode.Set:
 					op = OpCode.Set;
+					break;
+
+				case StoreMode.Add:
+					op = OpCode.Add;
 					break;
 
 				case StoreMode.Replace:
@@ -58,18 +58,11 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 
 		protected override IOperationResult ProcessResponse(BinaryResponse response)
 		{
-			var result = new BinaryOperationResult();
-
 			this.StatusCode = response.StatusCode;
-			if (response.StatusCode == 0)
-			{
-				return result.Pass();
-			}
-			else
-			{
-				var message = ResultHelper.ProcessResponseData(response.Data);
-				return result.Fail(message);
-			}
+			var result = new BinaryOperationResult();
+			return response.StatusCode == 0
+				? result.Pass()
+				: result.Fail(ResultHelper.ProcessResponseData(response.Data));
 		}
 
 		StoreMode IStoreOperation.Mode

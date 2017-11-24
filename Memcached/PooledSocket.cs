@@ -1,3 +1,4 @@
+#region Related components
 using System;
 using System.Linq;
 using System.Collections.Generic;
@@ -14,6 +15,7 @@ using System.Diagnostics;
 using Dawn.Net.Sockets;
 
 using Microsoft.Extensions.Logging;
+#endregion
 
 namespace Enyim.Caching.Memcached
 {
@@ -103,13 +105,17 @@ namespace Enyim.Caching.Memcached
 			if (available > 0)
 			{
 				if (this._logger.IsEnabled(LogLevel.Warning))
-					this._logger.LogWarning($"Socket bound to {this._socket.RemoteEndPoint} has {available} unread data! This is probably a bug in the code. InstanceID was {this.InstanceId}.");
+					this._logger.LogWarning($"Socket bound to {this._socket.RemoteEndPoint} has {available} unread data! This is probably a bug in the code. Instance ID was {this.InstanceId}.");
 
 				var data = new byte[available];
 				this.Read(data, 0, available);
 
 				if (this._logger.IsEnabled(LogLevel.Warning))
-					this._logger.LogWarning(Encoding.ASCII.GetString(data));
+				{
+					var unread = Encoding.ASCII.GetString(data);
+					unread = unread.Length > 255 ? unread.Substring(0, 255) + " ..." : unread;
+					this._logger.LogWarning(unread);
+				}
 			}
 
 			if (this._logger.IsEnabled(LogLevel.Debug))
@@ -204,7 +210,7 @@ namespace Enyim.Caching.Memcached
 		}
 
 		/// <summary>
-		/// Reads data from the server's response.into the specified buffer.
+		/// Reads data from the server's response into the specified buffer.
 		/// </summary>
 		/// <param name="buffer">An array of <see cref="System.Byte"/> that is the storage location for the received data.</param>
 		/// <param name="offset">The location in buffer to store the received data.</param>
@@ -238,21 +244,24 @@ namespace Enyim.Caching.Memcached
 		}
 
 		/// <summary>
-		/// Reads data from the server's response.
+		/// Reads data from the server's response into the specified buffer.
 		/// </summary>
-		/// <param name="count"></param>
-		/// <returns></returns>
-		public async Task<byte[]> ReadAsync(int count)
+		/// <param name="buffer">An array of <see cref="System.Byte"/> that is the storage location for the received data.</param>
+		/// <param name="offset">The location in buffer to store the received data.</param>
+		/// <param name="count">The number of bytes to read.</param>
+		/// <remarks>This method blocks and will not return until the specified amount of bytes are read.</remarks>
+		public Task ReadAsync(byte[] buffer, int offset, int count)
 		{
 			this.CheckDisposed();
 
+			/*
 			using (var awaitable = new SocketAwaitable())
 			{
 				try
 				{
-					awaitable.Buffer = new ArraySegment<byte>(new byte[count], 0, count);
+					awaitable.Buffer = new ArraySegment<byte>(new byte[count], offset, count);
 					await this._socket.ReceiveAsync(awaitable);
-					return awaitable.Transferred.Array;
+					buffer = awaitable.Transferred.Array;
 				}
 				catch (Exception e)
 				{
@@ -261,8 +270,30 @@ namespace Enyim.Caching.Memcached
 					throw;
 				}
 			}
+			*/
+
+			var tcs = new TaskCompletionSource<object>();
+			ThreadPool.QueueUserWorkItem(_ =>
+			{
+				try
+				{
+					this.Read(buffer, offset, count);
+					tcs.SetResult(null);
+				}
+				catch (Exception ex)
+				{
+					tcs.SetException(ex);
+				}
+			});
+			return tcs.Task;
 		}
 
+		/// <summary>
+		/// Writes data into socket
+		/// </summary>
+		/// <param name="data"></param>
+		/// <param name="offset"></param>
+		/// <param name="length"></param>
 		public void Write(byte[] data, int offset, int length)
 		{
 			this.CheckDisposed();
@@ -275,6 +306,10 @@ namespace Enyim.Caching.Memcached
 			}
 		}
 
+		/// <summary>
+		/// Writes data into socket
+		/// </summary>
+		/// <param name="buffers"></param>
 		public void Write(IList<ArraySegment<byte>> buffers)
 		{
 			this.CheckDisposed();
@@ -287,6 +322,11 @@ namespace Enyim.Caching.Memcached
 			}
 		}
 
+		/// <summary>
+		/// Writes data into socket
+		/// </summary>
+		/// <param name="buffers"></param>
+		/// <returns></returns>
 		public async Task WriteSync(IList<ArraySegment<byte>> buffers)
 		{
 			this.CheckDisposed();
