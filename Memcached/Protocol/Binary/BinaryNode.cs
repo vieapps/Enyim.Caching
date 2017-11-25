@@ -55,10 +55,10 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 					step = new SaslContinue(this._authenticationProvider, step.Data);
 					socket.Write(step.GetBuffer());
 				}
+				// invalid credentials or other error
 				else
 				{
 					this._logger.LogWarning("Authentication failed, return code: 0x{0:x}", step.StatusCode);
-					// invalid credentials or other error
 					return false;
 				}
 			}

@@ -366,6 +366,7 @@ namespace Enyim.Caching.Memcached
 					socket = this.CreateSocket();
 					if (this._isDebugEnabled)
 						this._logger.LogInformation($"Cost for creating socket when acquire: {(DateTime.Now - startTime).TotalMilliseconds}ms");
+
 					result.Value = socket;
 					result.Pass();
 				}
@@ -556,8 +557,8 @@ namespace Enyim.Caching.Memcached
 				}
 				catch (Exception e)
 				{
-					this._logger.LogError(e, $"{nameof(ExecuteOperation)} failed");
-					result.Fail("Exception reading response", e);
+					this._logger.LogError(e, "Failed to execute an operation");
+					result.Fail("Failed to execute an operation", e);
 					return result;
 				}
 				finally
@@ -598,8 +599,8 @@ namespace Enyim.Caching.Memcached
 				}
 				catch (Exception e)
 				{
-					this._logger.LogError(e, $"{nameof(ExecuteOperationAsync)} failed");
-					result.Fail("Exception reading response", e);
+					this._logger.LogError(e, "Failed to execute an operation (async)");
+					result.Fail("Failed to execute an operation (async)", e);
 					return result;
 				}
 				finally

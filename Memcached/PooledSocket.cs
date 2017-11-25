@@ -252,9 +252,9 @@ namespace Enyim.Caching.Memcached
 		/// <remarks>This method blocks and will not return until the specified amount of bytes are read.</remarks>
 		public Task ReadAsync(byte[] buffer, int offset, int count)
 		{
+			/*
 			this.CheckDisposed();
 
-			/*
 			using (var awaitable = new SocketAwaitable())
 			{
 				try
@@ -271,7 +271,6 @@ namespace Enyim.Caching.Memcached
 				}
 			}
 			*/
-
 			var tcs = new TaskCompletionSource<object>();
 			ThreadPool.QueueUserWorkItem(_ =>
 			{

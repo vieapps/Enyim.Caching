@@ -28,33 +28,33 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 
 		public unsafe IList<ArraySegment<byte>> CreateBuffer()
 		{
-			return CreateBuffer(null);
+			return this.CreateBuffer(null);
 		}
 
 		public unsafe IList<ArraySegment<byte>> CreateBuffer(IList<ArraySegment<byte>> appendTo)
 		{
 			// key size 
-			byte[] keyData = BinaryConverter.EncodeKey(this.Key);
-			int keyLength = keyData == null ? 0 : keyData.Length;
+			var keyData = BinaryConverter.EncodeKey(this.Key);
+			var keyLength = keyData == null ? 0 : keyData.Length;
 
 			if (keyLength > 0xffff)
 				throw new InvalidOperationException("KeyTooLong");
 
 			// extra size
-			ArraySegment<byte> extras = this.Extra;
-			int extraLength = extras.Array == null ? 0 : extras.Count;
+			var extras = this.Extra;
+			var extraLength = extras.Array == null ? 0 : extras.Count;
 			if (extraLength > 0xff)
 				throw new InvalidOperationException("ExtraTooLong");
 
 			// body size
-			ArraySegment<byte> body = this.Data;
-			int bodyLength = body.Array == null ? 0 : body.Count;
+			var body = this.Data;
+			var bodyLength = body.Array == null ? 0 : body.Count;
 
 			// total payload size
-			int totalLength = extraLength + keyLength + bodyLength;
+			var totalLength = extraLength + keyLength + bodyLength;
 
 			//build the header
-			byte[] header = new byte[24];
+			var header = new byte[24];
 
 			fixed (byte* buffer = header)
 			{
@@ -102,10 +102,10 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 			}
 
 			var result = appendTo ?? new List<ArraySegment<byte>>(4);
-
 			result.Add(new ArraySegment<byte>(header));
 
-			if (extraLength > 0) result.Add(extras);
+			if (extraLength > 0)
+				result.Add(extras);
 
 			// key must be already encoded and should not contain any invalid characters which are not allowed by the protocol
 			if (keyLength > 0)

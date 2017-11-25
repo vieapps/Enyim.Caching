@@ -94,7 +94,7 @@ namespace Enyim.Caching.Configuration
 				}
 				catch (Exception ex)
 				{
-					this._logger.LogError(new EventId(), ex, $"Unable to load authentication type {configuration.Authentication.Type}.");
+					this._logger.LogError(ex, $"Unable to load authentication type {configuration.Authentication.Type}.");
 				}
 			}
 
@@ -112,7 +112,7 @@ namespace Enyim.Caching.Configuration
 				}
 				catch (Exception ex)
 				{
-					this._logger.LogError(new EventId(), ex, $"Unable to load '{configuration.KeyTransformer}' of key-transformer");
+					this._logger.LogError(ex, $"Unable to load '{configuration.KeyTransformer}' of key-transformer");
 				}
 			}
 
@@ -203,7 +203,7 @@ namespace Enyim.Caching.Configuration
 					}
 					catch (Exception ex)
 					{
-						this._logger.LogError(new EventId(), ex, $"Unable to load authentication type [{authentication.Attributes["type"].Value}]");
+						this._logger.LogError(ex, $"Unable to load authentication type [{authentication.Attributes["type"].Value}]");
 					}
 
 			if (configuration.Section.SelectSingleNode("keyTransformer") is XmlNode keyTransformer)
@@ -216,7 +216,7 @@ namespace Enyim.Caching.Configuration
 					}
 					catch (Exception ex)
 					{
-						this._logger.LogError(new EventId(), ex, $"Unable to load key transformer [{keyTransformer.Attributes["type"].Value}]");
+						this._logger.LogError(ex, $"Unable to load key transformer [{keyTransformer.Attributes["type"].Value}]");
 					}
 
 			if (configuration.Section.SelectSingleNode("transcoder") is XmlNode transcoder)
@@ -229,7 +229,7 @@ namespace Enyim.Caching.Configuration
 					}
 					catch (Exception ex)
 					{
-						this._logger.LogError(new EventId(), ex, $"Unable to load transcoder [{transcoder.Attributes["type"].Value}]");
+						this._logger.LogError(ex, $"Unable to load transcoder [{transcoder.Attributes["type"].Value}]");
 					}
 
 			if (configuration.Section.SelectSingleNode("nodeLocator") is XmlNode nodeLocator)
@@ -242,7 +242,7 @@ namespace Enyim.Caching.Configuration
 					}
 					catch (Exception ex)
 					{
-						this._logger.LogError(new EventId(), ex, $"Unable to load node-locator [{nodeLocator.Attributes["type"].Value}]");
+						this._logger.LogError(ex, $"Unable to load node-locator [{nodeLocator.Attributes["type"].Value}]");
 					}
 		}
 
@@ -395,8 +395,7 @@ namespace Enyim.Caching.Configuration
 
 	}
 
-	// --------------------------------------------------------
-
+	#region Configuration helpers
 	public class MemcachedClientConfigurationSectionHandler : IConfigurationSectionHandler
 	{
 		public object Create(object parent, object configContext, XmlNode section)
@@ -409,8 +408,6 @@ namespace Enyim.Caching.Configuration
 
 		public XmlNode Section { get { return this._section; } }
 	}
-
-	// --------------------------------------------------------
 
 	public class MemcachedClientOptions : IOptions<MemcachedClientOptions>
 	{
@@ -431,14 +428,13 @@ namespace Enyim.Caching.Configuration
 		public MemcachedClientOptions Value => this;
 	}
 
-	// --------------------------------------------------------
-
 	public class MemcachedServer
 	{
 		public string Address { get; set; }
 
 		public int Port { get; set; }
 	}
+	#endregion
 
 }
 

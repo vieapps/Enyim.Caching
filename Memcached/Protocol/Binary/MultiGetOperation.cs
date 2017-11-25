@@ -24,7 +24,7 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 
 		public MultiGetOperation(IList<string> keys) : base(keys)
 		{
-			this._logger = LogManager.CreateLogger(typeof(MultiGetOperation));
+			this._logger = LogManager.CreateLogger<MultiGetOperation>();
 		}
 
 		protected override BinaryRequest Build(string key)

@@ -20,7 +20,7 @@ namespace Enyim.Caching.Memcached
 		IOperationFactory _factory;
 		IMemcachedNodeLocator _nodeLocator;
 
-		object _deadSync = new Object();
+		object _locker = new Object();
 		int _deadTimeoutMsec;
 		bool _isTimerActive, _isDisposed;
 		event Action<IMemcachedNode> _nodeFailed;
@@ -28,7 +28,7 @@ namespace Enyim.Caching.Memcached
 
 		public DefaultServerPool(IMemcachedClientConfiguration configuration, IOperationFactory opFactory)
 		{
-			this._configuration = configuration ?? throw new ArgumentNullException(nameof(configuration), "Socket configuration is invalid");
+			this._configuration = configuration ?? throw new ArgumentNullException(nameof(configuration), "Configuration is invalid");
 			this._factory = opFactory ?? throw new ArgumentNullException(nameof(opFactory), "Operation factory is invalid");
 			this._deadTimeoutMsec = (int)this._configuration.SocketPool.DeadTimeout.TotalMilliseconds;
 			this._logger = LogManager.CreateLogger<DefaultServerPool>();
@@ -52,7 +52,7 @@ namespace Enyim.Caching.Memcached
 		{
 			var isDebug = this._logger.IsEnabled(LogLevel.Debug);
 			if (isDebug)
-				this._logger.LogDebug("Checking the dead servers.");
+				this._logger.LogDebug("Checking the dead servers");
 
 			// how this works:
 			// 1. timer is created but suspended
@@ -69,7 +69,7 @@ namespace Enyim.Caching.Memcached
 			// 7. if all servers are up, we set isRunning to false, so the timer is suspended
 			// 8. GOTO 2
 
-			lock (this._deadSync)
+			lock (this._locker)
 			{
 				if (this._isDisposed)
 				{
@@ -102,12 +102,12 @@ namespace Enyim.Caching.Memcached
 							changed = true;
 							aliveList.Add(node);
 							if (isDebug)
-								this._logger.LogDebug("Ping OK, go back alive.");
+								this._logger.LogDebug("Ping OK, go back alive");
 						}
 						else
 						{
 							if (isDebug)
-								this._logger.LogDebug("Still dead.");
+								this._logger.LogDebug("Still dead");
 							deadCount++;
 						}
 					}
@@ -117,7 +117,7 @@ namespace Enyim.Caching.Memcached
 				if (changed)
 				{
 					if (isDebug)
-						this._logger.LogDebug("Reinitializing the locator.");
+						this._logger.LogDebug("Reinitializing the locator");
 					this._nodeLocator.Initialize(aliveList);
 				}
 
@@ -131,7 +131,7 @@ namespace Enyim.Caching.Memcached
 				else
 				{
 					if (isDebug)
-						this._logger.LogDebug("Count of dead is {0}, starting the timer.", deadCount);
+						this._logger.LogDebug($"Count of dead is {deadCount}, starting the timer.");
 					this._resurrectTimer.Change(this._deadTimeoutMsec, Timeout.Infinite);
 				}
 			}
@@ -141,11 +141,11 @@ namespace Enyim.Caching.Memcached
 		{
 			var isDebug = this._logger.IsEnabled(LogLevel.Debug);
 			if (isDebug)
-				this._logger.LogDebug("Node {0} is dead.", node.EndPoint);
+				this._logger.LogDebug($"Node {node.EndPoint} is dead");
 
 			// the timer is stopped until we encounter the first dead server
 			// when we have one, we trigger it and it will run after DeadTimeout has elapsed
-			lock (this._deadSync)
+			lock (this._locker)
 			{
 				if (this._isDisposed)
 				{
@@ -167,7 +167,7 @@ namespace Enyim.Caching.Memcached
 				if (!this._isTimerActive)
 				{
 					if (isDebug)
-						this._logger.LogDebug("Starting the recovery timer.");
+						this._logger.LogDebug("Starting the recovery timer");
 
 					if (this._resurrectTimer == null)
 						this._resurrectTimer = new Timer(this.OnResurrectCallback, null, this._deadTimeoutMsec, Timeout.Infinite);
@@ -175,9 +175,8 @@ namespace Enyim.Caching.Memcached
 						this._resurrectTimer.Change(this._deadTimeoutMsec, Timeout.Infinite);
 
 					this._isTimerActive = true;
-
 					if (isDebug)
-						this._logger.LogDebug("Recovery timer is started.");
+						this._logger.LogDebug("Recovery timer is started");
 				}
 			}
 		}
@@ -234,7 +233,7 @@ namespace Enyim.Caching.Memcached
 		{
 			GC.SuppressFinalize(this);
 
-			lock (this._deadSync)
+			lock (this._locker)
 			{
 				if (this._isDisposed) return;
 

@@ -37,19 +37,10 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 		public ArraySegment<byte> Extra;
 		public ArraySegment<byte> Data;
 
-		string _responseMessage;
-
 		public BinaryResponse()
 		{
 			this._logger = LogManager.CreateLogger<BinaryResponse>();
 			this.StatusCode = -1;
-		}
-
-		public string GetStatusMessage()
-		{
-			return this.Data.Array == null
-				? null
-				: (this._responseMessage ?? (this._responseMessage = Encoding.ASCII.GetString(this.Data.Array, this.Data.Offset, this.Data.Count)));
 		}
 
 		/// <summary>

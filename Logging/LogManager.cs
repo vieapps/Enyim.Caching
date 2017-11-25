@@ -11,11 +11,7 @@ namespace Enyim.Caching
 		public static void AssignLoggerFactory(ILoggerFactory loggerFactory)
 		{
 			if (LogManager.LoggerFactory == null && loggerFactory != null)
-#if DEBUG
 				LogManager.LoggerFactory = loggerFactory;
-#else
-				LogManager.LoggerFactory = loggerFactory;
-#endif
 		}
 
 		public static ILogger CreateLogger(Type type)

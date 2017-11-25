@@ -22,7 +22,7 @@ using CacheUtils;
 namespace Enyim.Caching
 {
 	/// <summary>
-	/// Memcached client.
+	/// Memcached client
 	/// </summary>
 	public partial class MemcachedClient : IMemcachedClient, IMemcachedResultsClient, IDistributedCache
 	{
@@ -104,7 +104,9 @@ namespace Enyim.Caching
 			if (this._logger.IsEnabled(LogLevel.Debug))
 				this._logger.LogInformation("An instance of Memcached client was created successful");
 		}
+		#endregion
 
+		#region Get instance (singleton)
 		static MemcachedClient _Instance = null;
 
 		internal static MemcachedClient GetInstance(IServiceProvider svcProvider)
