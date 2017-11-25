@@ -185,22 +185,17 @@ namespace CacheUtils
 		/// </summary>
 		/// <param name="options"></param>
 		/// <returns></returns>
-		public static uint GetExpiration(this DistributedCacheEntryOptions options)
+		public static object GetExpiration(this DistributedCacheEntryOptions options)
 		{
-			if (options.SlidingExpiration != null && options.AbsoluteExpiration != null)
-				throw new ArgumentException("You cannot specify both sliding expiration and absolute expiration");
-
-			if (options.AbsoluteExpiration != null)
-				return (uint)options.AbsoluteExpiration.Value.ToUnixTimeSeconds();
-
-			if (options.AbsoluteExpirationRelativeToNow != null)
-				return (uint)(DateTimeOffset.UtcNow + options.AbsoluteExpirationRelativeToNow.Value).ToUnixTimeSeconds();
-
-			return options.SlidingExpiration == null
-				? 0
-				: (options.SlidingExpiration.Value == TimeSpan.Zero || options.SlidingExpiration.Value == TimeSpan.MaxValue
-					? DateTime.MaxValue
-					: DateTime.Now.Add(options.SlidingExpiration.Value)).GetExpiration();
+			return options.SlidingExpiration != null && options.AbsoluteExpiration != null
+				? throw new ArgumentException("You cannot specify both sliding expiration and absolute expiration")
+				: options.AbsoluteExpiration != null
+					? options.AbsoluteExpiration.Value.ToUnixTimeSeconds()
+					: options.AbsoluteExpirationRelativeToNow != null
+						? (DateTimeOffset.UtcNow + options.AbsoluteExpirationRelativeToNow.Value).ToUnixTimeSeconds()
+						: options.SlidingExpiration == null || options.SlidingExpiration.Value == TimeSpan.Zero || options.SlidingExpiration.Value == TimeSpan.MaxValue
+							? (object)TimeSpan.Zero
+							: (object)DateTime.Now.Add(options.SlidingExpiration.Value).ToTimeSpan();
 		}
 
 		/// <summary>
