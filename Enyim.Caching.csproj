@@ -16,10 +16,8 @@
 		<Version>1.3.0.1712</Version>
 		<Title>Enyim Memcached</Title>
 		<Description>The .NET Standard 2.0 memcached client library, fully async with various transcoders (binary formatter, bson, protobuf, msgpack)</Description>
-		<Summary>The .NET Standard 2.0 memcached client library, fully async with various transcoders (binary formatter, bson, protobuf, msgpack)</Summary>
 		<Authors>VIEApps.net</Authors>
 		<Copyright>© 2010 Attila Kiskó, © 2016 CNBlogs, © 2017 VIEApps.net</Copyright>
-		<PackageReleaseNotes></PackageReleaseNotes>
 		<PackageTags>cache;caching;distributed;distributedcache;memcached;enyim;enyimmemcached;enyim.memcached;enyim.caching;vieapps;vieapps.components</PackageTags>
 		<PackageProjectUrl>https://github.com/vieapps/Enyim.Caching</PackageProjectUrl>
 		<RepositoryUrl>https://github.com/vieapps/Enyim.Caching</RepositoryUrl>

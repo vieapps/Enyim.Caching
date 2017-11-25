@@ -135,15 +135,10 @@ namespace Enyim.Caching
 				{
 					item = this._transcoder.Serialize(value);
 				}
-				catch (ArgumentException)
-				{
-					throw;
-				}
 				catch (Exception ex)
 				{
-					this._logger.LogError(ex, $"Perform store for '{key}' key failed");
-					result.Fail($"Perform store for '{key}' key failed", ex);
-					return result;
+					this._logger.LogError(ex, $"Cannot serialize the value of the key '{key}'");
+					throw;
 				}
 
 				var command = this._serverPool.OperationFactory.Store(mode, hashedKey, item, expires, cas);
@@ -153,12 +148,9 @@ namespace Enyim.Caching
 				result.StatusCode = statusCode = command.StatusCode;
 
 				if (commandResult.Success)
-				{
 					result.Pass();
-					return result;
-				}
-
-				commandResult.Combine(result);
+				else
+					commandResult.Combine(result);
 				return result;
 			}
 
@@ -239,15 +231,10 @@ namespace Enyim.Caching
 				{
 					item = this._transcoder.Serialize(value);
 				}
-				catch (ArgumentException)
-				{
-					throw;
-				}
 				catch (Exception ex)
 				{
-					this._logger.LogError(ex, $"Perform store (async) for '{key}' key failed");
-					result.Fail($"Perform store (async) for '{key}' key failed", ex);
-					return result;
+					this._logger.LogError(ex, $"Cannot serialize the value of the key '{key}'");
+					throw;
 				}
 
 				var command = this._serverPool.OperationFactory.Store(mode, hashedKey, item, expires, cas);
@@ -257,12 +244,9 @@ namespace Enyim.Caching
 				result.StatusCode = command.StatusCode;
 
 				if (commandResult.Success)
-				{
 					result.Pass();
-					return result;
-				}
-
-				commandResult.Combine(result);
+				else
+					commandResult.Combine(result);
 				return result;
 			}
 
@@ -538,7 +522,7 @@ namespace Enyim.Caching
 		#endregion
 
 		#region Mutate
-		protected virtual IMutateOperationResult PerformMutate(MutationMode mode, string key, ulong defaultValue, ulong delta, uint expires, ulong cas  = 0)
+		protected virtual IMutateOperationResult PerformMutate(MutationMode mode, string key, ulong defaultValue, ulong delta, uint expires, ulong cas = 0)
 		{
 			var hashedKey = this._keyTransformer.Transform(key);
 			var node = this._serverPool.Locate(hashedKey);
@@ -556,16 +540,15 @@ namespace Enyim.Caching
 				{
 					result.Value = command.Result;
 					result.Pass();
-					return result;
 				}
 				else
 				{
 					result.InnerResult = commandResult;
 					result.Fail("Mutate operation failed, see InnerResult or StatusCode for more details");
 				}
+				return result;
 			}
 
-			// TODO: not sure about the return value when the command fails
 			this._logger.LogError("Unable to locate node");
 			result.Fail("Unable to locate node");
 			return result;
@@ -800,16 +783,15 @@ namespace Enyim.Caching
 				{
 					result.Value = command.Result;
 					result.Pass();
-					return result;
 				}
 				else
 				{
 					result.InnerResult = commandResult;
 					result.Fail("Mutate operation failed, see InnerResult or StatusCode for more details");
 				}
+				return result;
 			}
 
-			// TODO: not sure about the return value when the command fails
 			this._logger.LogError("Unable to locate node");
 			result.Fail("Unable to locate node");
 			return result;
@@ -1050,7 +1032,6 @@ namespace Enyim.Caching
 					result.InnerResult = commandResult;
 					result.Fail("Concat operation failed, see InnerResult or StatusCode for details");
 				}
-
 				return result;
 			}
 
@@ -1139,7 +1120,6 @@ namespace Enyim.Caching
 					result.InnerResult = commandResult;
 					result.Fail("Concat operation failed, see InnerResult or StatusCode for details");
 				}
-
 				return result;
 			}
 
@@ -1222,15 +1202,11 @@ namespace Enyim.Caching
 				{
 					result.Value = value = this._transcoder.Deserialize(command.Result);
 					result.Cas = cas = command.CasValue;
-
 					result.Pass();
-					return result;
 				}
 				else
-				{
 					commandResult.Combine(result);
-					return result;
-				}
+				return result;
 			}
 
 			result.Value = value;
@@ -1303,17 +1279,12 @@ namespace Enyim.Caching
 		/// <returns></returns>
 		public CasResult<T> GetWithCas<T>(string key)
 		{
-			return this.TryGetWithCas(key, out CasResult<object> tmp)
-				? new CasResult<T>()
-				{
-					Cas = tmp.Cas,
-					Result = (T)tmp.Result
-				}
-				: new CasResult<T>
-					{
-						Cas = tmp.Cas,
-						Result = default(T)
-					};
+			var success = this.TryGetWithCas(key, out CasResult<object> tmp);
+			return new CasResult<T>()
+			{
+				Cas = tmp.Cas,
+				Result = success ? (T)tmp.Result : default(T)
+			};
 		}
 
 		/// <summary>
@@ -1341,15 +1312,11 @@ namespace Enyim.Caching
 				{
 					result.Value = this._transcoder.Deserialize(command.Result);
 					result.Cas = command.CasValue;
-
 					result.Pass();
-					return result;
 				}
 				else
-				{
 					commandResult.Combine(result);
-					return result;
-				}
+				return result;
 			}
 
 			result.Value = null;
@@ -1396,17 +1363,11 @@ namespace Enyim.Caching
 		public async Task<CasResult<T>> GetWithCasAsync<T>(string key)
 		{
 			var result = await this.PerformTryGetAsync(key);
-			return result.Success
-				? new CasResult<T>()
-				{
-					Cas = result.Cas,
-					Result = (T)result.Value
-				}
-				: new CasResult<T>
-				{
-					Cas = result.Cas,
-					Result = default(T)
-				};
+			return new CasResult<T>()
+			{
+				Cas = result.Cas,
+				Result = result.Success ? (T)result.Value : default(T)
+			};
 		}
 
 		/// <summary>
@@ -1619,15 +1580,12 @@ namespace Enyim.Caching
 				var commandResult = node.Execute(command);
 
 				if (commandResult.Success)
-				{
 					result.Pass();
-				}
 				else
 				{
 					result.InnerResult = commandResult;
 					result.Fail("Failed to remove item, see InnerResult or StatusCode for details");
 				}
-
 				return result;
 			}
 
@@ -1658,15 +1616,12 @@ namespace Enyim.Caching
 				var commandResult = await node.ExecuteAsync(command);
 
 				if (commandResult.Success)
-				{
 					result.Pass();
-				}
 				else
 				{
 					result.InnerResult = commandResult;
 					result.Fail("Failed to remove item, see InnerResult or StatusCode for details");
 				}
-
 				return result;
 			}
 
@@ -1828,16 +1783,15 @@ namespace Enyim.Caching
 		public void Dispose()
 		{
 			GC.SuppressFinalize(this);
-			if (this._serverPool != null)
-				try
-				{
-					this._serverPool.Dispose();
-				}
-				catch { }
-				finally
-				{
-					this._serverPool = null;
-				}
+			try
+			{
+				this._serverPool?.Dispose();
+			}
+			catch { }
+			finally
+			{
+				this._serverPool = null;
+			}
 		}
 		#endregion
 
@@ -1850,7 +1804,7 @@ namespace Enyim.Caching
 			var validFor = expires is TimeSpan
 				? (TimeSpan)expires
 				: CacheUtils.Helper.UnixEpoch.AddSeconds((long)expires).ToTimeSpan();
-			if (this.Store(StoreMode.Set, key, value, validFor) && expires is TimeSpan && validFor != TimeSpan .Zero)
+			if (this.Store(StoreMode.Set, key, value, validFor) && expires is TimeSpan && validFor != TimeSpan.Zero)
 				this.Store(StoreMode.Set, key.GetIDistributedCacheExpirationKey(), expires, validFor);
 		}
 

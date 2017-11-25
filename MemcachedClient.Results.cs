@@ -382,7 +382,7 @@ namespace Enyim.Caching
 		public IConcatOperationResult ExecuteAppend(string key, ulong cas, ArraySegment<byte> data)
 		{
 			ulong tmp = cas;
-			var result = PerformConcatenate(ConcatenationMode.Append, key, ref tmp, data);
+			var result = this.PerformConcatenate(ConcatenationMode.Append, key, ref tmp, data);
 			if (result.Success)
 				result.Cas = tmp;
 			return result;
@@ -408,7 +408,7 @@ namespace Enyim.Caching
 		public IConcatOperationResult ExecutePrepend(string key, ulong cas, ArraySegment<byte> data)
 		{
 			ulong tmp = cas;
-			var result = PerformConcatenate(ConcatenationMode.Prepend, key, ref tmp, data);
+			var result = this.PerformConcatenate(ConcatenationMode.Prepend, key, ref tmp, data);
 			if (result.Success)
 				result.Cas = tmp;
 			return result;
