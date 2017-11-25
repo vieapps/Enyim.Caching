@@ -54,7 +54,7 @@ namespace Enyim.Caching
 		#endregion
 
 		/// <summary>
-		/// Initializes new instance of memcached client using configuration section of appsettings.json file
+		/// Initializes a new instance of Memcached client using configuration section of appsettings.json file
 		/// </summary>
 		/// <param name="loggerFactory"></param>
 		/// <param name="configuration"></param>
@@ -67,7 +67,7 @@ namespace Enyim.Caching
 		}
 
 		/// <summary>
-		/// Initializes new instance of memcached client using configuration section of app.config/web.config file
+		/// Initializes a new instance of Memcached client using configuration section of app.config/web.config file
 		/// </summary>
 		/// <param name="configuration"></param>
 		/// <param name="loggerFactory"></param>
@@ -122,7 +122,7 @@ namespace Enyim.Caching
 			statusCode = -1;
 			if (value == null)
 			{
-				result.Fail("value is null");
+				result.Fail("Value is null");
 				return result;
 			}
 
@@ -141,8 +141,8 @@ namespace Enyim.Caching
 				}
 				catch (Exception ex)
 				{
-					this._logger.LogError(ex, $"{nameof(this.PerformStore)} for '{key}' key failed");
-					result.Fail($"{nameof(this.PerformStore)} for '{key}' key failed", ex);
+					this._logger.LogError(ex, $"Perform store for '{key}' key failed");
+					result.Fail($"Perform store for '{key}' key failed", ex);
 					return result;
 				}
 
@@ -225,7 +225,7 @@ namespace Enyim.Caching
 			var result = this.StoreOperationResultFactory.Create();
 			if (value == null)
 			{
-				result.Fail("value is null");
+				result.Fail("Value is null");
 				return result;
 			}
 
@@ -245,8 +245,8 @@ namespace Enyim.Caching
 				}
 				catch (Exception ex)
 				{
-					this._logger.LogError(ex, $"{nameof(this.PerformStoreAsync)} for '{key}' key failed");
-					result.Fail($"{nameof(this.PerformStoreAsync)} for '{key}' key failed", ex);
+					this._logger.LogError(ex, $"Perform store (async) for '{key}' key failed");
+					result.Fail($"Perform store (async) for '{key}' key failed", ex);
 					return result;
 				}
 
@@ -469,7 +469,7 @@ namespace Enyim.Caching
 		/// <returns>true if the item was successfully added in the cache; false otherwise.</returns>
 		public bool Set(string key, object value, int cacheMinutes)
 		{
-			return this.Store(StoreMode.Set, key, value, TimeSpan.FromMinutes(cacheMinutes));
+			return this.Store(StoreMode.Set, key, value, cacheMinutes < 1 ? TimeSpan.Zero : TimeSpan.FromMinutes(cacheMinutes));
 		}
 
 		/// <summary>
@@ -481,7 +481,7 @@ namespace Enyim.Caching
 		/// <returns>true if the item was successfully added in the cache; false otherwise.</returns>
 		public Task<bool> SetAsync(string key, object value, int cacheMinutes)
 		{
-			return this.StoreAsync(StoreMode.Set, key, value, TimeSpan.FromMinutes(cacheMinutes));
+			return this.StoreAsync(StoreMode.Set, key, value, cacheMinutes < 1 ? TimeSpan.Zero : TimeSpan.FromMinutes(cacheMinutes));
 		}
 		#endregion
 
@@ -495,7 +495,7 @@ namespace Enyim.Caching
 		/// <returns>true if the item was successfully added in the cache; false otherwise.</returns>
 		public bool Add(string key, object value, int cacheMinutes)
 		{
-			return this.Store(StoreMode.Add, key, value, TimeSpan.FromMinutes(cacheMinutes));
+			return this.Store(StoreMode.Add, key, value, cacheMinutes < 1 ? TimeSpan.Zero : TimeSpan.FromMinutes(cacheMinutes));
 		}
 
 		/// <summary>
@@ -507,7 +507,7 @@ namespace Enyim.Caching
 		/// <returns>true if the item was successfully added in the cache; false otherwise.</returns>
 		public Task<bool> AddAsync(string key, object value, int cacheMinutes)
 		{
-			return this.StoreAsync(StoreMode.Add, key, value, TimeSpan.FromMinutes(cacheMinutes));
+			return this.StoreAsync(StoreMode.Add, key, value, cacheMinutes < 1 ? TimeSpan.Zero : TimeSpan.FromMinutes(cacheMinutes));
 		}
 		#endregion
 
@@ -521,7 +521,7 @@ namespace Enyim.Caching
 		/// <returns>true if the item was successfully replaced in the cache; false otherwise.</returns>
 		public bool Replace(string key, object value, int cacheMinutes)
 		{
-			return this.Store(StoreMode.Replace, key, value, TimeSpan.FromMinutes(cacheMinutes));
+			return this.Store(StoreMode.Replace, key, value, cacheMinutes < 1 ? TimeSpan.Zero : TimeSpan.FromMinutes(cacheMinutes));
 		}
 
 		/// <summary>
@@ -533,7 +533,7 @@ namespace Enyim.Caching
 		/// <returns>true if the item was successfully replaced in the cache; false otherwise.</returns>
 		public Task<bool> ReplaceAsync(string key, object value, int cacheMinutes)
 		{
-			return this.StoreAsync(StoreMode.Replace, key, value, TimeSpan.FromMinutes(cacheMinutes));
+			return this.StoreAsync(StoreMode.Replace, key, value, cacheMinutes < 1 ? TimeSpan.Zero : TimeSpan.FromMinutes(cacheMinutes));
 		}
 		#endregion
 
@@ -815,9 +815,9 @@ namespace Enyim.Caching
 			return result;
 		}
 
-		async Task<IMutateOperationResult> CasMutateAsync(MutationMode mode, string key, ulong defaultValue, ulong delta, uint expires, ulong cas)
+		Task<IMutateOperationResult> CasMutateAsync(MutationMode mode, string key, ulong defaultValue, ulong delta, uint expires, ulong cas)
 		{
-			return await this.PerformMutateAsync(mode, key, defaultValue, delta, expires, cas);
+			return this.PerformMutateAsync(mode, key, defaultValue, delta, expires, cas);
 		}
 
 		/// <summary>
@@ -1472,7 +1472,7 @@ namespace Enyim.Caching
 					}
 					catch (Exception ex)
 					{
-						this._logger.LogError(ex, $"{nameof(PerformMultiGet)} for {keys.Count()} keys failed");
+						this._logger.LogError(ex, $"Perform multi-get for {keys.Count()} keys failed");
 					}
 				});
 			};
@@ -1554,7 +1554,7 @@ namespace Enyim.Caching
 				}
 				catch (Exception ex)
 				{
-					this._logger.LogError(ex, $"{nameof(PerformMultiGetAsync)} for {keys.Count()} keys failed");
+					this._logger.LogError(ex, $"Perform multi-get (async) for {keys.Count()} keys failed");
 				}
 			};
 
@@ -1855,7 +1855,6 @@ namespace Enyim.Caching
 		{
 			if (string.IsNullOrWhiteSpace(key))
 				throw new ArgumentNullException(nameof(key));
-
 			var expires = options == null ? 0 : options.GetExpiration();
 			if ((await this.PerformStoreAsync(StoreMode.Set, key, value, expires)).Success && expires > 0)
 				await this.PerformStoreAsync(StoreMode.Set, key.GetIDistributedCacheExpirationKey(), expires, expires);
