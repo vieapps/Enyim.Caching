@@ -19,7 +19,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Enyim.Caching.Memcached
 {
-	[DebuggerDisplay("Endpoint: {endpoint}, IsAlive = {IsAlive}")]
+	[DebuggerDisplay("EndPoint: {_endpoint}, Alive = {IsAlive}")]
 	public class PooledSocket : IDisposable
 	{
 		ILogger _logger;
@@ -27,8 +27,6 @@ namespace Enyim.Caching.Memcached
 		bool _isAlive;
 		Socket _socket;
 		EndPoint _endpoint;
-
-		NetworkStream _stream;
 		AsyncSocketHelper _helper;
 
 		public PooledSocket(EndPoint endpoint, TimeSpan connectionTimeout, TimeSpan receiveTimeout)
@@ -50,7 +48,6 @@ namespace Enyim.Caching.Memcached
 
 			this._socket = socket;
 			this._endpoint = endpoint;
-			this._stream = new NetworkStream(socket);
 			this._isAlive = true;
 		}
 
@@ -97,10 +94,7 @@ namespace Enyim.Caching.Memcached
 
 		public void Reset()
 		{
-			// discard any buffered data
-			this._stream.Flush();
 			this._helper?.DiscardBuffer();
-
 			var available = this._socket.Available;
 			if (available > 0)
 			{
@@ -157,20 +151,13 @@ namespace Enyim.Caching.Memcached
 				GC.SuppressFinalize(this);
 				try
 				{
-					try
-					{
-						this._socket?.Dispose();
-					}
-					catch { }
-					this._stream?.Dispose();
-
+					this._socket?.Dispose();
 					this._socket = null;
-					this._stream = null;
 					this.CleanupCallback = null;
 				}
 				catch (Exception e)
 				{
-					this._logger.LogError(e, "Error occured while disposing socket");
+					this._logger.LogError(e, "Error occurred while disposing socket");
 				}
 			}
 			else
@@ -189,108 +176,49 @@ namespace Enyim.Caching.Memcached
 		}
 
 		/// <summary>
-		/// Reads the next byte from the server's response.
+		/// Writes data into socket
 		/// </summary>
-		/// <remarks>This method blocks and will not return until the value is read.</remarks>
-		public int Read()
+		/// <param name="buffer"></param>
+		/// <param name="offset"></param>
+		/// <param name="length"></param>
+		public void Write(byte[] buffer, int offset, int length)
 		{
 			this.CheckDisposed();
 
-			try
+			this._socket.Send(buffer, offset, length, SocketFlags.None, out SocketError status);
+			if (status != SocketError.Success)
 			{
-				return this._stream.Read();
-			}
-			catch (Exception e)
-			{
-				this._logger.LogError(e, "Error occured while reading from socket");
 				this._isAlive = false;
-				throw;
-			}
-		}
-
-		/// <summary>
-		/// Reads data from the server's response into the specified buffer.
-		/// </summary>
-		/// <param name="buffer">An array of <see cref="System.Byte"/> that is the storage location for the received data.</param>
-		/// <param name="offset">The location in buffer to store the received data.</param>
-		/// <param name="count">The number of bytes to read.</param>
-		/// <remarks>This method blocks and will not return until the specified amount of bytes are read.</remarks>
-		public void Read(byte[] buffer, int offset, int count)
-		{
-			this.CheckDisposed();
-
-			var read = 0;
-			var shouldRead = count;
-			while (read < count)
-			{
-				try
-				{
-					var currentRead = this._stream.Read(buffer, offset, shouldRead);
-					if (currentRead < 1)
-						continue;
-
-					read += currentRead;
-					offset += currentRead;
-					shouldRead -= currentRead;
-				}
-				catch (Exception e)
-				{
-					this._logger.LogError(e, "Error occured while reading from socket");
-					this._isAlive = false;
-					throw;
-				}
-			}
-		}
-
-		/// <summary>
-		/// Reads data from the server's response into the specified buffer.
-		/// </summary>
-		/// <param name="buffer">An array of <see cref="System.Byte"/> that is the storage location for the received data.</param>
-		/// <param name="offset">The location in buffer to store the received data.</param>
-		/// <param name="count">The number of bytes to read.</param>
-		/// <remarks>This method blocks and will not return until the specified amount of bytes are read.</remarks>
-		public async Task ReadAsync(byte[] buffer, int offset, int count)
-		{
-			this.CheckDisposed();
-
-			var read = 0;
-			var shouldRead = count;
-			while (read < count)
-			{
-				try
-				{
-					var currentRead = await this._stream.ReadAsync(buffer, offset, shouldRead);
-					if (currentRead < 1)
-						continue;
-
-					read += currentRead;
-					offset += currentRead;
-					shouldRead -= currentRead;
-				}
-				catch (Exception e)
-				{
-					this._logger.LogError(e, "Error occured while reading from socket");
-					this._isAlive = false;
-					throw;
-				}
+				throw new IOException($"Failed to write to the socket '{this._endpoint}'. Error: {status}");
 			}
 		}
 
 		/// <summary>
 		/// Writes data into socket
 		/// </summary>
-		/// <param name="data"></param>
+		/// <param name="buffer"></param>
 		/// <param name="offset"></param>
 		/// <param name="length"></param>
-		public void Write(byte[] data, int offset, int length)
+		/// <returns></returns>
+		public async Task WriteSync(byte[] buffer, int offset, int length)
 		{
 			this.CheckDisposed();
 
-			this._socket.Send(data, offset, length, SocketFlags.None, out SocketError status);
-			if (status != SocketError.Success)
+			using (var awaitable = new SocketAwaitable())
 			{
-				this._isAlive = false;
-				throw new IOException($"Failed to write to the socket '{this._endpoint}'. Error: {status}");
+				awaitable.Arguments.SetBuffer(buffer, offset, length);
+				try
+				{
+					await this._socket.SendAsync(awaitable);
+					if (awaitable.Arguments.SocketError != SocketError.Success)
+						throw new IOException($"Failed to write to the socket '{this._endpoint}'. Error: {awaitable.Arguments.SocketError}");
+				}
+				catch (Exception ex)
+				{
+					this._logger.LogError(ex, "Error occurred while writting into socket");
+					this._isAlive = false;
+					throw new IOException($"Failed to write to the socket '{this._endpoint}'. Error: {awaitable.Arguments.SocketError}", ex);
+				}
 			}
 		}
 
@@ -325,20 +253,117 @@ namespace Enyim.Caching.Memcached
 				try
 				{
 					await this._socket.SendAsync(awaitable);
+					if (awaitable.Arguments.SocketError != SocketError.Success)
+						throw new IOException($"Failed to write to the socket '{this._endpoint}'. Error: {awaitable.Arguments.SocketError}");
 				}
 				catch (Exception ex)
 				{
-					this._logger.LogError(ex, "Error occured while writting into socket");
+					this._logger.LogError(ex, "Error occurred while writting into socket");
 					this._isAlive = false;
 					throw new IOException($"Failed to write to the socket '{this._endpoint}'. Error: {awaitable.Arguments.SocketError}", ex);
 				}
+			}
+		}
 
-				if (awaitable.Arguments.SocketError != SocketError.Success)
+		/// <summary>
+		/// Reads data from the server's response into the specified buffer.
+		/// </summary>
+		/// <param name="buffer">An array of <see cref="System.Byte"/> that is the storage location for the received data.</param>
+		/// <param name="offset">The location in buffer to store the received data.</param>
+		/// <param name="count">The number of bytes to read.</param>
+		/// <returns>The number of read bytes</returns>
+		/// <remarks>This method blocks and will not return until the specified amount of bytes are read.</remarks>
+		public int Read(byte[] buffer, int offset, int count)
+		{
+			this.CheckDisposed();
+
+			var totalRead = 0;
+			var shouldRead = count;
+			while (totalRead < count)
+			{
+				try
 				{
+					var currentRead = this._socket.Receive(buffer, offset, shouldRead, SocketFlags.None, out SocketError errorCode);
+					if (errorCode != SocketError.Success || currentRead == 0)
+						throw new IOException($"Failed to read from the socket '{this._socket.RemoteEndPoint}'. Error: {(errorCode == SocketError.Success ? "?" : errorCode.ToString())}");
+
+					totalRead += currentRead;
+					offset += currentRead;
+					shouldRead -= currentRead;
+				}
+				catch (Exception e)
+				{
+					this._logger.LogError(e, "Error occurred while reading from socket");
 					this._isAlive = false;
-					throw new IOException($"Failed to write to the socket '{this._endpoint}'. Error: {awaitable.Arguments.SocketError}");
+					throw;
 				}
 			}
+			return totalRead;
+		}
+
+		/// <summary>
+		/// Reads data from the server's response into the specified buffer.
+		/// </summary>
+		/// <param name="buffer">An array of <see cref="System.Byte"/> that is the storage location for the received data.</param>
+		/// <param name="offset">The location in buffer to store the received data.</param>
+		/// <param name="count">The number of bytes to read.</param>
+		/// <returns>The number of read bytes</returns>
+		public async Task<int> ReadAsync(byte[] buffer, int offset, int count)
+		{
+			this.CheckDisposed();
+
+			var totalRead = 0;
+			var shouldRead = count;
+			using (var awaitable = new SocketAwaitable())
+				while (totalRead < count)
+				{
+					try
+					{
+						awaitable.Buffer = new ArraySegment<byte>(new byte[shouldRead], 0, shouldRead);
+						await this._socket.ReceiveAsync(awaitable);
+						if (awaitable.Arguments.SocketError != SocketError.Success)
+							throw new IOException($"Failed to read from the socket '{this._socket.RemoteEndPoint}'. Error: {awaitable.Arguments.SocketError}");
+
+						var currentRead = awaitable.Transferred.Count;
+						if (currentRead > 0)
+							Buffer.BlockCopy(awaitable.Transferred.Array, 0, buffer, offset, currentRead);
+
+						totalRead += currentRead;
+						offset += currentRead;
+						shouldRead -= currentRead;
+					}
+					catch (Exception e)
+					{
+						this._logger.LogError(e, "Error occurred while reading from socket");
+						this._isAlive = false;
+						throw;
+					}
+				}
+			return totalRead;
+		}
+
+		/// <summary>
+		/// Reads the next byte from the server's response.
+		/// </summary>
+		/// <remarks>This method blocks and will not return until the value is read.</remarks>
+		public byte Read()
+		{
+			var buffer = new byte[1];
+			return this.Read(buffer, 0, 1) > 0
+				? buffer[0]
+				: (byte)0;
+		}
+
+		/// <summary>
+		/// Reads the next byte from the server's response.
+		/// </summary>
+		/// <remarks>This method blocks and will not return until the value is read.</remarks>
+		public async Task<byte> ReadAsync()
+		{
+			var buffer = new byte[1];
+			return await this.ReadAsync(buffer, 0, 1) > 0
+				? buffer[0]
+				: (byte)0;
 		}
 
 		/// <summary>
@@ -363,115 +388,6 @@ namespace Enyim.Caching.Memcached
 
 			return this._helper.Read(args);
 		}
-
-		#region Network stream
-		class NetworkStream : Stream
-		{
-			Socket _socket;
-
-			public NetworkStream(Socket socket)
-			{
-				this._socket = socket;
-			}
-
-			public override bool CanRead
-			{
-				get { return true; }
-			}
-
-			public override bool CanSeek
-			{
-				get { return false; }
-			}
-
-			public override bool CanWrite
-			{
-				get { return false; }
-			}
-
-			public override long Length
-			{
-				get { throw new NotSupportedException(); }
-			}
-
-			public override long Position
-			{
-				get { throw new NotSupportedException(); }
-				set { throw new NotSupportedException(); }
-			}
-
-			public override void Flush() { }
-
-			public override long Seek(long offset, SeekOrigin origin)
-			{
-				throw new NotSupportedException();
-			}
-
-			public override void SetLength(long value)
-			{
-				throw new NotSupportedException();
-			}
-
-			public override void Write(byte[] buffer, int offset, int count)
-			{
-				throw new NotSupportedException();
-			}
-
-			public int Read()
-			{
-				return base.ReadByte();
-			}
-
-			public override int Read(byte[] buffer, int offset, int count)
-			{
-				var result = this._socket.Receive(buffer, offset, count, SocketFlags.None, out SocketError errorCode);
-
-				// actually "0 bytes read" could mean an error as well
-				if (errorCode == SocketError.Success && result > 0)
-					return result;
-
-				throw new IOException($"Failed to read from the socket '{this._socket.RemoteEndPoint}'. Error: {(errorCode == SocketError.Success ? "?" : errorCode.ToString())}");
-			}
-
-			public new Task<int> ReadAsync(byte[] buffer, int offset, int count)
-			{
-				var tcs = new TaskCompletionSource<int>();
-				ThreadPool.QueueUserWorkItem(_ =>
-				{
-					try
-					{
-						tcs.SetResult(this.Read(buffer, offset, count));
-					}
-					catch (Exception ex)
-					{
-						tcs.SetException(ex);
-					}
-				});
-				/*
-				this._socket.BeginReceive(buffer, offset, count, SocketFlags.None, out SocketError errorCode, asyncResult =>
-				{
-					try
-					{
-						var result = this._socket.EndReceive(asyncResult, out errorCode);
-						if (errorCode == SocketError.Success && result > 0)
-							tcs.SetResult(result);
-
-						throw new IOException($"Failed to read from the socket '{this._socket.RemoteEndPoint}'. Error: {(errorCode == SocketError.Success ? "?" : errorCode.ToString())}");
-					}
-					catch (OperationCanceledException)
-					{
-						tcs.SetCanceled();
-					}
-					catch (Exception exc)
-					{
-						tcs.SetException(exc);
-					}
-				}, null);
-				*/
-				return tcs.Task;
-			}
-		}
-		#endregion
 
 		#region AsyncSocket Helper
 		/// <summary>
@@ -631,6 +547,7 @@ namespace Enyim.Caching.Memcached
 			}
 		}
 		#endregion
+
 	}
 }
 

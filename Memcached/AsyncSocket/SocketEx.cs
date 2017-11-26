@@ -1,4 +1,4 @@
-﻿// Copyright © 2013 Şafak Gür. All rights reserved.
+﻿// Copyright © 2013 Şafak Gür (https://github.com/safakgur/Dawn.SocketAwaitable)
 // Use of this source code is governed by the MIT License (MIT).
 
 namespace Dawn.Net.Sockets

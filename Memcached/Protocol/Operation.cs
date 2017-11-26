@@ -31,9 +31,9 @@ namespace Enyim.Caching.Memcached.Protocol
 			return this.ReadResponse(socket);
 		}
 
-		async Task<IOperationResult> IOperation.ReadResponseAsync(PooledSocket socket)
+		Task<IOperationResult> IOperation.ReadResponseAsync(PooledSocket socket)
 		{
-			return await this.ReadResponseAsync(socket);
+			return this.ReadResponseAsync(socket);
 		}
 
 		bool IOperation.ReadResponseAsync(PooledSocket socket, Action<bool> next)

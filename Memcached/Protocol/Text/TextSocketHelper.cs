@@ -32,7 +32,7 @@ namespace Enyim.Caching.Memcached.Protocol.Text
 			if (String.IsNullOrEmpty(response))
 				throw new MemcachedClientException("Empty response received.");
 
-			if (String.Compare(response, GenericErrorResponse, StringComparison.Ordinal) == 0)
+			if (String.Compare(response, TextSocketHelper.GenericErrorResponse, StringComparison.Ordinal) == 0)
 				throw new NotSupportedException("Operation is not supported by the server or the request was malformed. If the latter please report the bug to the developers.");
 
 			TextSocketHelper.Logger = TextSocketHelper.Logger ?? LogManager.CreateLogger(typeof(TextSocketHelper));
@@ -41,16 +41,15 @@ namespace Enyim.Caching.Memcached.Protocol.Text
 
 			if (response.Length >= ErrorResponseLength)
 			{
-				if (String.Compare(response, 0, ClientErrorResponse, 0, ErrorResponseLength, StringComparison.Ordinal) == 0)
-					throw new MemcachedClientException(response.Remove(0, ErrorResponseLength));
+				if (String.Compare(response, 0, TextSocketHelper.ClientErrorResponse, 0, TextSocketHelper.ErrorResponseLength, StringComparison.Ordinal) == 0)
+					throw new MemcachedClientException(response.Remove(0, TextSocketHelper.ErrorResponseLength));
 
-				else if (String.Compare(response, 0, ServerErrorResponse, 0, ErrorResponseLength, StringComparison.Ordinal) == 0)
-					throw new MemcachedException(response.Remove(0, ErrorResponseLength));
+				else if (String.Compare(response, 0, TextSocketHelper.ServerErrorResponse, 0, TextSocketHelper.ErrorResponseLength, StringComparison.Ordinal) == 0)
+					throw new MemcachedException(response.Remove(0, TextSocketHelper.ErrorResponseLength));
 			}
 
 			return response;
 		}
-
 
 		/// <summary>
 		/// Reads a line from the socket. A line is terninated by \r\n.
@@ -61,7 +60,7 @@ namespace Enyim.Caching.Memcached.Protocol.Text
 			using (var stream = new MemoryStream(50))
 			{
 				var gotR = false;
-				int data;
+				byte data;
 
 				while (true)
 				{
@@ -83,7 +82,7 @@ namespace Enyim.Caching.Memcached.Protocol.Text
 						gotR = false;
 					}
 
-					stream.WriteByte((byte)data);
+					stream.WriteByte(data);
 				}
 
 				var result = Encoding.ASCII.GetString(stream.ToArray(), 0, (int)stream.Length);

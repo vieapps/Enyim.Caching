@@ -1,6 +1,7 @@
 using System;
 using System.Globalization;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 
 using Enyim.Caching.Memcached.Results;
@@ -61,7 +62,19 @@ namespace Enyim.Caching.Memcached.Protocol.Text
 
 		protected internal override Task<IOperationResult> ReadResponseAsync(PooledSocket socket)
 		{
-			return Task.FromResult(this.ReadResponse(socket));
+			var tcs = new TaskCompletionSource<IOperationResult>();
+			ThreadPool.QueueUserWorkItem(_ =>
+			{
+				try
+				{
+					tcs.SetResult(this.ReadResponse(socket));
+				}
+				catch (Exception ex)
+				{
+					tcs.SetException(ex);
+				}
+			});
+			return tcs.Task;
 		}
 
 		protected internal override bool ReadResponseAsync(PooledSocket socket, Action<bool> next)
