@@ -1,9 +1,10 @@
 using System;
 using System.Net;
 using System.Collections.Generic;
+using System.Threading.Tasks;
+
 using Enyim.Caching.Memcached.Protocol;
 using Enyim.Caching.Memcached.Results;
-using System.Threading.Tasks;
 
 namespace Enyim.Caching.Memcached
 {
@@ -17,12 +18,6 @@ namespace Enyim.Caching.Memcached
 
 		Task<IOperationResult> ReadResponseAsync(PooledSocket socket);
 
-		/// <summary>
-		/// 'next' is called when the operation completes. The bool parameter indicates the success of the operation.
-		/// </summary>
-		/// <param name="socket"></param>
-		/// <param name="next"></param>
-		/// <returns></returns>
 		bool ReadResponseAsync(PooledSocket socket, Action<bool> next);
 	}
 

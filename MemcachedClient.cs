@@ -89,10 +89,7 @@ namespace Enyim.Caching
 			this._transcoder = configuration.CreateTranscoder() ?? new DefaultTranscoder();
 
 			this._serverPool = configuration.CreatePool();
-			this._serverPool.NodeFailed += (node) =>
-			{
-				this.NodeFailed?.Invoke(node);
-			};
+			this._serverPool.NodeFailed += node => this.NodeFailed?.Invoke(node);
 			this._serverPool.Start();
 
 			this.StoreOperationResultFactory = new DefaultStoreOperationResultFactory();
@@ -122,6 +119,7 @@ namespace Enyim.Caching
 			statusCode = -1;
 			if (value == null)
 			{
+				this._logger.LogError("Value is null");
 				result.Fail("Value is null");
 				return result;
 			}
@@ -137,7 +135,7 @@ namespace Enyim.Caching
 				}
 				catch (Exception ex)
 				{
-					this._logger.LogError(ex, $"Cannot serialize the value of the key '{key}'");
+					this._logger.LogError(ex, $"Cannot serialize the value of '{key}'");
 					throw;
 				}
 
@@ -217,6 +215,7 @@ namespace Enyim.Caching
 			var result = this.StoreOperationResultFactory.Create();
 			if (value == null)
 			{
+				this._logger.LogError("Value is null");
 				result.Fail("Value is null");
 				return result;
 			}
@@ -233,7 +232,7 @@ namespace Enyim.Caching
 				}
 				catch (Exception ex)
 				{
-					this._logger.LogError(ex, $"Cannot serialize the value of the key '{key}'");
+					this._logger.LogError(ex, $"Cannot serialize the value of '{key}'");
 					throw;
 				}
 
@@ -1189,7 +1188,6 @@ namespace Enyim.Caching
 			var hashedKey = this._keyTransformer.Transform(key);
 			var node = this._serverPool.Locate(hashedKey);
 			var result = this.GetOperationResultFactory.Create();
-
 			cas = 0;
 			value = null;
 
@@ -1209,10 +1207,10 @@ namespace Enyim.Caching
 				return result;
 			}
 
+			this._logger.LogError("Unable to locate node");
+
 			result.Value = value;
 			result.Cas = cas;
-
-			this._logger.LogError("Unable to locate node");
 			result.Fail("Unable to locate node");
 			return result;
 		}
@@ -1319,10 +1317,10 @@ namespace Enyim.Caching
 				return result;
 			}
 
+			this._logger.LogError("Unable to locate node");
+
 			result.Value = null;
 			result.Cas = 0;
-
-			this._logger.LogError("Unable to locate node");
 			result.Fail("Unable to locate node");
 			return result;
 		}

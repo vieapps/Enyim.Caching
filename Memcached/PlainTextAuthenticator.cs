@@ -25,21 +25,18 @@ namespace Enyim.Caching.Memcached
 		void ISaslAuthenticationProvider.Initialize(Dictionary<string, object> parameters)
 		{
 			if (parameters != null)
-			{
-				this.authData = PlainTextAuthenticator.CreateAuthData(this.GetParameter(parameters, "zone"), this.GetParameter(parameters, "userName"), this.GetParameter(parameters, "password"));
-			}
+				this.authData = PlainTextAuthenticator.CreateAuthData(
+					this.GetParameter(parameters, "zone"),
+					this.GetParameter(parameters, "userName"),
+					this.GetParameter(parameters, "password")
+				);
 		}
 
 		string GetParameter(Dictionary<string, object> parameters, string key)
 		{
-			if (parameters.ContainsKey(key))
-			{
-				return (string)parameters[key];
-			}
-			else
-			{
-				throw new MemcachedClientException($"Unable to find '{key}' authentication parameter for {nameof(PlainTextAuthenticator)}");
-			}
+			return parameters.ContainsKey(key)
+				? (string)parameters[key]
+				: throw new MemcachedClientException($"Unable to find '{key}' authentication parameter for {nameof(PlainTextAuthenticator)}");
 		}
 
 		byte[] ISaslAuthenticationProvider.Authenticate()

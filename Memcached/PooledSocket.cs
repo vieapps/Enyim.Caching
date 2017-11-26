@@ -72,10 +72,7 @@ namespace Enyim.Caching.Memcached
 				RemoteEndPoint = endpoint,
 				UserToken = completed
 			};
-			args.Completed += (sender, socketArgs) =>
-			{
-				(socketArgs.UserToken as EventWaitHandle)?.Set();
-			};
+			args.Completed += (sender, socketArgs) => (socketArgs.UserToken as EventWaitHandle)?.Set();
 
 			socket.ConnectAsync(args);
 			if (!completed.WaitOne(timeout) || !socket.Connected)
@@ -157,7 +154,7 @@ namespace Enyim.Caching.Memcached
 				}
 				catch (Exception e)
 				{
-					this._logger.LogError(e, "Error occurred while disposing socket");
+					this._logger.LogError(e, "Error occurred while disposing");
 				}
 			}
 			else
@@ -205,10 +202,9 @@ namespace Enyim.Caching.Memcached
 			this.CheckDisposed();
 
 			using (var awaitable = new SocketAwaitable())
-			{
-				awaitable.Arguments.SetBuffer(buffer, offset, length);
 				try
 				{
+					awaitable.Arguments.SetBuffer(buffer, offset, length);
 					await this._socket.SendAsync(awaitable);
 					if (awaitable.Arguments.SocketError != SocketError.Success)
 						throw new IOException($"Failed to write to the socket '{this._endpoint}'. Error: {awaitable.Arguments.SocketError}");
@@ -219,7 +215,6 @@ namespace Enyim.Caching.Memcached
 					this._isAlive = false;
 					throw new IOException($"Failed to write to the socket '{this._endpoint}'. Error: {awaitable.Arguments.SocketError}", ex);
 				}
-			}
 		}
 
 		/// <summary>
@@ -248,10 +243,9 @@ namespace Enyim.Caching.Memcached
 			this.CheckDisposed();
 
 			using (var awaitable = new SocketAwaitable())
-			{
-				awaitable.Arguments.BufferList = buffers;
 				try
 				{
+					awaitable.Arguments.BufferList = buffers;
 					await this._socket.SendAsync(awaitable);
 					if (awaitable.Arguments.SocketError != SocketError.Success)
 						throw new IOException($"Failed to write to the socket '{this._endpoint}'. Error: {awaitable.Arguments.SocketError}");
@@ -262,7 +256,6 @@ namespace Enyim.Caching.Memcached
 					this._isAlive = false;
 					throw new IOException($"Failed to write to the socket '{this._endpoint}'. Error: {awaitable.Arguments.SocketError}", ex);
 				}
-			}
 		}
 
 		/// <summary>
@@ -280,7 +273,6 @@ namespace Enyim.Caching.Memcached
 			var totalRead = 0;
 			var shouldRead = count;
 			while (totalRead < count)
-			{
 				try
 				{
 					var currentRead = this._socket.Receive(buffer, offset, shouldRead, SocketFlags.None, out SocketError errorCode);
@@ -297,7 +289,6 @@ namespace Enyim.Caching.Memcached
 					this._isAlive = false;
 					throw;
 				}
-			}
 			return totalRead;
 		}
 
@@ -316,7 +307,6 @@ namespace Enyim.Caching.Memcached
 			var shouldRead = count;
 			using (var awaitable = new SocketAwaitable())
 				while (totalRead < count)
-				{
 					try
 					{
 						awaitable.Buffer = new ArraySegment<byte>(new byte[shouldRead], 0, shouldRead);
@@ -338,7 +328,6 @@ namespace Enyim.Caching.Memcached
 						this._isAlive = false;
 						throw;
 					}
-				}
 			return totalRead;
 		}
 
@@ -349,9 +338,7 @@ namespace Enyim.Caching.Memcached
 		public byte Read()
 		{
 			var buffer = new byte[1];
-			return this.Read(buffer, 0, 1) > 0
-				? buffer[0]
-				: (byte)0;
+			return this.Read(buffer, 0, 1) > 0 ? buffer[0] : (byte)0;
 		}
 
 		/// <summary>
@@ -361,9 +348,7 @@ namespace Enyim.Caching.Memcached
 		public async Task<byte> ReadAsync()
 		{
 			var buffer = new byte[1];
-			return await this.ReadAsync(buffer, 0, 1) > 0
-				? buffer[0]
-				: (byte)0;
+			return await this.ReadAsync(buffer, 0, 1) > 0 ? buffer[0] : (byte)0;
 		}
 
 		/// <summary>
@@ -397,27 +382,25 @@ namespace Enyim.Caching.Memcached
 		{
 			const int ChunkSize = 65536;
 
-			PooledSocket socket;
-			SlidingBuffer asyncBuffer;
+			PooledSocket _socket;
+			SlidingBuffer _buffer;
 
-			SocketAsyncEventArgs readEvent;
-			int remainingRead;
-			int expectedToRead;
-			AsyncIOArgs pendingArgs;
+			AsyncIOArgs _pendingArgs;
+			SocketAsyncEventArgs _readEvent;
+			ManualResetEvent _resetEvent;
 
-			int isAborted;
-			ManualResetEvent readInProgressEvent;
+			int _remainingRead, _expectedToRead, _isAborted;
 
 			public AsyncSocketHelper(PooledSocket socket)
 			{
-				this.socket = socket;
-				this.asyncBuffer = new SlidingBuffer(ChunkSize);
+				this._socket = socket;
+				this._buffer = new SlidingBuffer(ChunkSize);
 
-				this.readEvent = new SocketAsyncEventArgs();
-				this.readEvent.Completed += new EventHandler<SocketAsyncEventArgs>(AsyncReadCompleted);
-				this.readEvent.SetBuffer(new byte[ChunkSize], 0, ChunkSize);
+				this._readEvent = new SocketAsyncEventArgs();
+				this._readEvent.Completed += new EventHandler<SocketAsyncEventArgs>(AsyncReadCompleted);
+				this._readEvent.SetBuffer(new byte[ChunkSize], 0, ChunkSize);
 
-				this.readInProgressEvent = new ManualResetEvent(false);
+				this._resetEvent = new ManualResetEvent(false);
 			}
 
 			/// <summary>
@@ -430,13 +413,13 @@ namespace Enyim.Caching.Memcached
 				var count = p.Count;
 				if (count < 1)
 					throw new ArgumentOutOfRangeException("count", "count must be > 0");
-				this.expectedToRead = p.Count;
-				this.pendingArgs = p;
+				this._expectedToRead = p.Count;
+				this._pendingArgs = p;
 
 				p.Fail = false;
 				p.Result = null;
 
-				if (this.asyncBuffer.Available >= count)
+				if (this._buffer.Available >= count)
 				{
 					PublishResult(false);
 
@@ -444,8 +427,8 @@ namespace Enyim.Caching.Memcached
 				}
 				else
 				{
-					this.remainingRead = count - this.asyncBuffer.Available;
-					this.isAborted = 0;
+					this._remainingRead = count - this._buffer.Available;
+					this._isAborted = 0;
 
 					this.BeginReceive();
 
@@ -455,21 +438,21 @@ namespace Enyim.Caching.Memcached
 
 			public void DiscardBuffer()
 			{
-				this.asyncBuffer.UnsafeClear();
+				this._buffer.UnsafeClear();
 			}
 
 			void BeginReceive()
 			{
-				while (this.remainingRead > 0)
+				while (this._remainingRead > 0)
 				{
-					this.readInProgressEvent.Reset();
+					this._resetEvent.Reset();
 
-					if (this.socket._socket.ReceiveAsync(this.readEvent))
+					if (this._socket._socket.ReceiveAsync(this._readEvent))
 					{
 						// wait until the timeout elapses, then abort this reading process
 						// EndREceive will be triggered sooner or later but its timeout
 						// may be higher than our read timeout, so it's not reliable
-						if (!readInProgressEvent.WaitOne(this.socket._socket.ReceiveTimeout))
+						if (!this._resetEvent.WaitOne(this._socket._socket.ReceiveTimeout))
 							this.AbortReadAndTryPublishError(false);
 
 						return;
@@ -488,21 +471,21 @@ namespace Enyim.Caching.Memcached
 			void AbortReadAndTryPublishError(bool markAsDead)
 			{
 				if (markAsDead)
-					this.socket._isAlive = false;
+					this._socket._isAlive = false;
 
 				// we've been already aborted, so quit
 				// both the EndReceive and the wait on the event can abort the read
 				// but only one should of them should continue the async call chain
-				if (Interlocked.CompareExchange(ref this.isAborted, 1, 0) != 0)
+				if (Interlocked.CompareExchange(ref this._isAborted, 1, 0) != 0)
 					return;
 
-				this.remainingRead = 0;
-				var p = this.pendingArgs;
+				this._remainingRead = 0;
+				var p = this._pendingArgs;
 
 				p.Fail = true;
 				p.Result = null;
 
-				this.pendingArgs.Next(p);
+				this._pendingArgs.Next(p);
 			}
 
 			/// <summary>
@@ -511,20 +494,20 @@ namespace Enyim.Caching.Memcached
 			/// <returns></returns>
 			bool EndReceive()
 			{
-				this.readInProgressEvent.Set();
+				this._resetEvent.Set();
 
-				var read = this.readEvent.BytesTransferred;
-				if (this.readEvent.SocketError != SocketError.Success || read == 0)
+				var read = this._readEvent.BytesTransferred;
+				if (this._readEvent.SocketError != SocketError.Success || read == 0)
 				{
 					this.AbortReadAndTryPublishError(true);
 
 					return false;
 				}
 
-				this.remainingRead -= read;
-				this.asyncBuffer.Append(this.readEvent.Buffer, 0, read);
+				this._remainingRead -= read;
+				this._buffer.Append(this._readEvent.Buffer, 0, read);
 
-				if (this.remainingRead <= 0)
+				if (this._remainingRead <= 0)
 				{
 					this.PublishResult(true);
 
@@ -536,14 +519,14 @@ namespace Enyim.Caching.Memcached
 
 			void PublishResult(bool isAsync)
 			{
-				var retval = this.pendingArgs;
+				var retval = this._pendingArgs;
 
-				var data = new byte[this.expectedToRead];
-				this.asyncBuffer.Read(data, 0, retval.Count);
-				pendingArgs.Result = data;
+				var data = new byte[this._expectedToRead];
+				this._buffer.Read(data, 0, retval.Count);
+				this._pendingArgs.Result = data;
 
 				if (isAsync)
-					pendingArgs.Next(pendingArgs);
+					this._pendingArgs.Next(this._pendingArgs);
 			}
 		}
 		#endregion
