@@ -1852,8 +1852,8 @@ namespace Enyim.Caching
 			var value = await this.GetAsync<byte[]>(key);
 			var expires = value != null ? await this.GetAsync(key.GetIDistributedCacheExpirationKey()) : null;
 			if (value != null && expires != null && expires is TimeSpan)
-				if (this.Store(StoreMode.Replace, key, value, (TimeSpan)expires))
-					this.Store(StoreMode.Replace, key.GetIDistributedCacheExpirationKey(), expires, (TimeSpan)expires);
+				if (await this.StoreAsync(StoreMode.Replace, key, value, (TimeSpan)expires))
+					await this.StoreAsync(StoreMode.Replace, key.GetIDistributedCacheExpirationKey(), expires, (TimeSpan)expires);
 		}
 
 		void IDistributedCache.Remove(string key)
@@ -1866,12 +1866,12 @@ namespace Enyim.Caching
 
 		Task IDistributedCache.RemoveAsync(string key, CancellationToken token = default(CancellationToken))
 		{
-			if (string.IsNullOrWhiteSpace(key))
-				throw new ArgumentNullException(nameof(key));
-			return Task.WhenAll(
-				this.RemoveAsync(key),
-				this.RemoveAsync(key.GetIDistributedCacheExpirationKey())
-			);
+			return string.IsNullOrWhiteSpace(key)
+				? throw new ArgumentNullException(nameof(key))
+				: Task.WhenAll(
+					this.RemoveAsync(key),
+					this.RemoveAsync(key.GetIDistributedCacheExpirationKey())
+				);
 		}
 		#endregion
 
