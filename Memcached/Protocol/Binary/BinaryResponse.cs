@@ -95,14 +95,14 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 			try
 			{
 				var header = new byte[HeaderLength];
-				await socket.ReadAsync(header, 0, header.Length);
+				await socket.ReadAsync(header, 0, header.Length).ConfigureAwait(false);
 
 				this.DeserializeHeader(header, out int dataLength, out int extraLength);
 
 				if (dataLength > 0)
 				{
 					var data = new byte[dataLength];
-					await socket.ReadAsync(data, 0, dataLength);
+					await socket.ReadAsync(data, 0, dataLength).ConfigureAwait(false);
 
 					this.Extra = new ArraySegment<byte>(data, 0, extraLength);
 					this.Data = new ArraySegment<byte>(data, extraLength, data.Length - extraLength);

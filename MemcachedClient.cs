@@ -237,7 +237,7 @@ namespace Enyim.Caching
 				}
 
 				var command = this._serverPool.OperationFactory.Store(mode, hashedKey, item, expires, cas);
-				var commandResult = await node.ExecuteAsync(command);
+				var commandResult = await node.ExecuteAsync(command).ConfigureAwait(false);
 
 				result.Cas = command.CasValue;
 				result.StatusCode = command.StatusCode;
@@ -264,7 +264,7 @@ namespace Enyim.Caching
 		/// <returns>true if the item was successfully stored in the cache; false otherwise.</returns>
 		public async Task<bool> StoreAsync(StoreMode mode, string key, object value)
 		{
-			return (await this.PerformStoreAsync(mode, key, value, 0)).Success;
+			return (await this.PerformStoreAsync(mode, key, value, 0).ConfigureAwait(false)).Success;
 		}
 
 		/// <summary>
@@ -277,7 +277,7 @@ namespace Enyim.Caching
 		/// <returns>true if the item was successfully stored in the cache; false otherwise.</returns>
 		public async Task<bool> StoreAsync(StoreMode mode, string key, object value, TimeSpan validFor)
 		{
-			return (await this.PerformStoreAsync(mode, key, value, validFor.GetExpiration())).Success;
+			return (await this.PerformStoreAsync(mode, key, value, validFor.GetExpiration()).ConfigureAwait(false)).Success;
 		}
 
 		/// <summary>
@@ -290,7 +290,7 @@ namespace Enyim.Caching
 		/// <returns>true if the item was successfully stored in the cache; false otherwise.</returns>
 		public async Task<bool> StoreAsync(StoreMode mode, string key, object value, DateTime expiresAt)
 		{
-			return (await this.PerformStoreAsync(mode, key, value, expiresAt.GetExpiration())).Success;
+			return (await this.PerformStoreAsync(mode, key, value, expiresAt.GetExpiration()).ConfigureAwait(false)).Success;
 		}
 		#endregion
 
@@ -379,7 +379,7 @@ namespace Enyim.Caching
 		/// <returns>A CasResult object containing the version of the item and the result of the operation (true if the item was successfully stored in the cache; false otherwise).</returns>
 		public async Task<CasResult<bool>> CasAsync(StoreMode mode, string key, object value, ulong cas)
 		{
-			var result = await this.PerformStoreAsync(mode, key, value, 0, cas);
+			var result = await this.PerformStoreAsync(mode, key, value, 0, cas).ConfigureAwait(false);
 			return new CasResult<bool>()
 			{
 				Cas = result.Cas,
@@ -412,7 +412,7 @@ namespace Enyim.Caching
 		/// <returns>A CasResult object containing the version of the item and the result of the operation (true if the item was successfully stored in the cache; false otherwise).</returns>
 		public async Task<CasResult<bool>> CasAsync(StoreMode mode, string key, object value, TimeSpan validFor, ulong cas)
 		{
-			var result = await this.PerformStoreAsync(mode, key, value, validFor.GetExpiration(), cas);
+			var result = await this.PerformStoreAsync(mode, key, value, validFor.GetExpiration(), cas).ConfigureAwait(false);
 			return new CasResult<bool>()
 			{
 				Cas = result.Cas,
@@ -432,7 +432,7 @@ namespace Enyim.Caching
 		/// <returns>A CasResult object containing the version of the item and the result of the operation (true if the item was successfully stored in the cache; false otherwise).</returns>
 		public async Task<CasResult<bool>> CasAsync(StoreMode mode, string key, object value, DateTime expiresAt, ulong cas)
 		{
-			var result = await this.PerformStoreAsync(mode, key, value, expiresAt.GetExpiration(), cas);
+			var result = await this.PerformStoreAsync(mode, key, value, expiresAt.GetExpiration(), cas).ConfigureAwait(false);
 			return new CasResult<bool>()
 			{
 				Cas = result.Cas,
@@ -773,7 +773,7 @@ namespace Enyim.Caching
 			if (node != null)
 			{
 				var command = this._serverPool.OperationFactory.Mutate(mode, hashedKey, defaultValue, delta, expires, cas);
-				var commandResult = await node.ExecuteAsync(command);
+				var commandResult = await node.ExecuteAsync(command).ConfigureAwait(false);
 
 				result.Cas = command.CasValue;
 				result.StatusCode = command.StatusCode;
@@ -1106,7 +1106,7 @@ namespace Enyim.Caching
 			if (node != null)
 			{
 				var command = this._serverPool.OperationFactory.Concat(mode, hashedKey, cas, data);
-				var commandResult = await node.ExecuteAsync(command);
+				var commandResult = await node.ExecuteAsync(command).ConfigureAwait(false);
 
 				if (commandResult.Success)
 				{
@@ -1304,7 +1304,7 @@ namespace Enyim.Caching
 			if (node != null)
 			{
 				var command = this._serverPool.OperationFactory.Get(hashedKey);
-				var commandResult = await node.ExecuteAsync(command);
+				var commandResult = await node.ExecuteAsync(command).ConfigureAwait(false);
 
 				if (commandResult.Success)
 				{
@@ -1497,7 +1497,7 @@ namespace Enyim.Caching
 				{
 					// execute command
 					var command = this._serverPool.OperationFactory.MultiGet(nodeKeys);
-					var commandResult = await node.ExecuteAsync(command);
+					var commandResult = await node.ExecuteAsync(command).ConfigureAwait(false);
 
 					// deserialize the items in the dictionary
 					if (commandResult.Success)
@@ -1524,7 +1524,7 @@ namespace Enyim.Caching
 
 			// wait for all nodes to finish
 			if (tasks.Count > 0)
-				await Task.WhenAll(tasks);
+				await Task.WhenAll(tasks).ConfigureAwait(false);
 
 			return values;
 		}
@@ -1611,7 +1611,7 @@ namespace Enyim.Caching
 			if (node != null)
 			{
 				var command = this._serverPool.OperationFactory.Delete(hashedKey, 0);
-				var commandResult = await node.ExecuteAsync(command);
+				var commandResult = await node.ExecuteAsync(command).ConfigureAwait(false);
 
 				if (commandResult.Success)
 					result.Pass();
@@ -1662,9 +1662,9 @@ namespace Enyim.Caching
 		/// <returns>Returns a boolean value indicating if the object that associates with the key is cached or not</returns>
 		public async Task<bool> ExistsAsync(string key)
 		{
-			if (!await this.AppendAsync(key, new ArraySegment<byte>(new byte[0])))
+			if (!await this.AppendAsync(key, new ArraySegment<byte>(new byte[0])).ConfigureAwait(false))
 			{
-				await this.RemoveAsync(key);
+				await this.RemoveAsync(key).ConfigureAwait(false);
 				return false;
 			}
 			return true;
@@ -1737,14 +1737,14 @@ namespace Enyim.Caching
 
 			Func<IMemcachedNode, IStatsOperation, EndPoint, Task> func = async (node, command, endpoint) =>
 			{
-				await node.ExecuteAsync(command);
+				await node.ExecuteAsync(command).ConfigureAwait(false);
 				lock (results)
 					results[endpoint] = command.Result;
 			};
 
 			var tasks = this._serverPool.GetWorkingNodes().Select(node => func(node, this._serverPool.OperationFactory.Stats(type), node.EndPoint)).ToList();
 			if (tasks.Count > 0)
-				await Task.WhenAll(tasks);
+				await Task.WhenAll(tasks).ConfigureAwait(false);
 
 			return new ServerStats(results);
 		}
@@ -1814,8 +1814,8 @@ namespace Enyim.Caching
 			var validFor = expires is TimeSpan
 				? (TimeSpan)expires
 				: CacheUtils.Helper.UnixEpoch.AddSeconds((long)expires).ToTimeSpan();
-			if (await this.StoreAsync(StoreMode.Set, key, value, validFor) && expires is TimeSpan && validFor != TimeSpan.Zero)
-				await this.StoreAsync(StoreMode.Set, key.GetIDistributedCacheExpirationKey(), expires, validFor);
+			if (await this.StoreAsync(StoreMode.Set, key, value, validFor).ConfigureAwait(false) && expires is TimeSpan && validFor != TimeSpan.Zero)
+				await this.StoreAsync(StoreMode.Set, key.GetIDistributedCacheExpirationKey(), expires, validFor).ConfigureAwait(false);
 		}
 
 		byte[] IDistributedCache.Get(string key)
@@ -1850,8 +1850,8 @@ namespace Enyim.Caching
 			var value = await this.GetAsync<byte[]>(key);
 			var expires = value != null ? await this.GetAsync(key.GetIDistributedCacheExpirationKey()) : null;
 			if (value != null && expires != null && expires is TimeSpan)
-				if (await this.StoreAsync(StoreMode.Replace, key, value, (TimeSpan)expires))
-					await this.StoreAsync(StoreMode.Replace, key.GetIDistributedCacheExpirationKey(), expires, (TimeSpan)expires);
+				if (await this.StoreAsync(StoreMode.Replace, key, value, (TimeSpan)expires).ConfigureAwait(false))
+					await this.StoreAsync(StoreMode.Replace, key.GetIDistributedCacheExpirationKey(), expires, (TimeSpan)expires).ConfigureAwait(false);
 		}
 
 		void IDistributedCache.Remove(string key)

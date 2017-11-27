@@ -117,7 +117,7 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 
 			var response = new BinaryResponse();
 
-			while (await response.ReadAsync(socket))
+			while (await response.ReadAsync(socket).ConfigureAwait(false))
 			{
 				this.StatusCode = response.StatusCode;
 

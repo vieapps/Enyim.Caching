@@ -590,7 +590,7 @@ namespace Enyim.Caching.Memcached
 					var startTime = DateTime.Now;
 					var socket = result.Value;
 					var buffer = op.GetBuffer();
-					await socket.WriteSync(buffer);
+					await socket.WriteSync(buffer).ConfigureAwait(false);
 
 					if (this._logger.IsEnabled(LogLevel.Debug))
 					{
@@ -599,7 +599,7 @@ namespace Enyim.Caching.Memcached
 							this._logger.LogWarning($"Cost for writting into socket when execute operation: {duration}ms");
 					}
 
-					var readResult = await op.ReadResponseAsync(socket);
+					var readResult = await op.ReadResponseAsync(socket).ConfigureAwait(false);
 					if (readResult.Success)
 						result.Pass();
 					else

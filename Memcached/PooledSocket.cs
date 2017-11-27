@@ -201,7 +201,7 @@ namespace Enyim.Caching.Memcached
 		{
 			this.CheckDisposed();
 
-			using (var awaitable = new SocketAwaitable())
+			using (var awaitable = new SocketAwaitable() { ShouldCaptureContext = false })
 				try
 				{
 					awaitable.Arguments.SetBuffer(buffer, offset, length);
@@ -242,7 +242,7 @@ namespace Enyim.Caching.Memcached
 		{
 			this.CheckDisposed();
 
-			using (var awaitable = new SocketAwaitable())
+			using (var awaitable = new SocketAwaitable() { ShouldCaptureContext = false })
 				try
 				{
 					awaitable.Arguments.BufferList = buffers;
@@ -305,7 +305,7 @@ namespace Enyim.Caching.Memcached
 
 			var totalRead = 0;
 			var shouldRead = count;
-			using (var awaitable = new SocketAwaitable())
+			using (var awaitable = new SocketAwaitable() { ShouldCaptureContext = false })
 				while (totalRead < count)
 					try
 					{
@@ -348,7 +348,7 @@ namespace Enyim.Caching.Memcached
 		public async Task<byte> ReadAsync()
 		{
 			var buffer = new byte[1];
-			return await this.ReadAsync(buffer, 0, 1) > 0 ? buffer[0] : (byte)0;
+			return await this.ReadAsync(buffer, 0, 1).ConfigureAwait(false) > 0 ? buffer[0] : (byte)0;
 		}
 
 		/// <summary>
