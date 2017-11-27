@@ -23,6 +23,8 @@ namespace Enyim.Caching.Memcached
 	[DebuggerDisplay("Address: {EndPoint}, Alive = {IsAlive}")]
 	public class MemcachedNode : IMemcachedNode
 	{
+
+		#region Attributes
 		static object locker = new Object();
 
 		ILogger _logger;
@@ -35,6 +37,7 @@ namespace Enyim.Caching.Memcached
 		INodeFailurePolicy _failurePolicy;
 
 		public event Action<IMemcachedNode> Failed = null;
+		#endregion
 
 		public MemcachedNode(EndPoint endpoint, ISocketPoolConfiguration socketPoolConfig)
 		{
@@ -63,7 +66,7 @@ namespace Enyim.Caching.Memcached
 
 		/// <summary>
 		/// <para>Gets a value indicating whether the server is working or not. Returns a <b>cached</b> state.</para>
-		/// <para>To get real-time information and update the cached state, use the <see cref="M:Ping"/> method.</para>
+		/// <para>To get real-time information and update the cached state, use the <see cref="Ping"/> method.</para>
 		/// </summary>
 		/// <remarks>Used by the <see cref="IServerPool"/> to quickly check if the server's state is valid.</remarks>
 		public bool IsAlive
@@ -138,8 +141,9 @@ namespace Enyim.Caching.Memcached
 						var startTime = DateTime.Now;
 						this._internalPoolImpl.InitPool();
 						this._isInitialized = true;
+
 						if (this._logger.IsEnabled(LogLevel.Debug))
-							this._logger.LogInformation($"Cost for initiaizing pool: {(DateTime.Now - startTime).TotalMilliseconds}ms");
+							this._logger.LogDebug($"Cost for initiaizing pool: {(DateTime.Now - startTime).TotalMilliseconds}ms");
 					}
 
 			try
@@ -157,6 +161,20 @@ namespace Enyim.Caching.Memcached
 			}
 		}
 
+		protected internal virtual PooledSocket CreateSocket()
+		{
+			try
+			{
+				return new PooledSocket(this._endpoint, this._config.ConnectionTimeout, this._config.ReceiveTimeout);
+			}
+			catch (Exception ex)
+			{
+				this._logger.LogError(ex, $"Cannot create socket ({this._endpoint})");
+				throw ex;
+			}
+		}
+
+		#region Dispose
 		~MemcachedNode()
 		{
 			try
@@ -194,6 +212,7 @@ namespace Enyim.Caching.Memcached
 		{
 			this.Dispose();
 		}
+		#endregion
 
 		#region [ InternalPoolImpl             ]
 		class InternalPoolImpl : IDisposable
@@ -256,7 +275,7 @@ namespace Enyim.Caching.Memcached
 						}
 
 					if (this._logger.IsEnabled(LogLevel.Debug))
-						this._logger.LogDebug($"Pool has been initialized for {this._endPoint} with {this._minItems} sockets");
+						this._logger.LogInformation($"Pool has been initialized for {this._endPoint} with {this._minItems} sockets");
 				}
 				catch (Exception e)
 				{
@@ -517,19 +536,7 @@ namespace Enyim.Caching.Memcached
 		}
 		#endregion
 
-		protected internal virtual PooledSocket CreateSocket()
-		{
-			try
-			{
-				return new PooledSocket(this._endpoint, this._config.ConnectionTimeout, this._config.ReceiveTimeout);
-			}
-			catch (Exception ex)
-			{
-				this._logger.LogError(ex, $"Cannot create socket ({this._endpoint})");
-				throw ex;
-			}
-		}
-
+		#region Execute an operation
 		protected virtual IPooledSocketResult ExecuteOperation(IOperation op)
 		{
 			var result = this.Acquire();
@@ -642,6 +649,7 @@ namespace Enyim.Caching.Memcached
 				return false;
 			}
 		}
+		#endregion
 
 		#region [ IMemcachedNode               ]
 		EndPoint IMemcachedNode.EndPoint

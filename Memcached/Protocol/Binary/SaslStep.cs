@@ -21,7 +21,7 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 		protected internal override IOperationResult ReadResponse(PooledSocket socket)
 		{
 			var response = new BinaryResponse();
-			var retval = response.Read(socket);
+			var success = response.Read(socket);
 
 			this.StatusCode = response.StatusCode;
 			this.Data = response.Data.Array;
@@ -30,26 +30,24 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 			{
 				StatusCode = this.StatusCode
 			};
-			result.PassOrFail(retval, "Failed to read response");
+			result.PassOrFail(success, "Failed to read response");
 			return result;
 		}
 
-		protected internal override Task<IOperationResult> ReadResponseAsync(PooledSocket socket)
+		protected internal override async Task<IOperationResult> ReadResponseAsync(PooledSocket socket)
 		{
-			var tcs = new TaskCompletionSource<IOperationResult>();
-			ThreadPool.QueueUserWorkItem(_ =>
+			var response = new BinaryResponse();
+			var success = await response.ReadAsync(socket);
+
+			this.StatusCode = response.StatusCode;
+			this.Data = response.Data.Array;
+
+			var result = new BinaryOperationResult
 			{
-				try
-				{
-					var result = this.ReadResponse(socket);
-					tcs.SetResult(result);
-				}
-				catch (Exception ex)
-				{
-					tcs.SetException(ex);
-				}
-			});
-			return tcs.Task;
+				StatusCode = this.StatusCode
+			};
+			result.PassOrFail(success, "Failed to read response");
+			return result;
 		}
 
 		public byte[] Data { get; private set; }

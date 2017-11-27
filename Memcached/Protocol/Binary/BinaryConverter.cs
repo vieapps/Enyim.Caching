@@ -20,15 +20,13 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 			fixed (byte* buffer = segment.Array)
 			{
 				byte* ptr = buffer + segment.Offset + offset;
-
-				return DecodeInt32(buffer, 0);
+				return BinaryConverter.DecodeInt32(buffer, 0);
 			}
 		}
 
 		public static unsafe int DecodeInt32(byte* buffer, int offset)
 		{
 			buffer += offset;
-
 			return (buffer[0] << 24) | (buffer[1] << 16) | (buffer[2] << 8) | buffer[3];
 		}
 
@@ -41,17 +39,15 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 		{
 			fixed (byte* ptr = buffer)
 			{
-				return DecodeUInt64(ptr, offset);
+				return BinaryConverter.DecodeUInt64(ptr, offset);
 			}
 		}
 
 		public static unsafe ulong DecodeUInt64(byte* buffer, int offset)
 		{
 			buffer += offset;
-
 			var part1 = (uint)((buffer[0] << 24) | (buffer[1] << 16) | (buffer[2] << 8) | buffer[3]);
 			var part2 = (uint)((buffer[4] << 24) | (buffer[5] << 16) | (buffer[6] << 8) | buffer[7]);
-
 			return ((ulong)part1 << 32) | part2;
 		}
 
@@ -59,14 +55,13 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 		{
 			fixed (byte* bufferPtr = buffer)
 			{
-				EncodeUInt16(value, bufferPtr, offset);
+				BinaryConverter.EncodeUInt16(value, bufferPtr, offset);
 			}
 		}
 
 		public static unsafe void EncodeUInt16(uint value, byte* buffer, int offset)
 		{
 			byte* ptr = buffer + offset;
-
 			ptr[0] = (byte)(value >> 8);
 			ptr[1] = (byte)(value & 255);
 		}
@@ -75,14 +70,13 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 		{
 			fixed (byte* bufferPtr = buffer)
 			{
-				EncodeUInt32(value, bufferPtr, offset);
+				BinaryConverter.EncodeUInt32(value, bufferPtr, offset);
 			}
 		}
 
 		public static unsafe void EncodeUInt32(uint value, byte* buffer, int offset)
 		{
 			byte* ptr = buffer + offset;
-
 			ptr[0] = (byte)(value >> 24);
 			ptr[1] = (byte)(value >> 16);
 			ptr[2] = (byte)(value >> 8);
@@ -93,14 +87,13 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 		{
 			fixed (byte* bufferPtr = buffer)
 			{
-				EncodeUInt64(value, bufferPtr, offset);
+				BinaryConverter.EncodeUInt64(value, bufferPtr, offset);
 			}
 		}
 
 		public static unsafe void EncodeUInt64(ulong value, byte* buffer, int offset)
 		{
 			byte* ptr = buffer + offset;
-
 			ptr[0] = (byte)(value >> 56);
 			ptr[1] = (byte)(value >> 48);
 			ptr[2] = (byte)(value >> 40);
@@ -113,26 +106,23 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 
 		public static byte[] EncodeKey(string key)
 		{
-			if (String.IsNullOrEmpty(key))
-				return null;
-
-			return Encoding.UTF8.GetBytes(key);
+			return string.IsNullOrWhiteSpace(key)
+				? null
+				: Encoding.UTF8.GetBytes(key);
 		}
 
 		public static string DecodeKey(byte[] data)
 		{
-			if (data == null || data.Length == 0)
-				return null;
-
-			return Encoding.UTF8.GetString(data);
+			return data == null || data.Length == 0
+				?  null
+				:  Encoding.UTF8.GetString(data);
 		}
 
 		public static string DecodeKey(byte[] data, int index, int count)
 		{
-			if (data == null || data.Length == 0 || count == 0)
-				return null;
-
-			return Encoding.UTF8.GetString(data, index, count);
+			return data == null || data.Length == 0 || count == 0
+				? null
+				: Encoding.UTF8.GetString(data, index, count);
 		}
 	}
 }

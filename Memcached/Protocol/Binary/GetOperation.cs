@@ -10,9 +10,7 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 	{
 		CacheItem result;
 
-		public GetOperation(string key) : base(key)
-		{
-		}
+		public GetOperation(string key) : base(key) { }
 
 		protected override BinaryRequest Build()
 		{

@@ -31,7 +31,6 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 			fixed (byte* buffer = extra)
 			{
 				BinaryConverter.EncodeUInt64(this._delta, buffer, 0);
-
 				BinaryConverter.EncodeUInt64(this._defaultValue, buffer, 8);
 				BinaryConverter.EncodeUInt32(this._expires, buffer, 16);
 			}

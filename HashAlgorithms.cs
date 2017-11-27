@@ -113,9 +113,7 @@ namespace Enyim
 		/// <summary>
 		/// Initializes a new instance of the <see cref="FNV1a"/> class.
 		/// </summary>
-		public FNV1()
-		{
-		}
+		public FNV1() { }
 
 		/// <summary>
 		/// Initializes an instance of <see cref="FNV1a"/>.

@@ -1,3 +1,5 @@
+using System.Threading.Tasks;
+
 using Enyim.Caching.Memcached.Results;
 using Enyim.Caching.Memcached.Results.Extensions;
 
@@ -16,6 +18,22 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 		{
 			var response = new BinaryResponse();
 			var success = response.Read(socket);
+
+			this.StatusCode = StatusCode;
+			var result = new BinaryOperationResult()
+			{
+				Success = success,
+				StatusCode = this.StatusCode
+			};
+
+			result.PassOrFail(success, "Failed to read response");
+			return result;
+		}
+
+		protected internal override async Task<IOperationResult> ReadResponseAsync(PooledSocket socket)
+		{
+			var response = new BinaryResponse();
+			var success = await response.ReadAsync(socket);
 
 			this.StatusCode = StatusCode;
 			var result = new BinaryOperationResult()

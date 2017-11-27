@@ -8,9 +8,7 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 	/// </summary>
 	public class BinaryOperationFactory : IOperationFactory
 	{
-		public BinaryOperationFactory()
-		{
-		}
+		public BinaryOperationFactory() { }
 
 		IGetOperation IOperationFactory.Get(string key)
 		{

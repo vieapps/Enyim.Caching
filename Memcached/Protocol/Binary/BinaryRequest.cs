@@ -23,7 +23,7 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 		public BinaryRequest(byte commandCode)
 		{
 			this.Operation = commandCode;
-			this.CorrelationId = Interlocked.Increment(ref InstanceCounter); // session id
+			this.CorrelationId = Interlocked.Increment(ref InstanceCounter); // session ID
 		}
 
 		public unsafe IList<ArraySegment<byte>> CreateBuffer()
@@ -85,8 +85,8 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 				buffer[0x0e] = (byte)(this.CorrelationId >> 8);
 				buffer[0x0f] = (byte)(this.CorrelationId & 255);
 
-				ulong cas = this.Cas;
 				// CAS
+				ulong cas = this.Cas;
 				if (cas > 0)
 				{
 					// skip this if no cas is specfied

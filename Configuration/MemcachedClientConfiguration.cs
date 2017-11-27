@@ -22,7 +22,7 @@ namespace Enyim.Caching.Configuration
 	public class MemcachedClientConfiguration : IMemcachedClientConfiguration
 	{
 		// these are lazy initialized in the getters
-		Type _nodeLocatorType;
+		Type _nodeLocator;
 		ITranscoder _transcoder;
 		IMemcachedKeyTransformer _keyTransformer;
 		ILogger _logger;
@@ -70,11 +70,11 @@ namespace Enyim.Caching.Configuration
 			{
 				try
 				{
-					var authenticationType = Type.GetType(configuration.Authentication.Type);
-					if (authenticationType != null)
+					var type = Type.GetType(configuration.Authentication.Type);
+					if (type != null)
 					{
 						if (this._logger.IsEnabled(LogLevel.Debug))
-							this._logger.LogDebug($"Authentication type is {authenticationType}");
+							this._logger.LogDebug($"User '{type}' authentication");
 
 						this.Authentication = new AuthenticationConfiguration()
 						{
@@ -88,13 +88,11 @@ namespace Enyim.Caching.Configuration
 						}
 					}
 					else
-					{
-						this._logger.LogError($"Unable to load authentication type {configuration.Authentication.Type}.");
-					}
+						this._logger.LogError($"Unable to load '{configuration.Authentication.Type}' authentication");
 				}
 				catch (Exception ex)
 				{
-					this._logger.LogError(ex, $"Unable to load authentication type {configuration.Authentication.Type}.");
+					this._logger.LogError(ex, $"Unable to load '{configuration.Authentication.Type}' authentication");
 				}
 			}
 
@@ -105,22 +103,40 @@ namespace Enyim.Caching.Configuration
 					var keyTransformerType = Type.GetType(configuration.KeyTransformer);
 					if (keyTransformerType != null)
 					{
-						this.KeyTransformer = FastActivator.Create(keyTransformerType) as IMemcachedKeyTransformer;
+						this._keyTransformer = FastActivator.Create(keyTransformerType) as IMemcachedKeyTransformer;
 						if (this._logger.IsEnabled(LogLevel.Debug))
-							this._logger.LogDebug($"Use '{configuration.KeyTransformer}' of key-transformer");
+							this._logger.LogDebug($"Use '{configuration.KeyTransformer}' key-transformer");
 					}
 				}
 				catch (Exception ex)
 				{
-					this._logger.LogError(ex, $"Unable to load '{configuration.KeyTransformer}' of key-transformer");
+					this._logger.LogError(ex, $"Unable to load '{configuration.KeyTransformer}' key-transformer");
 				}
 			}
 
-			if (configuration.Transcoder != null)
-				this._transcoder = configuration.Transcoder;
+			if (!string.IsNullOrWhiteSpace(configuration.Transcoder))
+				try
+				{
+					this._transcoder = FastActivator.Create(Type.GetType(configuration.Transcoder)) as ITranscoder;
+					if (this._logger.IsEnabled(LogLevel.Debug))
+						this._logger.LogDebug($"Use '{configuration.Transcoder}' transcoder");
+				}
+				catch (Exception ex)
+				{
+					this._logger.LogError(ex, $"Unable to load '{configuration.Transcoder}' transcoder");
+				}
 
-			if (configuration.NodeLocatorFactory != null)
-				this.NodeLocatorFactory = configuration.NodeLocatorFactory;
+			if (!string.IsNullOrWhiteSpace(configuration.NodeLocator))
+				try
+				{
+					this.NodeLocator = Type.GetType(configuration.NodeLocator);
+					if (this._logger.IsEnabled(LogLevel.Debug))
+						this._logger.LogDebug($"Use '{configuration.NodeLocator}' node-locator");
+				}
+				catch (Exception ex)
+				{
+					this._logger.LogError(ex, $"Unable to load '{configuration.NodeLocator}' node-locator");
+				}
 		}
 
 		/// <summary>
@@ -168,22 +184,27 @@ namespace Enyim.Caching.Configuration
 
 				var failurePolicy = socketpool.Attributes["failurePolicy"]?.Value;
 				if ("throttling" == failurePolicy)
-				{
-					var failureThreshold = Convert.ToInt32(socketpool.Attributes["failureThreshold"]?.Value ?? "4");
-					var resetAfter = TimeSpan.Parse(socketpool.Attributes["resetAfter"]?.Value ?? "00:05:00");
-					this.SocketPool.FailurePolicyFactory = new ThrottlingFailurePolicyFactory(failureThreshold, resetAfter);
-				}
+					try
+					{
+						var failureThreshold = Convert.ToInt32(socketpool.Attributes["failureThreshold"]?.Value ?? "4");
+						var resetAfter = TimeSpan.Parse(socketpool.Attributes["resetAfter"]?.Value ?? "00:05:00");
+						this.SocketPool.FailurePolicyFactory = new ThrottlingFailurePolicyFactory(failureThreshold, resetAfter);
+					}
+					catch (Exception ex)
+					{
+						this._logger.LogError(ex, $"Unable to set '{socketpool.Attributes["failurePolicy"].Value}' failure policy");
+					}
 			}
 
 			if (configuration.Section.SelectSingleNode("authentication") is XmlNode authentication)
 				if (authentication.Attributes["type"]?.Value != null)
 					try
 					{
-						var authenticationType = Type.GetType(authentication.Attributes["type"].Value);
-						if (authenticationType != null)
+						var type = Type.GetType(authentication.Attributes["type"].Value);
+						if (type != null)
 						{
 							if (this._logger.IsEnabled(LogLevel.Debug))
-								this._logger.LogDebug($"Authentication type is {authenticationType}");
+								this._logger.LogDebug($"Use '{type}' authentication");
 
 							this.Authentication = new AuthenticationConfiguration()
 							{
@@ -197,13 +218,11 @@ namespace Enyim.Caching.Configuration
 								this.Authentication.Parameters.Add("password", authentication.Attributes["password"].Value);
 						}
 						else
-						{
-							this._logger.LogError($"Unable to load authentication type [{authentication.Attributes["type"].Value}]");
-						}
+							this._logger.LogError($"Unable to load '{authentication.Attributes["type"].Value}' authentication");
 					}
 					catch (Exception ex)
 					{
-						this._logger.LogError(ex, $"Unable to load authentication type [{authentication.Attributes["type"].Value}]");
+						this._logger.LogError(ex, $"Unable to load '{authentication.Attributes["type"].Value}' authentication");
 					}
 
 			if (configuration.Section.SelectSingleNode("keyTransformer") is XmlNode keyTransformer)
@@ -212,11 +231,11 @@ namespace Enyim.Caching.Configuration
 					{
 						this._keyTransformer = FastActivator.Create(Type.GetType(keyTransformer.Attributes["type"].Value)) as IMemcachedKeyTransformer;
 						if (this._logger.IsEnabled(LogLevel.Debug))
-							this._logger.LogDebug($"Use '{keyTransformer.Attributes["type"].Value}' of key-transformer");
+							this._logger.LogDebug($"Use '{keyTransformer.Attributes["type"].Value}' key-transformer");
 					}
 					catch (Exception ex)
 					{
-						this._logger.LogError(ex, $"Unable to load key transformer [{keyTransformer.Attributes["type"].Value}]");
+						this._logger.LogError(ex, $"Unable to load '{keyTransformer.Attributes["type"].Value}' key-transformer");
 					}
 
 			if (configuration.Section.SelectSingleNode("transcoder") is XmlNode transcoder)
@@ -229,20 +248,20 @@ namespace Enyim.Caching.Configuration
 					}
 					catch (Exception ex)
 					{
-						this._logger.LogError(ex, $"Unable to load transcoder [{transcoder.Attributes["type"].Value}]");
+						this._logger.LogError(ex, $"Unable to load '{transcoder.Attributes["type"].Value}' transcoder");
 					}
 
 			if (configuration.Section.SelectSingleNode("nodeLocator") is XmlNode nodeLocator)
 				if (nodeLocator.Attributes["type"]?.Value != null)
 					try
 					{
-						this._nodeLocatorType = Type.GetType(nodeLocator.Attributes["type"].Value);
+						this.NodeLocator = Type.GetType(nodeLocator.Attributes["type"].Value);
 						if (this._logger.IsEnabled(LogLevel.Debug))
 							this._logger.LogDebug($"Use '{nodeLocator.Attributes["type"].Value}' node-locator");
 					}
 					catch (Exception ex)
 					{
-						this._logger.LogError(ex, $"Unable to load node-locator [{nodeLocator.Attributes["type"].Value}]");
+						this._logger.LogError(ex, $"Unable to load '{nodeLocator.Attributes["type"].Value}' node-locator");
 					}
 		}
 
@@ -304,17 +323,17 @@ namespace Enyim.Caching.Configuration
 		/// <summary>
 		/// Gets or sets the Type of the <see cref="Enyim.Caching.Memcached.IMemcachedNodeLocator"/> which will be used to assign items to Memcached nodes.
 		/// </summary>
-		/// <remarks>If both <see cref="M:NodeLocator"/> and  <see cref="M:NodeLocatorFactory"/> are assigned then the latter takes precedence.</remarks>
+		/// <remarks>If both <see cref="NodeLocator"/> and  <see cref="NodeLocatorFactory"/> are assigned then the latter takes precedence.</remarks>
 		public Type NodeLocator
 		{
 			get
 			{
-				return this._nodeLocatorType;
+				return this._nodeLocator;
 			}
 			set
 			{
 				ConfigurationHelper.CheckForInterface(value, typeof(IMemcachedNodeLocator));
-				this._nodeLocatorType = value;
+				this._nodeLocator = value;
 			}
 		}
 
@@ -366,13 +385,11 @@ namespace Enyim.Caching.Configuration
 
 		IMemcachedNodeLocator IMemcachedClientConfiguration.CreateNodeLocator()
 		{
-			var factory = this.NodeLocatorFactory;
-			if (factory != null)
-				return factory.Create();
-
-			return this.NodeLocator == null
-				? new DefaultNodeLocator()
-				: FastActivator.Create(this.NodeLocator) as IMemcachedNodeLocator;
+			return this.NodeLocatorFactory != null
+				? this.NodeLocatorFactory.Create()
+				: this.NodeLocator == null
+					? new KetamaNodeLocator()
+					: FastActivator.Create(this.NodeLocator) as IMemcachedNodeLocator;
 		}
 
 		ITranscoder IMemcachedClientConfiguration.CreateTranscoder()
@@ -421,9 +438,9 @@ namespace Enyim.Caching.Configuration
 
 		public string KeyTransformer { get; set; }
 
-		public ITranscoder Transcoder { get; set; }
+		public string Transcoder { get; set; }
 
-		public IProviderFactory<IMemcachedNodeLocator> NodeLocatorFactory { get; set; }
+		public string NodeLocator { get; set; }
 
 		public MemcachedClientOptions Value => this;
 	}
