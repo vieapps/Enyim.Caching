@@ -536,7 +536,7 @@ namespace Enyim.Caching.Memcached
 		}
 		#endregion
 
-		#region Execute an operation
+		#region [ Execute an operation   ]
 		protected virtual IPooledSocketResult ExecuteOperation(IOperation op)
 		{
 			var result = this.Acquire();

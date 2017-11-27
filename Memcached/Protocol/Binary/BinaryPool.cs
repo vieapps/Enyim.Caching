@@ -13,27 +13,21 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 	/// </summary>
 	public class BinaryPool : DefaultServerPool
 	{
-		ISaslAuthenticationProvider _authenticationProvider;
 		IMemcachedClientConfiguration _configuration;
+		ISaslAuthenticationProvider _authenticationProvider;
 
 		public BinaryPool(IMemcachedClientConfiguration configuration) : base(configuration, new BinaryOperationFactory())
 		{
-			this._authenticationProvider = BinaryPool.GetProvider(configuration);
 			this._configuration = configuration;
+			this._authenticationProvider = configuration.Authentication != null && !string.IsNullOrWhiteSpace(configuration.Authentication.Type)
+				? FastActivator.Create(Type.GetType(configuration.Authentication.Type)) as ISaslAuthenticationProvider
+				: null;
+			this._authenticationProvider?.Initialize(configuration.Authentication.Parameters);
 		}
 
 		protected override IMemcachedNode CreateNode(EndPoint endpoint)
 		{
 			return new BinaryNode(endpoint, this._configuration.SocketPool, this._authenticationProvider);
-		}
-
-		static ISaslAuthenticationProvider GetProvider(IMemcachedClientConfiguration configuration)
-		{
-			var provider = configuration.Authentication != null && !string.IsNullOrWhiteSpace(configuration.Authentication.Type)
-				? FastActivator.Create(Type.GetType(configuration.Authentication.Type)) as ISaslAuthenticationProvider
-				: null;
-			provider?.Initialize(configuration.Authentication.Parameters);
-			return provider;
 		}
 	}
 }

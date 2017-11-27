@@ -182,11 +182,11 @@ namespace Enyim.Caching.Memcached
 		{
 			this.CheckDisposed();
 
-			this._socket.Send(buffer, offset, length, SocketFlags.None, out SocketError status);
-			if (status != SocketError.Success)
+			this._socket.Send(buffer, offset, length, SocketFlags.None, out SocketError errorCode);
+			if (errorCode != SocketError.Success)
 			{
 				this._isAlive = false;
-				throw new IOException($"Failed to write to the socket '{this._endpoint}'. Error: {status}");
+				throw new IOException($"Failed to write to the socket '{this._endpoint}'. Error: {errorCode}");
 			}
 		}
 
@@ -225,11 +225,11 @@ namespace Enyim.Caching.Memcached
 		{
 			this.CheckDisposed();
 
-			this._socket.Send(buffers, SocketFlags.None, out SocketError status);
-			if (status != SocketError.Success)
+			this._socket.Send(buffers, SocketFlags.None, out SocketError errorCode);
+			if (errorCode != SocketError.Success)
 			{
 				this._isAlive = false;
-				throw new IOException($"Failed to write to the socket '{this._endpoint}'. Error: {status}");
+				throw new IOException($"Failed to write to the socket '{this._endpoint}'. Error: {errorCode}");
 			}
 		}
 

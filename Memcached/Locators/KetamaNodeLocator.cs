@@ -73,7 +73,7 @@ namespace Enyim.Caching.Memcached
 				// 01 02 03 04 05 06 07
 				// server will be stored with keys 0x07060504 & 0x03020100
 				string address = currentNode.EndPoint.ToString();
-				for (int mutation = 0; mutation < ServerAddressMutations / partCount; mutation++)
+				for (int mutation = 0; mutation < KetamaNodeLocator.ServerAddressMutations / partCount; mutation++)
 				{
 					var data = hashAlgorithm.ComputeHash(Encoding.ASCII.GetBytes(address + "-" + mutation));
 					for (var part = 0; part < partCount; part++)
@@ -128,8 +128,11 @@ namespace Enyim.Caching.Memcached
 			var id = this._lookupData;
 			switch (id.Servers.Length)
 			{
-				case 0: return null;
-				case 1: var tmp = id.Servers[0]; return tmp.IsAlive ? tmp : null;
+				case 0:
+					return null;
+				case 1:
+					var tmp = id.Servers[0];
+					return tmp.IsAlive ? tmp : null;
 			}
 
 			var node = KetamaNodeLocator.LocateNode(id, this.GetKeyHash(key));
@@ -181,16 +184,13 @@ namespace Enyim.Caching.Memcached
 				// this is the nearest server in the list
 				foundIndex = ~foundIndex;
 
+				// it's smaller than everything, so use the last server (with the highest key)
 				if (foundIndex == 0)
-				{
-					// it's smaller than everything, so use the last server (with the highest key)
 					foundIndex = id.keys.Length - 1;
-				}
+
+				// the key was larger than all server keys, so return the first server
 				else if (foundIndex >= id.keys.Length)
-				{
-					// the key was larger than all server keys, so return the first server
 					foundIndex = 0;
-				}
 			}
 
 			return foundIndex < 0 || foundIndex > id.keys.Length
