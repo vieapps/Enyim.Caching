@@ -39,7 +39,7 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 
 		public BinaryResponse()
 		{
-			this._logger = LogManager.CreateLogger<BinaryResponse>();
+			this._logger = Logger.CreateLogger<BinaryResponse>();
 			this.StatusCode = -1;
 		}
 

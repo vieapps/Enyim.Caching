@@ -20,7 +20,7 @@ namespace Enyim.Caching.Memcached.Protocol.Text
 
 		public StatsOperation(string type)
 		{
-			this._logger = LogManager.CreateLogger<StatsOperation>();
+			this._logger = Logger.CreateLogger<StatsOperation>();
 			this._type = type;
 		}
 

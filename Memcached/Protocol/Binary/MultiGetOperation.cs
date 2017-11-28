@@ -24,7 +24,7 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 
 		public MultiGetOperation(IList<string> keys) : base(keys)
 		{
-			this._logger = LogManager.CreateLogger<MultiGetOperation>();
+			this._logger = Logger.CreateLogger<MultiGetOperation>();
 		}
 
 		protected override BinaryRequest Build(string key)
@@ -79,7 +79,6 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 			var result = new TextOperationResult();
 
 			var response = new BinaryResponse();
-
 			while (response.Read(socket))
 			{
 				this.StatusCode = response.StatusCode;
@@ -116,7 +115,6 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 			var result = new TextOperationResult();
 
 			var response = new BinaryResponse();
-
 			while (await response.ReadAsync(socket).ConfigureAwait(false))
 			{
 				this.StatusCode = response.StatusCode;
@@ -148,8 +146,8 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 
 		protected internal override bool ReadResponseAsync(PooledSocket socket, Action<bool> next)
 		{
-			this._result = new Dictionary<string, CacheItem>();
 			this.Cas = new Dictionary<string, ulong>();
+			this._result = new Dictionary<string, CacheItem>();
 
 			this._socket = socket;
 			this._response = new BinaryResponse();
@@ -210,7 +208,7 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 				this.Cas[key] = reader.CAS;
 
 				if (this._logger.IsEnabled(LogLevel.Debug))
-					this._logger.LogDebug($"Multi-Get: Reading data of '{key}' (StoreResult) - CAS: {reader.CAS} - Flags: {flags}");
+					this._logger.LogDebug($"Multi-Get: Reading data of '{key}' (ReadResponseAsync+StoreResult) - CAS: {reader.CAS} - Flags: {flags}");
 			}
 		}
 

@@ -35,7 +35,7 @@ namespace Enyim.Caching.Memcached.Protocol.Text
 			if (String.Compare(response, TextSocketHelper.GenericErrorResponse, StringComparison.Ordinal) == 0)
 				throw new NotSupportedException("Operation is not supported by the server or the request was malformed. If the latter please report the bug to the developers.");
 
-			TextSocketHelper.Logger = TextSocketHelper.Logger ?? LogManager.CreateLogger(typeof(TextSocketHelper));
+			TextSocketHelper.Logger = TextSocketHelper.Logger ?? Caching.Logger.CreateLogger(typeof(TextSocketHelper));
 			if (TextSocketHelper.Logger.IsEnabled(LogLevel.Debug))
 				TextSocketHelper.Logger.LogDebug("Received response: " + response);
 
@@ -87,7 +87,7 @@ namespace Enyim.Caching.Memcached.Protocol.Text
 
 				var result = Encoding.ASCII.GetString(stream.ToArray(), 0, (int)stream.Length);
 
-				Logger = Logger ?? LogManager.CreateLogger(typeof(TextSocketHelper));
+				Logger = Logger ?? Caching.Logger.CreateLogger(typeof(TextSocketHelper));
 				if (Logger.IsEnabled(LogLevel.Debug))
 					Logger.LogDebug("ReadLine: " + result);
 

@@ -19,7 +19,7 @@ namespace Enyim.Caching.Memcached.Protocol.Text
 
 		public MultiGetOperation(IList<string> keys) : base(keys)
 		{
-			this._logger = LogManager.CreateLogger<MultiGetOperation>();
+			this._logger = Logger.CreateLogger<MultiGetOperation>();
 		}
 
 		protected internal override IList<ArraySegment<byte>> GetBuffer()

@@ -31,7 +31,7 @@ namespace Enyim.Caching.Memcached
 
 		public PooledSocket(EndPoint endpoint, TimeSpan connectionTimeout, TimeSpan receiveTimeout)
 		{
-			this._logger = LogManager.CreateLogger<PooledSocket>();
+			this._logger = Logger.CreateLogger<PooledSocket>();
 
 			var timeout = receiveTimeout == TimeSpan.MaxValue
 			    ? Timeout.Infinite

@@ -82,8 +82,8 @@ namespace Enyim.Caching
 		#region Prepare
 		void Prepare(ILoggerFactory loggerFactory, IMemcachedClientConfiguration configuration)
 		{
-			LogManager.AssignLoggerFactory(loggerFactory);
-			this._logger = LogManager.CreateLogger<MemcachedClient>();
+			Logger.AssignLoggerFactory(loggerFactory);
+			this._logger = Logger.CreateLogger<MemcachedClient>();
 
 			this._keyTransformer = configuration.CreateKeyTransformer() ?? new DefaultKeyTransformer();
 			this._transcoder = configuration.CreateTranscoder() ?? new DefaultTranscoder();
@@ -1383,19 +1383,16 @@ namespace Enyim.Caching
 		protected Dictionary<IMemcachedNode, IList<string>> GroupByServer(IEnumerable<string> keys)
 		{
 			var results = new Dictionary<IMemcachedNode, IList<string>>();
-
 			foreach (var key in keys)
 			{
 				var node = this._serverPool.Locate(key);
-				if (node == null)
-					continue;
-
-				if (!results.TryGetValue(node, out IList<string> list))
-					results[node] = list = new List<string>(4);
-
-				list.Add(key);
+				if (node != null)
+				{
+					if (!results.TryGetValue(node, out IList<string> list))
+						results[node] = list = new List<string>(4);
+					list.Add(key);
+				}
 			}
-
 			return results;
 		}
 
@@ -1406,7 +1403,7 @@ namespace Enyim.Caching
 			var hashed = keys.ToDictionary(key => this._keyTransformer.Transform(key), key => key);
 			var values = new Dictionary<string, T>(hashed.Count);
 
-			// action to execute command in parallel
+			// execute get commands in parallel
 			Func<IMemcachedNode, IList<string>, Task> func = (node, nodeKeys) =>
 			{
 				return Task.Run(() =>
@@ -1422,6 +1419,7 @@ namespace Enyim.Caching
 							foreach (var kvp in command.Result)
 								if (hashed.TryGetValue(kvp.Key, out string original))
 								{
+									// collect the cached item
 									var result = collector(command, kvp);
 
 									// the lock will serialize the merge, but at least the commands were not waiting on each other
@@ -1439,11 +1437,11 @@ namespace Enyim.Caching
 			// execute each list of keys on their respective node (in parallel)
 			var tasks = this.GroupByServer(hashed.Keys)
 				.Select(slice => func(slice.Key, slice.Value))
-				.ToList();
+				.ToArray();
 
 			// wait for all nodes to finish
-			if (tasks.Count > 0)
-				Task.WaitAll(tasks.ToArray(), TimeSpan.FromSeconds(13));
+			if (tasks.Length > 0)
+				Task.WaitAll(tasks, TimeSpan.FromSeconds(13));
 
 			return values;
 		}
@@ -1504,6 +1502,7 @@ namespace Enyim.Caching
 						foreach (var kvp in command.Result)
 							if (hashed.TryGetValue(kvp.Key, out string original))
 							{
+								// collect the cached item
 								var result = collector(command, kvp);
 
 								// the lock will serialize the merge, but at least the commands were not waiting on each other

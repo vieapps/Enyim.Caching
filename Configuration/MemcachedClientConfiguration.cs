@@ -267,8 +267,8 @@ namespace Enyim.Caching.Configuration
 
 		void PrepareLogger(ILoggerFactory loggerFactory)
 		{
-			LogManager.AssignLoggerFactory(loggerFactory);
-			this._logger = LogManager.CreateLogger<MemcachedClientConfiguration>();
+			Logger.AssignLoggerFactory(loggerFactory);
+			this._logger = Logger.CreateLogger<MemcachedClientConfiguration>();
 		}
 
 		/// <summary>
@@ -383,6 +383,11 @@ namespace Enyim.Caching.Configuration
 			return this.KeyTransformer;
 		}
 
+		ITranscoder IMemcachedClientConfiguration.CreateTranscoder()
+		{
+			return this.Transcoder;
+		}
+
 		IMemcachedNodeLocator IMemcachedClientConfiguration.CreateNodeLocator()
 		{
 			return this.NodeLocatorFactory != null
@@ -390,11 +395,6 @@ namespace Enyim.Caching.Configuration
 				: this.NodeLocator != null
 					? FastActivator.Create(this.NodeLocator) as IMemcachedNodeLocator
 					: new KetamaNodeLocator();
-		}
-
-		ITranscoder IMemcachedClientConfiguration.CreateTranscoder()
-		{
-			return this.Transcoder;
 		}
 
 		IServerPool IMemcachedClientConfiguration.CreatePool()
@@ -409,7 +409,6 @@ namespace Enyim.Caching.Configuration
 			}
 			throw new ArgumentOutOfRangeException($"Unknown protocol: [{this.Protocol}]");
 		}
-
 	}
 
 	#region Configuration helpers

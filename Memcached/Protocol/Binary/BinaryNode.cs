@@ -18,7 +18,7 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 		public BinaryNode(EndPoint endpoint, ISocketPoolConfiguration config, ISaslAuthenticationProvider authenticationProvider) : base(endpoint, config)
 		{
 			this._authenticationProvider = authenticationProvider;
-			this._logger = LogManager.CreateLogger<BinaryNode>();
+			this._logger = Logger.CreateLogger<BinaryNode>();
 		}
 
 		/// <summary>

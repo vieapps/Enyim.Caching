@@ -4,24 +4,24 @@ using Microsoft.Extensions.Logging;
 
 namespace Enyim.Caching
 {
-	public static class LogManager
+	public static class Logger
 	{
 		static ILoggerFactory LoggerFactory;
 
 		public static void AssignLoggerFactory(ILoggerFactory loggerFactory)
 		{
-			if (LogManager.LoggerFactory == null && loggerFactory != null)
-				LogManager.LoggerFactory = loggerFactory;
+			if (Logger.LoggerFactory == null && loggerFactory != null)
+				Logger.LoggerFactory = loggerFactory;
 		}
 
 		public static ILogger CreateLogger(Type type)
 		{
-			return (LogManager.LoggerFactory ?? new NullLoggerFactory()).CreateLogger(type);
+			return (Logger.LoggerFactory ?? new NullLoggerFactory()).CreateLogger(type);
 		}
 
 		public static ILogger CreateLogger<T>()
 		{
-			return LogManager.CreateLogger(typeof(T));
+			return Logger.CreateLogger(typeof(T));
 		}
 	}
 }

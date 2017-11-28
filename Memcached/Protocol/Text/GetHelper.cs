@@ -52,7 +52,7 @@ namespace Enyim.Caching.Memcached.Protocol.Text
 
 			var result = new GetResponse(parts[1], flags, cas, allData);
 
-			GetHelper.Logger = GetHelper.Logger ?? LogManager.CreateLogger(typeof(GetHelper));
+			GetHelper.Logger = GetHelper.Logger ?? Caching.Logger.CreateLogger(typeof(GetHelper));
 			if (GetHelper.Logger.IsEnabled(LogLevel.Debug))
 				GetHelper.Logger.LogDebug("Received value. Data type: {0}, size: {1}.", result.Item.Flags, result.Item.Data.Count);
 

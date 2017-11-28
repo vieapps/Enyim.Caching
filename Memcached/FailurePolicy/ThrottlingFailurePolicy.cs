@@ -25,7 +25,7 @@ namespace Enyim.Caching.Memcached
 		/// <param name="failureThreshold">Specifies the number of failures that must occur in the specified time window to fail a node.</param>
 		public ThrottlingFailurePolicy(int resetAfter, int failureThreshold)
 		{
-			this._logger = LogManager.CreateLogger<ThrottlingFailurePolicy>();
+			this._logger = Logger.CreateLogger<ThrottlingFailurePolicy>();
 			this._isDebugEnabled = this._logger.IsEnabled(LogLevel.Debug);
 
 			this.resetAfter = resetAfter;

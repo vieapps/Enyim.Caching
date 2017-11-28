@@ -44,7 +44,7 @@ namespace Enyim.Caching.Memcached
 			if (socketPoolConfig.ConnectionTimeout.TotalMilliseconds >= Int32.MaxValue)
 				throw new InvalidOperationException($"ConnectionTimeout must be < {Int32.MaxValue}");
 
-			this._logger = LogManager.CreateLogger<MemcachedNode>();
+			this._logger = Logger.CreateLogger<MemcachedNode>();
 
 			this._endpoint = endpoint;
 			this._config = socketPoolConfig;
@@ -256,7 +256,7 @@ namespace Enyim.Caching.Memcached
 				this._semaphore = new Semaphore(this._maxItems, this._maxItems);
 				this._freeItems = new InterlockedStack<PooledSocket>();
 
-				this._logger = LogManager.CreateLogger<InternalPoolImpl>();
+				this._logger = Logger.CreateLogger<InternalPoolImpl>();
 				this._isDebugEnabled = this._logger.IsEnabled(LogLevel.Debug);
 			}
 

@@ -55,7 +55,7 @@ namespace Enyim.Caching.Memcached
 
 		internal ServerStats(Dictionary<EndPoint, Dictionary<string, string>> results)
 		{
-			this._logger = LogManager.CreateLogger<ServerStats>();
+			this._logger = Logger.CreateLogger<ServerStats>();
 			this.results = results;
 		}
 

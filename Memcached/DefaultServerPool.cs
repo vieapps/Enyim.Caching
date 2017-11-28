@@ -31,7 +31,7 @@ namespace Enyim.Caching.Memcached
 			this._configuration = configuration ?? throw new ArgumentNullException(nameof(configuration), "Configuration is invalid");
 			this._factory = opFactory ?? throw new ArgumentNullException(nameof(opFactory), "Operation factory is invalid");
 			this._deadTimeoutMsec = (int)this._configuration.SocketPool.DeadTimeout.TotalMilliseconds;
-			this._logger = LogManager.CreateLogger<DefaultServerPool>();
+			this._logger = Logger.CreateLogger<DefaultServerPool>();
 		}
 
 		~DefaultServerPool()
