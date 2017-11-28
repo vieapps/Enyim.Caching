@@ -321,6 +321,21 @@ namespace Enyim.Caching.Configuration
 		}
 
 		/// <summary>
+		/// Gets or sets the <see cref="Enyim.Caching.Memcached.ITranscoder"/> which will be used serialize or deserialize items.
+		/// </summary>
+		public ITranscoder Transcoder
+		{
+			get
+			{
+				return this._transcoder ?? (this._transcoder = new DefaultTranscoder());
+			}
+			set
+			{
+				this._transcoder = value;
+			}
+		}
+
+		/// <summary>
 		/// Gets or sets the Type of the <see cref="Enyim.Caching.Memcached.IMemcachedNodeLocator"/> which will be used to assign items to Memcached nodes.
 		/// </summary>
 		/// <remarks>If both <see cref="NodeLocator"/> and  <see cref="NodeLocatorFactory"/> are assigned then the latter takes precedence.</remarks>
@@ -342,21 +357,6 @@ namespace Enyim.Caching.Configuration
 		/// </summary>
 		/// <remarks>If both <see cref="NodeLocator"/> and  <see cref="NodeLocatorFactory"/> are assigned then the latter takes precedence.</remarks>
 		public IProviderFactory<IMemcachedNodeLocator> NodeLocatorFactory { get; set; }
-
-		/// <summary>
-		/// Gets or sets the <see cref="Enyim.Caching.Memcached.ITranscoder"/> which will be used serialize or deserialize items.
-		/// </summary>
-		public ITranscoder Transcoder
-		{
-			get
-			{
-				return this._transcoder ?? (this._transcoder = new DefaultTranscoder());
-			}
-			set
-			{
-				this._transcoder = value;
-			}
-		}
 
 		/// <summary>
 		/// Gets or sets the type of the communication between client and server.
@@ -387,9 +387,9 @@ namespace Enyim.Caching.Configuration
 		{
 			return this.NodeLocatorFactory != null
 				? this.NodeLocatorFactory.Create()
-				: this.NodeLocator == null
-					? new KetamaNodeLocator()
-					: FastActivator.Create(this.NodeLocator) as IMemcachedNodeLocator;
+				: this.NodeLocator != null
+					? FastActivator.Create(this.NodeLocator) as IMemcachedNodeLocator
+					: new KetamaNodeLocator();
 		}
 
 		ITranscoder IMemcachedClientConfiguration.CreateTranscoder()
