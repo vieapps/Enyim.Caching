@@ -160,12 +160,7 @@ namespace Enyim.Caching
 		IStoreOperationResult PerformStore(StoreMode mode, string key, object value, uint expires, ulong cas = 0)
 		{
 			ulong tmp = cas;
-			var retval = this.PerformStore(mode, key, value, expires, ref tmp, out int status);
-			retval.StatusCode = status;
-
-			if (retval.Success)
-				retval.Cas = tmp;
-			return retval;
+			return this.PerformStore(mode, key, value, expires, ref tmp, out int status);
 		}
 
 		/// <summary>
