@@ -323,7 +323,7 @@ namespace CacheUtils
 						if (value.GetType().IsSerializable)
 							using (var stream = new MemoryStream())
 							{
-								(new BinaryFormatter()).Serialize(stream, value);
+								new BinaryFormatter().Serialize(stream, value);
 								data = stream.GetBuffer();
 							}
 						else
@@ -428,7 +428,7 @@ namespace CacheUtils
 				default:
 					using (var stream = new MemoryStream(data, start, count))
 					{
-						return (new BinaryFormatter()).Deserialize(stream);
+						return new BinaryFormatter().Deserialize(stream);
 					}
 			}
 		}

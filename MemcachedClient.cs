@@ -1787,7 +1787,7 @@ namespace Enyim.Caching
 		}
 		#endregion
 
-		#region IDistributedCache 
+		#region IDistributedCache
 		void IDistributedCache.Set(string key, byte[] value, DistributedCacheEntryOptions options)
 		{
 			if (string.IsNullOrWhiteSpace(key))
@@ -1832,9 +1832,8 @@ namespace Enyim.Caching
 				throw new ArgumentNullException(nameof(key));
 			var value = this.Get<byte[]>(key);
 			var expires = value != null ? this.Get(key.GetIDistributedCacheExpirationKey()) : null;
-			if (value != null && expires != null && expires is TimeSpan)
-				if (this.Store(StoreMode.Replace, key, value, (TimeSpan)expires))
-					this.Store(StoreMode.Replace, key.GetIDistributedCacheExpirationKey(), expires, (TimeSpan)expires);
+			if (value != null && expires != null && expires is TimeSpan && this.Store(StoreMode.Replace, key, value, (TimeSpan)expires))
+				this.Store(StoreMode.Replace, key.GetIDistributedCacheExpirationKey(), expires, (TimeSpan)expires);
 		}
 
 		async Task IDistributedCache.RefreshAsync(string key, CancellationToken token = default(CancellationToken))
@@ -1843,9 +1842,8 @@ namespace Enyim.Caching
 				throw new ArgumentNullException(nameof(key));
 			var value = await this.GetAsync<byte[]>(key).ConfigureAwait(false);
 			var expires = value != null ? await this.GetAsync(key.GetIDistributedCacheExpirationKey()).ConfigureAwait(false) : null;
-			if (value != null && expires != null && expires is TimeSpan)
-				if (await this.StoreAsync(StoreMode.Replace, key, value, (TimeSpan)expires).ConfigureAwait(false))
-					await this.StoreAsync(StoreMode.Replace, key.GetIDistributedCacheExpirationKey(), expires, (TimeSpan)expires).ConfigureAwait(false);
+			if (value != null && expires != null && expires is TimeSpan && await this.StoreAsync(StoreMode.Replace, key, value, (TimeSpan)expires).ConfigureAwait(false))
+				await this.StoreAsync(StoreMode.Replace, key.GetIDistributedCacheExpirationKey(), expires, (TimeSpan)expires).ConfigureAwait(false);
 		}
 
 		void IDistributedCache.Remove(string key)
