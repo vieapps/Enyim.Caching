@@ -393,7 +393,7 @@ namespace Enyim.Caching
 		/// <returns>A CasResult object containing the version of the item and the result of the operation (true if the item was successfully stored in the cache; false otherwise).</returns>
 		public async Task<CasResult<bool>> CasAsync(StoreMode mode, string key, object value)
 		{
-			return await this.CasAsync(mode, key, value, 0);
+			return await this.CasAsync(mode, key, value, 0).ConfigureAwait(false);
 		}
 
 		/// <summary>
@@ -806,7 +806,7 @@ namespace Enyim.Caching
 		/// <remarks>If the client uses the Text protocol, the item must be inserted into the cache before it can be changed. It must be inserted as a <see cref="System.String"/>. Moreover the Text protocol only works with <see cref="System.UInt32"/> values, so return value -1 always indicates that the item was not found.</remarks>
 		public async Task<ulong> IncrementAsync(string key, ulong defaultValue, ulong delta)
 		{
-			return (await this.PerformMutateAsync(MutationMode.Increment, key, defaultValue, delta, 0)).Value;
+			return (await this.PerformMutateAsync(MutationMode.Increment, key, defaultValue, delta, 0).ConfigureAwait(false)).Value;
 		}
 
 		/// <summary>
@@ -820,7 +820,7 @@ namespace Enyim.Caching
 		/// <remarks>If the client uses the Text protocol, the item must be inserted into the cache before it can be changed. It must be inserted as a <see cref="System.String"/>. Moreover the Text protocol only works with <see cref="System.UInt32"/> values, so return value -1 always indicates that the item was not found.</remarks>
 		public async Task<ulong> IncrementAsync(string key, ulong defaultValue, ulong delta, TimeSpan validFor)
 		{
-			return (await this.PerformMutateAsync(MutationMode.Increment, key, defaultValue, delta, validFor.GetExpiration())).Value;
+			return (await this.PerformMutateAsync(MutationMode.Increment, key, defaultValue, delta, validFor.GetExpiration()).ConfigureAwait(false)).Value;
 		}
 
 		/// <summary>
@@ -834,7 +834,7 @@ namespace Enyim.Caching
 		/// <remarks>If the client uses the Text protocol, the item must be inserted into the cache before it can be changed. It must be inserted as a <see cref="System.String"/>. Moreover the Text protocol only works with <see cref="System.UInt32"/> values, so return value -1 always indicates that the item was not found.</remarks>
 		public async Task<ulong> IncrementAsync(string key, ulong defaultValue, ulong delta, DateTime expiresAt)
 		{
-			return (await this.PerformMutateAsync(MutationMode.Increment, key, defaultValue, delta, expiresAt.GetExpiration())).Value;
+			return (await this.PerformMutateAsync(MutationMode.Increment, key, defaultValue, delta, expiresAt.GetExpiration()).ConfigureAwait(false)).Value;
 		}
 
 		/// <summary>
@@ -848,7 +848,7 @@ namespace Enyim.Caching
 		/// <remarks>If the client uses the Text protocol, the item must be inserted into the cache before it can be changed. It must be inserted as a <see cref="System.String"/>. Moreover the Text protocol only works with <see cref="System.UInt32"/> values, so return value -1 always indicates that the item was not found.</remarks>
 		public async Task<CasResult<ulong>> IncrementAsync(string key, ulong defaultValue, ulong delta, ulong cas)
 		{
-			var result = await this.CasMutateAsync(MutationMode.Increment, key, defaultValue, delta, 0, cas);
+			var result = await this.CasMutateAsync(MutationMode.Increment, key, defaultValue, delta, 0, cas).ConfigureAwait(false);
 			return new CasResult<ulong>()
 			{
 				Cas = result.Cas,
@@ -869,7 +869,7 @@ namespace Enyim.Caching
 		/// <remarks>If the client uses the Text protocol, the item must be inserted into the cache before it can be changed. It must be inserted as a <see cref="System.String"/>. Moreover the Text protocol only works with <see cref="System.UInt32"/> values, so return value -1 always indicates that the item was not found.</remarks>
 		public async Task<CasResult<ulong>> IncrementAsync(string key, ulong defaultValue, ulong delta, TimeSpan validFor, ulong cas)
 		{
-			var result = await this.CasMutateAsync(MutationMode.Increment, key, defaultValue, delta, validFor.GetExpiration(), cas);
+			var result = await this.CasMutateAsync(MutationMode.Increment, key, defaultValue, delta, validFor.GetExpiration(), cas).ConfigureAwait(false);
 			return new CasResult<ulong>()
 			{
 				Cas = result.Cas,
@@ -890,7 +890,7 @@ namespace Enyim.Caching
 		/// <remarks>If the client uses the Text protocol, the item must be inserted into the cache before it can be changed. It must be inserted as a <see cref="System.String"/>. Moreover the Text protocol only works with <see cref="System.UInt32"/> values, so return value -1 always indicates that the item was not found.</remarks>
 		public async Task<CasResult<ulong>> IncrementAsync(string key, ulong defaultValue, ulong delta, DateTime expiresAt, ulong cas)
 		{
-			var result = await this.CasMutateAsync(MutationMode.Increment, key, defaultValue, delta, expiresAt.GetExpiration(), cas);
+			var result = await this.CasMutateAsync(MutationMode.Increment, key, defaultValue, delta, expiresAt.GetExpiration(), cas).ConfigureAwait(false);
 			return new CasResult<ulong>()
 			{
 				Cas = result.Cas,
@@ -909,7 +909,7 @@ namespace Enyim.Caching
 		/// <remarks>If the client uses the Text protocol, the item must be inserted into the cache before it can be changed. It must be inserted as a <see cref="System.String"/>. Moreover the Text protocol only works with <see cref="System.UInt32"/> values, so return value -1 always indicates that the item was not found.</remarks>
 		public async Task<ulong> DecrementAsync(string key, ulong defaultValue, ulong delta)
 		{
-			return (await this.PerformMutateAsync(MutationMode.Decrement, key, defaultValue, delta, 0)).Value;
+			return (await this.PerformMutateAsync(MutationMode.Decrement, key, defaultValue, delta, 0).ConfigureAwait(false)).Value;
 		}
 
 		/// <summary>
@@ -923,7 +923,7 @@ namespace Enyim.Caching
 		/// <remarks>If the client uses the Text protocol, the item must be inserted into the cache before it can be changed. It must be inserted as a <see cref="System.String"/>. Moreover the Text protocol only works with <see cref="System.UInt32"/> values, so return value -1 always indicates that the item was not found.</remarks>
 		public async Task<ulong> DecrementAsync(string key, ulong defaultValue, ulong delta, TimeSpan validFor)
 		{
-			return (await this.PerformMutateAsync(MutationMode.Decrement, key, defaultValue, delta, validFor.GetExpiration())).Value;
+			return (await this.PerformMutateAsync(MutationMode.Decrement, key, defaultValue, delta, validFor.GetExpiration()).ConfigureAwait(false)).Value;
 		}
 
 		/// <summary>
@@ -937,7 +937,7 @@ namespace Enyim.Caching
 		/// <remarks>If the client uses the Text protocol, the item must be inserted into the cache before it can be changed. It must be inserted as a <see cref="System.String"/>. Moreover the Text protocol only works with <see cref="System.UInt32"/> values, so return value -1 always indicates that the item was not found.</remarks>
 		public async Task<ulong> DecrementAsync(string key, ulong defaultValue, ulong delta, DateTime expiresAt)
 		{
-			return (await this.PerformMutateAsync(MutationMode.Decrement, key, defaultValue, delta, expiresAt.GetExpiration())).Value;
+			return (await this.PerformMutateAsync(MutationMode.Decrement, key, defaultValue, delta, expiresAt.GetExpiration()).ConfigureAwait(false)).Value;
 		}
 
 		/// <summary>
@@ -951,7 +951,7 @@ namespace Enyim.Caching
 		/// <remarks>If the client uses the Text protocol, the item must be inserted into the cache before it can be changed. It must be inserted as a <see cref="System.String"/>. Moreover the Text protocol only works with <see cref="System.UInt32"/> values, so return value -1 always indicates that the item was not found.</remarks>
 		public async Task<CasResult<ulong>> DecrementAsync(string key, ulong defaultValue, ulong delta, ulong cas)
 		{
-			var result = await this.CasMutateAsync(MutationMode.Decrement, key, defaultValue, delta, 0, cas);
+			var result = await this.CasMutateAsync(MutationMode.Decrement, key, defaultValue, delta, 0, cas).ConfigureAwait(false);
 			return new CasResult<ulong>()
 			{
 				Cas = result.Cas,
@@ -972,7 +972,7 @@ namespace Enyim.Caching
 		/// <remarks>If the client uses the Text protocol, the item must be inserted into the cache before it can be changed. It must be inserted as a <see cref="System.String"/>. Moreover the Text protocol only works with <see cref="System.UInt32"/> values, so return value -1 always indicates that the item was not found.</remarks>
 		public async Task<CasResult<ulong>> DecrementAsync(string key, ulong defaultValue, ulong delta, TimeSpan validFor, ulong cas)
 		{
-			var result = await this.CasMutateAsync(MutationMode.Decrement, key, defaultValue, delta, validFor.GetExpiration(), cas);
+			var result = await this.CasMutateAsync(MutationMode.Decrement, key, defaultValue, delta, validFor.GetExpiration(), cas).ConfigureAwait(false);
 			return new CasResult<ulong>()
 			{
 				Cas = result.Cas,
@@ -993,7 +993,7 @@ namespace Enyim.Caching
 		/// <remarks>If the client uses the Text protocol, the item must be inserted into the cache before it can be changed. It must be inserted as a <see cref="System.String"/>. Moreover the Text protocol only works with <see cref="System.UInt32"/> values, so return value -1 always indicates that the item was not found.</remarks>
 		public async Task<CasResult<ulong>> DecrementAsync(string key, ulong defaultValue, ulong delta, DateTime expiresAt, ulong cas)
 		{
-			var result = await this.CasMutateAsync(MutationMode.Decrement, key, defaultValue, delta, expiresAt.GetExpiration(), cas);
+			var result = await this.CasMutateAsync(MutationMode.Decrement, key, defaultValue, delta, expiresAt.GetExpiration(), cas).ConfigureAwait(false);
 			return new CasResult<ulong>()
 			{
 				Cas = result.Cas,
@@ -1130,7 +1130,7 @@ namespace Enyim.Caching
 		/// <returns>true if the data was successfully stored; false otherwise.</returns>
 		public async Task<bool> AppendAsync(string key, ArraySegment<byte> data)
 		{
-			return (await this.PerformConcatenateAsync(ConcatenationMode.Append, key, data)).Success;
+			return (await this.PerformConcatenateAsync(ConcatenationMode.Append, key, data).ConfigureAwait(false)).Success;
 		}
 
 		/// <summary>
@@ -1142,7 +1142,7 @@ namespace Enyim.Caching
 		/// <returns>true if the data was successfully stored; false otherwise.</returns>
 		public async Task<CasResult<bool>> AppendAsync(string key, ulong cas, ArraySegment<byte> data)
 		{
-			var result = await this.PerformConcatenateAsync(ConcatenationMode.Append, key, data, cas);
+			var result = await this.PerformConcatenateAsync(ConcatenationMode.Append, key, data, cas).ConfigureAwait(false);
 			return new CasResult<bool>()
 			{
 				Cas = result.Cas,
@@ -1156,7 +1156,7 @@ namespace Enyim.Caching
 		/// <returns>true if the data was successfully stored; false otherwise.</returns>
 		public async Task<bool> PrependAsync(string key, ArraySegment<byte> data)
 		{
-			return (await this.PerformConcatenateAsync(ConcatenationMode.Prepend, key, data)).Success;
+			return (await this.PerformConcatenateAsync(ConcatenationMode.Prepend, key, data).ConfigureAwait(false)).Success;
 		}
 
 		/// <summary>
@@ -1168,7 +1168,7 @@ namespace Enyim.Caching
 		/// <returns>true if the data was successfully stored; false otherwise.</returns>
 		public async Task<CasResult<bool>> PrependAsync(string key, ulong cas, ArraySegment<byte> data)
 		{
-			var result = await this.PerformConcatenateAsync(ConcatenationMode.Prepend, key, data, cas);
+			var result = await this.PerformConcatenateAsync(ConcatenationMode.Prepend, key, data, cas).ConfigureAwait(false);
 			return new CasResult<bool>()
 			{
 				Cas = result.Cas,
@@ -1327,7 +1327,7 @@ namespace Enyim.Caching
 		/// <returns>The retrieved item, or <value>null</value> if the key was not found.</returns>
 		public async Task<object> GetAsync(string key)
 		{
-			var result = await this.PerformTryGetAsync(key);
+			var result = await this.PerformTryGetAsync(key).ConfigureAwait(false);
 			return result.Success ? result.Value : null;
 		}
 
@@ -1339,7 +1339,7 @@ namespace Enyim.Caching
 		/// <returns>The retrieved item, or <value>null</value> if the key was not found.</returns>
 		public async Task<T> GetAsync<T>(string key)
 		{
-			var value = await this.GetAsync(key);
+			var value = await this.GetAsync(key).ConfigureAwait(false);
 			return value != null
 				? value is string && typeof(T) == typeof(Guid)
 					? (T)(object)new Guid(value as string)
@@ -1355,7 +1355,7 @@ namespace Enyim.Caching
 		/// <returns></returns>
 		public async Task<CasResult<T>> GetWithCasAsync<T>(string key)
 		{
-			var result = await this.PerformTryGetAsync(key);
+			var result = await this.PerformTryGetAsync(key).ConfigureAwait(false);
 			return new CasResult<T>()
 			{
 				Cas = result.Cas,
@@ -1629,7 +1629,7 @@ namespace Enyim.Caching
 		/// <returns>true if the item was successfully removed from the cache; false otherwise.</returns>
 		public async Task<bool> RemoveAsync(string key)
 		{
-			return (await this.PerformRemoveAsync(key)).Success;
+			return (await this.PerformRemoveAsync(key).ConfigureAwait(false)).Success;
 		}
 		#endregion
 
@@ -1841,8 +1841,8 @@ namespace Enyim.Caching
 		{
 			if (string.IsNullOrWhiteSpace(key))
 				throw new ArgumentNullException(nameof(key));
-			var value = await this.GetAsync<byte[]>(key);
-			var expires = value != null ? await this.GetAsync(key.GetIDistributedCacheExpirationKey()) : null;
+			var value = await this.GetAsync<byte[]>(key).ConfigureAwait(false);
+			var expires = value != null ? await this.GetAsync(key.GetIDistributedCacheExpirationKey()).ConfigureAwait(false) : null;
 			if (value != null && expires != null && expires is TimeSpan)
 				if (await this.StoreAsync(StoreMode.Replace, key, value, (TimeSpan)expires).ConfigureAwait(false))
 					await this.StoreAsync(StoreMode.Replace, key.GetIDistributedCacheExpirationKey(), expires, (TimeSpan)expires).ConfigureAwait(false);

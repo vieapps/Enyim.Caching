@@ -14,6 +14,9 @@
 		<GeneratePackageOnBuild>false</GeneratePackageOnBuild>
 		<PackageId>VIEApps.Enyim.Caching</PackageId>
 		<Version>1.4.0.1801</Version>
+		<SignAssembly>false</SignAssembly>
+		<DelaySign>false</DelaySign>
+		<AssemblyOriginatorKeyFile>..\VIEApps.Components.snk</AssemblyOriginatorKeyFile>
 		<Title>Enyim Memcached</Title>
 		<Description>The .NET Standard 2.0 memcached client library, fully async with various transcoders (binary formatter, bson, protobuf, msgpack)</Description>
 		<Authors>VIEApps.net</Authors>

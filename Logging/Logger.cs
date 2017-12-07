@@ -8,17 +8,31 @@ namespace Enyim.Caching
 	{
 		static ILoggerFactory LoggerFactory;
 
+		/// <summary>
+		/// Assigns a logger factory
+		/// </summary>
+		/// <param name="loggerFactory"></param>
 		public static void AssignLoggerFactory(ILoggerFactory loggerFactory)
 		{
 			if (Logger.LoggerFactory == null && loggerFactory != null)
 				Logger.LoggerFactory = loggerFactory;
 		}
 
+		/// <summary>
+		/// Creates a logger
+		/// </summary>
+		/// <param name="type"></param>
+		/// <returns></returns>
 		public static ILogger CreateLogger(Type type)
 		{
 			return (Logger.LoggerFactory ?? new NullLoggerFactory()).CreateLogger(type);
 		}
 
+		/// <summary>
+		/// Creates a logger
+		/// </summary>
+		/// <typeparam name="T"></typeparam>
+		/// <returns></returns>
 		public static ILogger CreateLogger<T>()
 		{
 			return Logger.CreateLogger(typeof(T));
