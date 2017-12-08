@@ -21,9 +21,6 @@ using CacheUtils;
 
 namespace Enyim.Caching
 {
-	/// <summary>
-	/// Memcached client
-	/// </summary>
 	public partial class MemcachedClient : IMemcachedClient, IMemcachedResultsClient, IDistributedCache
 	{
 
@@ -54,7 +51,7 @@ namespace Enyim.Caching
 		#endregion
 
 		/// <summary>
-		/// Initializes a new instance of Memcached client using configuration section of appsettings.json file
+		/// Initializes a new instance of Memcached client (using configuration section of appsettings.json file)
 		/// </summary>
 		/// <param name="loggerFactory"></param>
 		/// <param name="configuration"></param>
@@ -67,7 +64,7 @@ namespace Enyim.Caching
 		}
 
 		/// <summary>
-		/// Initializes a new instance of Memcached client using configuration section of app.config/web.config file
+		/// Initializes a new instance of Memcached client (using configuration section of app.config/web.config file)
 		/// </summary>
 		/// <param name="configuration"></param>
 		/// <param name="loggerFactory"></param>
@@ -1871,7 +1868,7 @@ namespace Enyim.Caching
 #region [ License information          ]
 /* ************************************************************
  * 
- *    © 2010 Attila Kiskó (aka Enyim), © 2016 CNBlogs, © 2017 VIEApps.net
+ *    © 2010 Attila Kiskó (aka Enyim), © 2016 CNBlogs, © 2018 VIEApps.net
  *    
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.

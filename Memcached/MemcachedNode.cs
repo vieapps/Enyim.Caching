@@ -44,11 +44,10 @@ namespace Enyim.Caching.Memcached
 			if (socketPoolConfig.ConnectionTimeout.TotalMilliseconds >= Int32.MaxValue)
 				throw new InvalidOperationException($"ConnectionTimeout must be < {Int32.MaxValue}");
 
-			this._logger = Logger.CreateLogger<MemcachedNode>();
-
+			this._logger = Logger.CreateLogger<IMemcachedNode>();
 			this._endpoint = endpoint;
 			this._config = socketPoolConfig;
-			this._internalPoolImpl = new InternalPoolImpl(this, socketPoolConfig);
+			this._internalPoolImpl = new InternalPoolImpl(this, this._config);
 		}
 
 		protected INodeFailurePolicy FailurePolicy
@@ -279,7 +278,7 @@ namespace Enyim.Caching.Memcached
 				}
 				catch (Exception e)
 				{
-					this._logger.LogError(e, "Could not initialize pool of sockets");
+					this._logger.LogError(e, $"Could not initialize pool of sockets for {this._endPoint}");
 					this.MarkAsDead();
 				}
 			}
@@ -701,7 +700,7 @@ namespace Enyim.Caching.Memcached
 #region [ License information          ]
 /* ************************************************************
  * 
- *    © 2010 Attila Kiskó (aka Enyim), © 2016 CNBlogs, © 2017 VIEApps.net
+ *    © 2010 Attila Kiskó (aka Enyim), © 2016 CNBlogs, © 2018 VIEApps.net
  *    
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.

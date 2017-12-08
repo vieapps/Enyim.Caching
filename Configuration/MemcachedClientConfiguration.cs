@@ -16,9 +16,6 @@ using Microsoft.Extensions.Options;
 
 namespace Enyim.Caching.Configuration
 {
-	/// <summary>
-	/// Configuration class
-	/// </summary>
 	public class MemcachedClientConfiguration : IMemcachedClientConfiguration
 	{
 		// these are lazy initialized in the getters
@@ -140,7 +137,7 @@ namespace Enyim.Caching.Configuration
 		}
 
 		/// <summary>
-		/// Initializes a new instance of the <see cref="MemcachedClientConfiguration"/> class.
+		/// Initializes a new instance of the <see cref="MemcachedClientConfiguration"/>.
 		/// </summary>
 		/// <param name="loggerFactory"></param>
 		/// <param name="configuration"></param>
@@ -457,7 +454,7 @@ namespace Enyim.Caching.Configuration
 #region [ License information          ]
 /* ************************************************************
  * 
- *    © 2010 Attila Kiskó (aka Enyim), © 2016 CNBlogs, © 2017 VIEApps.net
+ *    © 2010 Attila Kiskó (aka Enyim), © 2016 CNBlogs, © 2018 VIEApps.net
  *    
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
