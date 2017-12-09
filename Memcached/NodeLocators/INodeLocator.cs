@@ -5,10 +5,10 @@ namespace Enyim.Caching.Memcached
 	/// <summary>
 	/// Defines a locator class which maps item keys to memcached servers.
 	/// </summary>
-	public interface IMemcachedNodeLocator
+	public interface INodeLocator
 	{
 		/// <summary>
-		/// Initializes the locator.
+		/// Initializes a node locator
 		/// </summary>
 		/// <param name="nodes">The memcached nodes defined in the configuration.</param>
 		/// <remarks>This called first when the server pool is initialized, and subsequently every time 

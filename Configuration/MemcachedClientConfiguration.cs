@@ -21,7 +21,7 @@ namespace Enyim.Caching.Configuration
 		// these are lazy initialized in the getters
 		Type _nodeLocator;
 		ITranscoder _transcoder;
-		IMemcachedKeyTransformer _keyTransformer;
+		IKeyTransformer _keyTransformer;
 		ILogger _logger;
 
 		/// <summary>
@@ -100,7 +100,7 @@ namespace Enyim.Caching.Configuration
 					var keyTransformerType = Type.GetType(configuration.KeyTransformer);
 					if (keyTransformerType != null)
 					{
-						this._keyTransformer = FastActivator.Create(keyTransformerType) as IMemcachedKeyTransformer;
+						this._keyTransformer = FastActivator.Create(keyTransformerType) as IKeyTransformer;
 						if (this._logger.IsEnabled(LogLevel.Debug))
 							this._logger.LogDebug($"Use '{configuration.KeyTransformer}' key-transformer");
 					}
@@ -226,7 +226,7 @@ namespace Enyim.Caching.Configuration
 				if (keyTransformer.Attributes["type"]?.Value != null)
 					try
 					{
-						this._keyTransformer = FastActivator.Create(Type.GetType(keyTransformer.Attributes["type"].Value)) as IMemcachedKeyTransformer;
+						this._keyTransformer = FastActivator.Create(Type.GetType(keyTransformer.Attributes["type"].Value)) as IKeyTransformer;
 						if (this._logger.IsEnabled(LogLevel.Debug))
 							this._logger.LogDebug($"Use '{keyTransformer.Attributes["type"].Value}' key-transformer");
 					}
@@ -303,9 +303,9 @@ namespace Enyim.Caching.Configuration
 		public IAuthenticationConfiguration Authentication { get; internal set; }
 
 		/// <summary>
-		/// Gets or sets the <see cref="Enyim.Caching.Memcached.IMemcachedKeyTransformer"/> which will be used to convert item keys for Memcached.
+		/// Gets or sets the <see cref="Enyim.Caching.Memcached.IKeyTransformer"/> which will be used to convert item keys for Memcached.
 		/// </summary>
-		public IMemcachedKeyTransformer KeyTransformer
+		public IKeyTransformer KeyTransformer
 		{
 			get
 			{
@@ -333,7 +333,7 @@ namespace Enyim.Caching.Configuration
 		}
 
 		/// <summary>
-		/// Gets or sets the Type of the <see cref="Enyim.Caching.Memcached.IMemcachedNodeLocator"/> which will be used to assign items to Memcached nodes.
+		/// Gets or sets the Type of the <see cref="Enyim.Caching.Memcached.INodeLocator"/> which will be used to assign items to Memcached nodes.
 		/// </summary>
 		/// <remarks>If both <see cref="NodeLocator"/> and  <see cref="NodeLocatorFactory"/> are assigned then the latter takes precedence.</remarks>
 		public Type NodeLocator
@@ -344,7 +344,7 @@ namespace Enyim.Caching.Configuration
 			}
 			set
 			{
-				ConfigurationHelper.CheckForInterface(value, typeof(IMemcachedNodeLocator));
+				ConfigurationHelper.CheckForInterface(value, typeof(INodeLocator));
 				this._nodeLocator = value;
 			}
 		}
@@ -353,7 +353,7 @@ namespace Enyim.Caching.Configuration
 		/// Gets or sets the NodeLocatorFactory instance which will be used to create a new IMemcachedNodeLocator instances.
 		/// </summary>
 		/// <remarks>If both <see cref="NodeLocator"/> and  <see cref="NodeLocatorFactory"/> are assigned then the latter takes precedence.</remarks>
-		public IProviderFactory<IMemcachedNodeLocator> NodeLocatorFactory { get; set; }
+		public IProviderFactory<INodeLocator> NodeLocatorFactory { get; set; }
 
 		/// <summary>
 		/// Gets or sets the type of the communication between client and server.
@@ -375,7 +375,7 @@ namespace Enyim.Caching.Configuration
 			get { return this.Authentication; }
 		}
 
-		IMemcachedKeyTransformer IMemcachedClientConfiguration.CreateKeyTransformer()
+		IKeyTransformer IMemcachedClientConfiguration.CreateKeyTransformer()
 		{
 			return this.KeyTransformer;
 		}
@@ -385,12 +385,12 @@ namespace Enyim.Caching.Configuration
 			return this.Transcoder;
 		}
 
-		IMemcachedNodeLocator IMemcachedClientConfiguration.CreateNodeLocator()
+		INodeLocator IMemcachedClientConfiguration.CreateNodeLocator()
 		{
 			return this.NodeLocatorFactory != null
 				? this.NodeLocatorFactory.Create()
 				: this.NodeLocator != null
-					? FastActivator.Create(this.NodeLocator) as IMemcachedNodeLocator
+					? FastActivator.Create(this.NodeLocator) as INodeLocator
 					: new KetamaNodeLocator();
 		}
 

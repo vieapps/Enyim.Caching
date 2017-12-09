@@ -10,7 +10,7 @@ namespace Enyim.Caching.Memcached
 	/// <summary>
 	/// Implements Ketama cosistent hashing, compatible with the "spymemcached" Java client
 	/// </summary>
-	public sealed class KetamaNodeLocator : IMemcachedNodeLocator
+	public sealed class KetamaNodeLocator : INodeLocator
 	{
 		const string DefaultHashName = "md5";
 		const int ServerAddressMutations = 160;
@@ -45,7 +45,7 @@ namespace Enyim.Caching.Memcached
 				this._hashFactory = () => MD5.Create();
 		}
 
-		void IMemcachedNodeLocator.Initialize(IList<IMemcachedNode> nodes)
+		void INodeLocator.Initialize(IList<IMemcachedNode> nodes)
 		{
 			// quit if we've been initialized because we can handle dead nodes,
 			// so there is no need to recalculate everything
@@ -120,7 +120,7 @@ namespace Enyim.Caching.Memcached
 			}
 		}
 
-		IMemcachedNode IMemcachedNodeLocator.Locate(string key)
+		IMemcachedNode INodeLocator.Locate(string key)
 		{
 			if (key == null)
 				throw new ArgumentNullException("key");
@@ -161,7 +161,7 @@ namespace Enyim.Caching.Memcached
 			return node.IsAlive ? node : null;
 		}
 
-		IEnumerable<IMemcachedNode> IMemcachedNodeLocator.GetWorkingNodes()
+		IEnumerable<IMemcachedNode> INodeLocator.GetWorkingNodes()
 		{
 			var id = this._lookupData;
 			if (id.Servers == null || id.Servers.Length == 0)

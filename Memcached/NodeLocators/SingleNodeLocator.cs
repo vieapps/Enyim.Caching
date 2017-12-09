@@ -7,20 +7,20 @@ namespace Enyim.Caching.Memcached
 	/// <summary>
 	/// This is a simple node locator with no computation overhead, always returns the first server from the list. Use only in single server deployments.
 	/// </summary>
-	public sealed class SingleNodeLocator : IMemcachedNodeLocator
+	public sealed class SingleNodeLocator : INodeLocator
 	{
 		IMemcachedNode _node;
 		bool _isInitialized;
 		object _locker = new Object();
 
-		void IMemcachedNodeLocator.Initialize(IList<IMemcachedNode> nodes)
+		void INodeLocator.Initialize(IList<IMemcachedNode> nodes)
 		{
 			if (nodes.Count > 0)
 				this._node = nodes[0];
 			this._isInitialized = true;
 		}
 
-		IMemcachedNode IMemcachedNodeLocator.Locate(string key)
+		IMemcachedNode INodeLocator.Locate(string key)
 		{
 			if (!this._isInitialized)
 				throw new InvalidOperationException("You must call Initialize first");
@@ -30,7 +30,7 @@ namespace Enyim.Caching.Memcached
 				: this._node;
 		}
 
-		IEnumerable<IMemcachedNode> IMemcachedNodeLocator.GetWorkingNodes()
+		IEnumerable<IMemcachedNode> INodeLocator.GetWorkingNodes()
 		{
 			return this._node.IsAlive
 				? new IMemcachedNode[] { this._node }

@@ -18,7 +18,7 @@ namespace Enyim.Caching.Memcached
 
 		IMemcachedClientConfiguration _configuration;
 		IOperationFactory _factory;
-		IMemcachedNodeLocator _nodeLocator;
+		INodeLocator _nodeLocator;
 
 		object _locker = new Object();
 		int _deadTimeoutMsec;

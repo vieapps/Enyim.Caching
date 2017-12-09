@@ -1,10 +1,10 @@
 namespace Enyim.Caching.Memcached
 {
-	public abstract class KeyTransformerBase : IMemcachedKeyTransformer
+	public abstract class KeyTransformerBase : IKeyTransformer
 	{
 		public abstract string Transform(string key);
 
-		string IMemcachedKeyTransformer.Transform(string key)
+		string IKeyTransformer.Transform(string key)
 		{
 			return this.Transform(key);
 		}

@@ -27,7 +27,7 @@ namespace Enyim.Caching
 		ILogger _logger;
 
 		IServerPool _serverPool;
-		IMemcachedKeyTransformer _keyTransformer;
+		IKeyTransformer _keyTransformer;
 		ITranscoder _transcoder;
 
 		public IStoreOperationResultFactory StoreOperationResultFactory { get; set; }
@@ -42,7 +42,7 @@ namespace Enyim.Caching
 
 		protected IServerPool Pool { get { return this._serverPool; } }
 
-		protected IMemcachedKeyTransformer KeyTransformer { get { return this._keyTransformer; } }
+		protected IKeyTransformer KeyTransformer { get { return this._keyTransformer; } }
 
 		protected ITranscoder Transcoder { get { return this._transcoder; } }
 

@@ -26,14 +26,14 @@ namespace Enyim.Caching.Configuration
 		IAuthenticationConfiguration Authentication { get; }
 
 		/// <summary>
-		/// Creates an <see cref="Enyim.Caching.Memcached.IMemcachedKeyTransformer"/> instance which will be used to convert item keys for Memcached.
+		/// Creates an <see cref="Enyim.Caching.Memcached.IKeyTransformer"/> instance which will be used to convert item keys for Memcached.
 		/// </summary>
-		IMemcachedKeyTransformer CreateKeyTransformer();
+		IKeyTransformer CreateKeyTransformer();
 
 		/// <summary>
-		/// Creates an <see cref="Enyim.Caching.Memcached.IMemcachedNodeLocator"/> instance which will be used to assign items to Memcached nodes.
+		/// Creates an <see cref="Enyim.Caching.Memcached.INodeLocator"/> instance which will be used to assign items to Memcached nodes.
 		/// </summary>
-		IMemcachedNodeLocator CreateNodeLocator();
+		INodeLocator CreateNodeLocator();
 
 		/// <summary>
 		/// Creates an <see cref="Enyim.Caching.Memcached.ITranscoder"/> instance which will be used to serialize or deserialize items.

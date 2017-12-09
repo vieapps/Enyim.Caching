@@ -3,7 +3,7 @@ namespace Enyim.Caching.Memcached
 	/// <summary>
 	/// Converts Memcached item keys into a custom format.
 	/// </summary>
-	public interface IMemcachedKeyTransformer
+	public interface IKeyTransformer
 	{
 		/// <summary>
 		/// Performs the transformation of a key

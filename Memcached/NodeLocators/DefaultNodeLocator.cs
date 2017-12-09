@@ -8,9 +8,9 @@ namespace Enyim.Caching.Memcached
 {
 	/// <summary>
 	/// This is a ketama-like consistent hashing based node locator.
-	/// Used when no other <see cref="IMemcachedNodeLocator"/> is specified for the pool.
+	/// Used when no other <see cref="INodeLocator"/> is specified for the pool.
 	/// </summary>
-	public sealed class DefaultNodeLocator : IMemcachedNodeLocator, IDisposable
+	public sealed class DefaultNodeLocator : INodeLocator, IDisposable
 	{
 		const int ServerAddressMutations = 100;
 
@@ -48,7 +48,7 @@ namespace Enyim.Caching.Memcached
 			Interlocked.Exchange(ref this._keys, keys);
 		}
 
-		void IMemcachedNodeLocator.Initialize(IList<IMemcachedNode> nodes)
+		void INodeLocator.Initialize(IList<IMemcachedNode> nodes)
 		{
 			this._locker.EnterWriteLock();
 			try
@@ -62,7 +62,7 @@ namespace Enyim.Caching.Memcached
 			}
 		}
 
-		IMemcachedNode IMemcachedNodeLocator.Locate(string key)
+		IMemcachedNode INodeLocator.Locate(string key)
 		{
 			if (key == null)
 				throw new ArgumentNullException(nameof(key));
@@ -78,7 +78,7 @@ namespace Enyim.Caching.Memcached
 			}
 		}
 
-		IEnumerable<IMemcachedNode> IMemcachedNodeLocator.GetWorkingNodes()
+		IEnumerable<IMemcachedNode> INodeLocator.GetWorkingNodes()
 		{
 			this._locker.EnterReadLock();
 			try
