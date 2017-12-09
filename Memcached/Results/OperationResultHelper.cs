@@ -1,9 +1,24 @@
 ﻿using System;
+using System.Text;
 
-namespace Enyim.Caching.Memcached.Results.Extensions
+namespace Enyim.Caching.Memcached.Results
 {
-	public static class OperationResultExtensions
+	public static class OperationResultHelper
 	{
+		public static string ProcessResponseData(ArraySegment<byte> data, string message = "")
+		{
+			if (data != null && data.Count > 0)
+				try
+				{
+					return message + (!string.IsNullOrEmpty(message) ? ": " : "") + Encoding.UTF8.GetString(data.Array, data.Offset, data.Count);
+				}
+				catch (Exception ex)
+				{
+					return ex.GetBaseException().Message;
+				}
+			return string.Empty;
+		}
+
 		/// <summary>
 		/// Set the result Success to false
 		/// </summary>
@@ -73,14 +88,13 @@ namespace Enyim.Caching.Memcached.Results.Extensions
 			target.InnerResult = source.InnerResult ?? source;
 		}
 	}
+
 }
 
 #region [ License information          ]
 /* ************************************************************
  * 
- *    @author Couchbase <info@couchbase.com>
- *    @copyright 2012 Couchbase, Inc.
- *    @copyright 2012 Attila Kiskó, enyim.com
+ *    © 2010 Attila Kiskó (aka Enyim), © 2016 CNBlogs, © 2018 VIEApps.net
  *    
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.

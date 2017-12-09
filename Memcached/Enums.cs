@@ -1,10 +1,8 @@
-using System;
-
 namespace Enyim.Caching.Memcached
 {
-	public enum MutationMode : byte { Increment = 0x05, Decrement = 0x06 };
+	public enum MutationMode : byte { Increment = 0x05, Decrement = 0x06 }
 
-	public enum ConcatenationMode : byte { Append = 0x0E, Prepend = 0x0F };
+	public enum ConcatenationMode : byte { Append = 0x0E, Prepend = 0x0F }
 
 	public enum MemcachedProtocol { Binary, Text }
 
@@ -25,7 +23,7 @@ namespace Enyim.Caching.Memcached
 		/// Store the data, overwrite if already exist
 		/// </summary>
 		Set
-	};
+	}
 
 	internal enum StoreCommand
 	{
@@ -53,7 +51,80 @@ namespace Enyim.Caching.Memcached
 		/// Stores the data only if it has not been updated by someone else. Uses a "transaction id" to check for modification.
 		/// </summary>
 		CheckAndSet
-	};
+	}
+
+	/// <summary>
+	/// Represent a stat item returned by Memcached.
+	/// </summary>
+	public enum StatItem : int
+	{
+		/// <summary>
+		/// The number of seconds the server has been running.
+		/// </summary>
+		Uptime = 0,
+		/// <summary>
+		/// Current time according to the server.
+		/// </summary>
+		ServerTime,
+		/// <summary>
+		/// The version of the server.
+		/// </summary>
+		Version,
+		/// <summary>
+		/// The number of items stored by the server.
+		/// </summary>
+		ItemCount,
+		/// <summary>
+		/// The total number of items stored by the server including the ones whihc have been already evicted.
+		/// </summary>
+		TotalItems,
+		/// <summary>
+		/// Number of active connections to the server.
+		/// </summary>
+		ConnectionCount,
+		/// <summary>
+		/// The total number of connections ever made to the server.
+		/// </summary>
+		TotalConnections,
+		/// <summary>
+		/// ?
+		/// </summary>
+		ConnectionStructures,
+
+		/// <summary>
+		/// Number of get operations performed by the server.
+		/// </summary>
+		GetCount,
+		/// <summary>
+		/// Number of set operations performed by the server.
+		/// </summary>
+		SetCount,
+		/// <summary>
+		/// Cache hit.
+		/// </summary>
+		GetHits,
+		/// <summary>
+		/// Cache miss.
+		/// </summary>
+		GetMisses,
+
+		/// <summary>
+		/// ?
+		/// </summary>
+		UsedBytes,
+		/// <summary>
+		/// Number of bytes read from the server.
+		/// </summary>
+		BytesRead,
+		/// <summary>
+		/// Number of bytes written to the server.
+		/// </summary>
+		BytesWritten,
+		/// <summary>
+		/// ?
+		/// </summary>
+		MaxBytes
+	}
 }
 
 #region [ License information          ]

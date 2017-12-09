@@ -10,7 +10,6 @@ using System.Threading.Tasks;
 using Enyim.Collections;
 using Enyim.Caching.Configuration;
 using Enyim.Caching.Memcached.Results;
-using Enyim.Caching.Memcached.Results.Extensions;
 
 using Microsoft.Extensions.Logging;
 #endregion
@@ -353,7 +352,7 @@ namespace Enyim.Caching.Memcached
 					{
 						socket.Reset();
 
-						message = $"Socket was reset ({socket.InstanceId})";
+						message = $"Socket was reset ({socket.InstanceID})";
 						result.Pass(message);
 						result.Value = socket;
 
@@ -440,7 +439,7 @@ namespace Enyim.Caching.Memcached
 			void ReleaseSocket(PooledSocket socket)
 			{
 				if (this._isDebugEnabled)
-					this._logger.LogDebug($"Releasing socket ({socket.InstanceId}) - Alive: {this._isAlive}");
+					this._logger.LogDebug($"Releasing socket ({socket.InstanceID}) - Alive: {this._isAlive}");
 
 				if (this._isAlive)
 				{

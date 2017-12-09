@@ -1,15 +1,31 @@
 using System;
 using System.Linq;
 using System.Net;
+using System.Net.Sockets;
 using System.Collections.Generic;
+using System.Configuration;
 
 namespace Enyim.Caching.Configuration
 {
 	public static class ConfigurationHelper
 	{
+		internal static bool TryGetAndRemove(Dictionary<string, string> dict, string name, out string value, bool required)
+		{
+			if (dict.TryGetValue(name, out value))
+			{
+				dict.Remove(name);
+				if (!string.IsNullOrEmpty(value))
+					return true;
+			}
+
+			return required
+				? throw new Exception("Missing parameter: " + (string.IsNullOrEmpty(name) ? "element content" : name))
+				: false;
+		}
+
 		internal static bool TryGetAndRemove(Dictionary<string, string> dict, string name, out int value, bool required)
 		{
-			if (TryGetAndRemove(dict, name, out string tmp, required) && Int32.TryParse(tmp, out value))
+			if (ConfigurationHelper.TryGetAndRemove(dict, name, out string tmp, required) && Int32.TryParse(tmp, out value))
 				return true;
 
 			if (required)
@@ -21,29 +37,13 @@ namespace Enyim.Caching.Configuration
 
 		internal static bool TryGetAndRemove(Dictionary<string, string> dict, string name, out TimeSpan value, bool required)
 		{
-			if (TryGetAndRemove(dict, name, out string tmp, required) && TimeSpan.TryParse(tmp, out value))
+			if (ConfigurationHelper.TryGetAndRemove(dict, name, out string tmp, required) && TimeSpan.TryParse(tmp, out value))
 				return true;
 
 			if (required)
 				throw new Exception("Missing or invalid parameter: " + (String.IsNullOrEmpty(name) ? "element content" : name));
 
 			value = TimeSpan.Zero;
-			return false;
-		}
-
-		internal static bool TryGetAndRemove(Dictionary<string, string> dict, string name, out string value, bool required)
-		{
-			if (dict.TryGetValue(name, out value))
-			{
-				dict.Remove(name);
-
-				if (!String.IsNullOrEmpty(value))
-					return true;
-			}
-
-			if (required)
-				throw new Exception("Missing parameter: " + (String.IsNullOrEmpty(name) ? "element content" : name));
-
 			return false;
 		}
 
@@ -59,37 +59,37 @@ namespace Enyim.Caching.Configuration
 				return;
 
 			if (Array.IndexOf<Type>(type.GetInterfaces(), interfaceType) == -1)
-				throw new System.Configuration.ConfigurationErrorsException("The type " + type.AssemblyQualifiedName + " must implement " + interfaceType.AssemblyQualifiedName);
+				throw new ConfigurationErrorsException($"The type {type.AssemblyQualifiedName} must implement {interfaceType.AssemblyQualifiedName}");
 		}
 
 		public static EndPoint ResolveToEndPoint(string value)
 		{
 			if (String.IsNullOrEmpty(value))
-				throw new ArgumentNullException("value");
+				throw new ArgumentNullException(nameof(value));
 
 			var parts = value.Split(':');
 			if (parts.Length != 2)
-				throw new ArgumentException("host:port is expected", "value");
+				throw new ArgumentException("host:port is expected", nameof(value));
 
 			if (!Int32.TryParse(parts[1], out int port))
-				throw new ArgumentException("Cannot parse port: " + parts[1], "value");
+				throw new ArgumentException($"Cannot parse port: {parts[1]}", nameof(value));
 
 			return ResolveToEndPoint(parts[0], port);
 		}
 
 		public static EndPoint ResolveToEndPoint(string host, int port)
 		{
-			if (String.IsNullOrEmpty(host))
-				throw new ArgumentNullException("host");
+			if (string.IsNullOrWhiteSpace(host))
+				throw new ArgumentNullException(nameof(host));
 
-			// parse as an IP address
 			if (!IPAddress.TryParse(host, out IPAddress address))
 			{
 				var addresses = Dns.GetHostAddresses(host);
-				address = addresses.FirstOrDefault(ip => ip.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork);
+				address = addresses.FirstOrDefault(ip => ip.AddressFamily == AddressFamily.InterNetwork);
 				if (address == null)
-					throw new ArgumentException(String.Format("Could not resolve host '{0}'.", host));
+					throw new ArgumentException($"Could not resolve host '{host}'");
 			}
+
 			return new IPEndPoint(address, port);
 		}
 	}

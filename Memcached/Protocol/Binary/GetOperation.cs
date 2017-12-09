@@ -1,6 +1,4 @@
 using Enyim.Caching.Memcached.Results;
-using Enyim.Caching.Memcached.Results.Extensions;
-using Enyim.Caching.Memcached.Results.Helpers;
 
 using Microsoft.Extensions.Logging;
 
@@ -37,7 +35,7 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 			}
 
 			this.Cas = 0;
-			return result.Fail(ResultHelper.ProcessResponseData(response.Data));
+			return result.Fail(OperationResultHelper.ProcessResponseData(response.Data));
 		}
 
 		CacheItem IGetOperation.Result

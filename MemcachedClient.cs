@@ -10,7 +10,6 @@ using Enyim.Caching.Configuration;
 using Enyim.Caching.Memcached;
 using Enyim.Caching.Memcached.Results;
 using Enyim.Caching.Memcached.Results.Factories;
-using Enyim.Caching.Memcached.Results.Extensions;
 
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Caching.Distributed;

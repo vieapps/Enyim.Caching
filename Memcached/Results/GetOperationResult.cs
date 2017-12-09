@@ -7,16 +7,22 @@
 		public bool HasValue { get { return Value != null; } }
 
 		public object Value { get; set; }
+	}
 
+	public class GetOperationResult<T> : OperationResultBase, IGetOperationResult<T>
+	{
+		public bool HasValue { get { return Value != null; } }
+
+		public T Value { get; set; }
+
+		public ulong Cas { get; set; }
 	}
 }
 
 #region [ License information          ]
 /* ************************************************************
  * 
- *    @author Couchbase <info@couchbase.com>
- *    @copyright 2012 Couchbase, Inc.
- *    @copyright 2012 Attila Kiskó, enyim.com
+ *    © 2010 Attila Kiskó (aka Enyim), © 2016 CNBlogs, © 2018 VIEApps.net
  *    
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.

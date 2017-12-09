@@ -2,8 +2,6 @@ using System;
 using System.IO;
 using System.Text;
 using System.Linq;
-using System.Linq.Expressions;
-using System.Collections.Generic;
 using System.Runtime.Serialization.Formatters.Binary;
 
 using Enyim.Caching;
@@ -14,55 +12,10 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.DependencyInjection;
 
-#region Fast activator to avoid reflection
-namespace Enyim.Reflection
-{
-	/// <summary>
-	/// <para>Implements a very fast object factory for dynamic object creation. Dynamically generates a factory class which will use the new() constructor of the requested type.</para>
-	/// <para>Much faster than using Activator at the price of the first invocation being significantly slower than subsequent calls.</para>
-	/// </summary>
-	public static class FastActivator
-	{
-		private static Dictionary<Type, Func<object>> factoryCache = new Dictionary<Type, Func<object>>();
-
-		/// <summary>
-		/// Creates an instance of the specified type using a generated factory to avoid using Reflection.
-		/// </summary>
-		/// <typeparam name="T">The type to be created.</typeparam>
-		/// <returns>The newly created instance.</returns>
-		public static T Create<T>()
-		{
-			return TypeFactory<T>.Create();
-		}
-
-		/// <summary>
-		/// Creates an instance of the specified type using a generated factory to avoid using Reflection.
-		/// </summary>
-		/// <param name="type">The type to be created.</param>
-		/// <returns>The newly created instance.</returns>
-		public static object Create(Type type)
-		{
-			if (!factoryCache.TryGetValue(type, out Func<object> func))
-				lock (factoryCache)
-					if (!factoryCache.TryGetValue(type, out func))
-					{
-						factoryCache[type] = func = Expression.Lambda<Func<object>>(Expression.New(type)).Compile();
-					}
-
-			return func();
-		}
-
-		private static class TypeFactory<T>
-		{
-			public static readonly Func<T> Create = Expression.Lambda<Func<T>>(Expression.New(typeof(T))).Compile();
-		}
-	}
-}
-#endregion
-
-#region Extensions for working with ASP.NET Core
 namespace Microsoft.Extensions.DependencyInjection
 {
+
+	#region Extensions for working with .NET Core dependency injection
 	public static partial class ServiceCollectionExtensions
 	{
 		/// <summary>
@@ -87,10 +40,14 @@ namespace Microsoft.Extensions.DependencyInjection
 			return services;
 		}
 	}
+	#endregion
+
 }
 
 namespace Microsoft.AspNetCore.Builder
 {
+
+	#region Extensions for working with ASP.NET Core
 	public static partial class ApplicationBuilderExtensions
 	{
 		/// <summary>
@@ -111,14 +68,16 @@ namespace Microsoft.AspNetCore.Builder
 			return appBuilder;
 		}
 	}
-}
-#endregion
+	#endregion
 
-#region Utilities for working with caching data
+}
+
 namespace CacheUtils
 {
 	public static class Helper
 	{
+
+		#region Work with caching data
 		/// <summary>
 		/// Gets the Unix epoch
 		/// </summary>
@@ -229,7 +188,9 @@ namespace CacheUtils
 		/// Gets the flag of raw data
 		/// </summary>
 		public const int FlagOfRawData = 0xfa52;
+		#endregion
 
+		#region Serialize & Deserialize
 		/// <summary>
 		/// Serialize an object to array of bytes
 		/// </summary>
@@ -432,9 +393,10 @@ namespace CacheUtils
 					}
 			}
 		}
+		#endregion
+
 	}
 }
-#endregion
 
 #region [ License information          ]
 /* ************************************************************

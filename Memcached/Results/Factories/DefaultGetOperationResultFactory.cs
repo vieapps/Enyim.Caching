@@ -12,14 +12,25 @@
 			};
 		}
 	}
+
+	public class DefaultGetOperationResultFactory<T> : IGetOperationResultFactory<T>
+	{
+		public IGetOperationResult<T> Create()
+		{
+			return new GetOperationResult<T>()
+			{
+				Message = string.Empty,
+				Value = default(T),
+				Success = false
+			};
+		}
+	}
 }
 
 #region [ License information          ]
 /* ************************************************************
  * 
- *    @author Couchbase <info@couchbase.com>
- *    @copyright 2012 Couchbase, Inc.
- *    @copyright 2012 Attila Kiskó, enyim.com
+ *    © 2010 Attila Kiskó (aka Enyim), © 2016 CNBlogs, © 2018 VIEApps.net
  *    
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.

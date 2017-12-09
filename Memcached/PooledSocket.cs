@@ -12,6 +12,7 @@ using System.Threading.Tasks;
 using System.Runtime.InteropServices;
 using System.Diagnostics;
 
+using Enyim.Collections;
 using Dawn.Net.Sockets;
 
 using Microsoft.Extensions.Logging;
@@ -72,7 +73,7 @@ namespace Enyim.Caching.Memcached
 				RemoteEndPoint = endpoint,
 				UserToken = completed
 			};
-			args.Completed += (sender, socketArgs) => (socketArgs.UserToken as EventWaitHandle)?.Set();
+			args.Completed += (sender, arguments) => (arguments.UserToken as EventWaitHandle)?.Set();
 
 			socket.ConnectAsync(args);
 			if (!completed.WaitOne(timeout) || !socket.Connected)
@@ -96,7 +97,7 @@ namespace Enyim.Caching.Memcached
 			if (available > 0)
 			{
 				if (this._logger.IsEnabled(LogLevel.Warning))
-					this._logger.LogWarning($"Socket bound to {this._socket.RemoteEndPoint} has {available} unread data! This is probably a bug in the code. Instance ID was {this.InstanceId}.");
+					this._logger.LogWarning($"Socket bound to {this._socket.RemoteEndPoint} has {available} unread data! This is probably a bug in the code. Instance ID was {this.InstanceID}.");
 
 				var data = new byte[available];
 				this.Read(data, 0, available);
@@ -104,19 +105,19 @@ namespace Enyim.Caching.Memcached
 				if (this._logger.IsEnabled(LogLevel.Warning))
 				{
 					var unread = Encoding.ASCII.GetString(data);
-					unread = unread.Length > 255 ? unread.Substring(0, 255) + " ..." : unread;
+					unread = unread.Length > 255 ? unread.Substring(0, 255) + "..." : unread;
 					this._logger.LogWarning(unread);
 				}
 			}
 
 			if (this._logger.IsEnabled(LogLevel.Debug))
-				this._logger.LogDebug($"Socket was reset ({this.InstanceId})");
+				this._logger.LogDebug($"Socket was reset ({this.InstanceID})");
 		}
 
 		/// <summary>
-		/// The ID of this instance. Used by the <see cref="IServerPool"/> to identify the instance in its inner lists.
+		/// The identity of this instance. Used by the <see cref="IServerPool"/> to identify the instance in its inner lists.
 		/// </summary>
-		public readonly Guid InstanceId = Guid.NewGuid();
+		public readonly Guid InstanceID = Guid.NewGuid();
 
 		public bool IsAlive
 		{
@@ -528,6 +529,134 @@ namespace Enyim.Caching.Memcached
 				if (isAsync)
 					this._pendingArgs.Next(this._pendingArgs);
 			}
+		}
+		#endregion
+
+		#region SlidingBuffer
+		/// <summary>
+		/// Supports exactly one reader and writer, but they can access the buffer concurrently.
+		/// </summary>
+		internal class SlidingBuffer
+		{
+			readonly InterlockedQueue<Segment> _buffers;
+			readonly int _chunkSize;
+			Segment _lastSegment;
+			int _available;
+
+			public SlidingBuffer(int chunkSize)
+			{
+				this._chunkSize = chunkSize;
+				this._buffers = new InterlockedQueue<Segment>();
+			}
+
+			public int Available { get { return this._available; } }
+
+			public int Read(byte[] buffer, int offset, int count)
+			{
+				var read = 0;
+				Segment segment;
+
+				while (read < count && this._buffers.Peek(out segment))
+				{
+					var available = Math.Min(segment.WriteOffset - segment.ReadOffset, count - read);
+
+					if (available > 0)
+					{
+						Buffer.BlockCopy(segment.Data, segment.ReadOffset, buffer, offset + read, available);
+						read += available;
+						segment.ReadOffset += available;
+					}
+
+					// are we at the end of the segment?
+					if (segment.ReadOffset == segment.WriteOffset)
+					{
+						// we can dispose the current segment if it's not the last 
+						// (which is probably being written by the receiver)
+						if (this._lastSegment != segment)
+							this._buffers.Dequeue(out segment);
+					}
+				}
+
+				Interlocked.Add(ref this._available, -read);
+
+				return read;
+			}
+
+			public void Append(byte[] buffer, int offset, int count)
+			{
+				if (buffer == null || buffer.Length == 0 || count == 0)
+					return;
+
+				// try to append the data to the last segment
+				// if the data is larger than the ChunkSize we copy it and append it as one chunk
+				// if the data does not fit into the last segment we allocate a new
+				// so data is never split (at the price of some wasted bytes)
+				var last = this._lastSegment;
+				var shouldQueue = false;
+
+				if (count > this._chunkSize)
+				{
+					// big data, append it
+					last = new Segment(new byte[count]);
+					shouldQueue = true;
+				}
+				else
+				{
+					var remaining = last == null
+						? 0
+						: last.Data.Length - last.WriteOffset;
+
+					// no space, create a new chunk
+					if (remaining < count)
+					{
+						last = new Segment(new byte[this._chunkSize]);
+						shouldQueue = true;
+					}
+				}
+
+				Buffer.BlockCopy(buffer, offset, last.Data, last.WriteOffset, count);
+
+				// first we update the lastSegment reference, then we enque the new segment
+				// this way Read can safely dequeue (discard) the last item it processed and 
+				// continue  on the next one
+				// doing it in reverse would make Read dequeue the current segment (the one we just inserted)
+				if (shouldQueue)
+				{
+					Interlocked.Exchange(ref this._lastSegment, last);
+					this._buffers.Enqueue(last);
+				}
+
+				// advertise that we have more data available for reading
+				// we have to use Interlocked because in the same time the reader
+				// can remove data and will decrease the value of Available
+				Interlocked.Add(ref last.WriteOffset, count);
+				Interlocked.Add(ref this._available, count);
+			}
+
+			public void UnsafeClear()
+			{
+				Segment tmp;
+
+				this._lastSegment = null;
+				while (this._buffers.Dequeue(out tmp)) ;
+
+				this._available = 0;
+			}
+
+			#region [ Segment                      ]
+			private class Segment
+			{
+				public Segment(byte[] data)
+				{
+					this.Data = data;
+				}
+
+				public readonly byte[] Data;
+				public int WriteOffset;
+				public int ReadOffset;
+			}
+			#endregion
+
 		}
 		#endregion
 

@@ -23,7 +23,7 @@ namespace Enyim.Caching.Memcached
 		object _locker = new Object();
 		int _deadTimeoutMsec;
 		bool _isTimerActive, _isDisposed;
-		event Action<IMemcachedNode> _nodeFailed;
+		event Action<IMemcachedNode> _onNodeFailed;
 		System.Threading.Timer _resurrectTimer;
 
 		public DefaultServerPool(IMemcachedClientConfiguration configuration, IOperationFactory opFactory)
@@ -155,7 +155,7 @@ namespace Enyim.Caching.Memcached
 				}
 
 				// bubble up the fail event to the client
-				this._nodeFailed?.Invoke(node);
+				this._onNodeFailed?.Invoke(node);
 
 				// re-initialize the locator
 				var newLocator = this._configuration.CreateNodeLocator();
@@ -219,11 +219,11 @@ namespace Enyim.Caching.Memcached
 		{
 			add
 			{
-				this._nodeFailed += value;
+				this._onNodeFailed += value;
 			}
 			remove
 			{
-				this._nodeFailed -= value;
+				this._onNodeFailed -= value;
 			}
 		}
 		#endregion

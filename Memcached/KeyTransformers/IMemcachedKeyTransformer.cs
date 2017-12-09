@@ -6,10 +6,10 @@ namespace Enyim.Caching.Memcached
 	public interface IMemcachedKeyTransformer
 	{
 		/// <summary>
-		/// Performs the transformation.
+		/// Performs the transformation of a key
 		/// </summary>
 		/// <param name="key">The key to be transformed.</param>
-		/// <returns>the transformed key.</returns>
+		/// <returns>The transformed key.</returns>
 		string Transform(string key);
 	}
 }

@@ -1,6 +1,4 @@
 using System;
-using Enyim.Caching.Memcached.Results.Extensions;
-using Enyim.Caching.Memcached.Results.Helpers;
 using Enyim.Caching.Memcached.Results;
 
 namespace Enyim.Caching.Memcached.Protocol.Binary
@@ -67,7 +65,7 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 				return result.Pass();
 			}
 
-			var message = ResultHelper.ProcessResponseData(response.Data);
+			var message = OperationResultHelper.ProcessResponseData(response.Data);
 			return result.Fail(message);
 		}
 
