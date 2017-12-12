@@ -22,7 +22,6 @@ namespace Enyim.Collections
 		public InterlockedQueue()
 		{
 			Node node = new Node(default(T));
-
 			this.headNode = node;
 			this.tailNode = node;
 		}
@@ -41,35 +40,30 @@ namespace Enyim.Collections
 				next = head.Next;
 
 				// Are head, tail, and next consistent?
-				if (Object.ReferenceEquals(this.headNode, head))
+				if (object.ReferenceEquals(this.headNode, head))
 				{
 					// is tail falling behind
-					if (Object.ReferenceEquals(head, tail))
+					if (object.ReferenceEquals(head, tail))
 					{
 						// is the queue empty?
-						if (Object.ReferenceEquals(next, null))
+						if (object.ReferenceEquals(next, null))
 						{
 							value = default(T);
-
 							// queue is empty and cannot dequeue
 							return false;
 						}
 
-						Interlocked.CompareExchange<Node>(
-							ref this.tailNode,
-							next,
-							tail);
+						Interlocked.CompareExchange<Node>(ref this.tailNode, next, tail);
 					}
-					else // No need to deal with tail
+
+					// No need to deal with tail
+					else
 					{
 						// read value before CAS otherwise another deque might try to free the next node
 						value = next.Value;
 
 						// try to swing the head to the next node
-						if (Interlocked.CompareExchange<Node>(
-							ref this.headNode,
-							next,
-							head) == head)
+						if (Interlocked.CompareExchange<Node>(ref this.headNode, next, head) == head)
 						{
 							return true;
 						}
@@ -89,13 +83,13 @@ namespace Enyim.Collections
 				next = head.Next;
 
 				// Are head, tail, and next consistent?
-				if (Object.ReferenceEquals(this.headNode, head))
+				if (object.ReferenceEquals(this.headNode, head))
 				{
 					// is tail falling behind
-					if (Object.ReferenceEquals(head, tail))
+					if (object.ReferenceEquals(head, tail))
 					{
 						// is the queue empty?
-						if (Object.ReferenceEquals(next, null))
+						if (object.ReferenceEquals(next, null))
 						{
 							value = default(T);
 
@@ -126,12 +120,12 @@ namespace Enyim.Collections
 				var next = tail.Next;
 
 				// are tail and next consistent
-				if (Object.ReferenceEquals(tail, this.tailNode))
+				if (object.ReferenceEquals(tail, this.tailNode))
 				{
 					// was tail pointing to the last node?
-					if (Object.ReferenceEquals(next, null))
+					if (object.ReferenceEquals(next, null))
 					{
-						if (Object.ReferenceEquals(Interlocked.CompareExchange(ref tail.Next, valueNode, next), next))
+						if (object.ReferenceEquals(Interlocked.CompareExchange(ref tail.Next, valueNode, next), next))
 						{
 							Interlocked.CompareExchange(ref this.tailNode, valueNode, tail);
 							break;
@@ -227,7 +221,7 @@ namespace Enyim.Reflection
 	/// </summary>
 	public static class FastActivator
 	{
-		private static Dictionary<Type, Func<object>> factoryCache = new Dictionary<Type, Func<object>>();
+		static Dictionary<Type, Func<object>> Factories = new Dictionary<Type, Func<object>>();
 
 		/// <summary>
 		/// Creates an instance of the specified type using a generated factory to avoid using Reflection.
@@ -246,17 +240,16 @@ namespace Enyim.Reflection
 		/// <returns>The newly created instance.</returns>
 		public static object Create(Type type)
 		{
-			if (!factoryCache.TryGetValue(type, out Func<object> func))
-				lock (factoryCache)
-					if (!factoryCache.TryGetValue(type, out func))
+			if (!FastActivator.Factories.TryGetValue(type, out Func<object> func))
+				lock (FastActivator.Factories)
+					if (!FastActivator.Factories.TryGetValue(type, out func))
 					{
-						factoryCache[type] = func = Expression.Lambda<Func<object>>(Expression.New(type)).Compile();
+						FastActivator.Factories[type] = func = Expression.Lambda<Func<object>>(Expression.New(type)).Compile();
 					}
-
 			return func();
 		}
 
-		private static class TypeFactory<T>
+		static class TypeFactory<T>
 		{
 			public static readonly Func<T> Create = Expression.Lambda<Func<T>>(Expression.New(typeof(T))).Compile();
 		}
