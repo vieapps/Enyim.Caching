@@ -41,7 +41,7 @@ namespace Enyim.Caching.Memcached
 		public KetamaNodeLocator(string hashName = null)
 		{
 			this._hashName = hashName ?? KetamaNodeLocator.DefaultHashName;
-			if (!KetamaNodeLocator.HashFactory.TryGetValue(this._hashName, out this._hashFactory))
+			if (!KetamaNodeLocator.HashFactory.TryGetValue(this._hashName.ToLower(), out this._hashFactory))
 				this._hashFactory = () => MD5.Create();
 		}
 
@@ -219,8 +219,6 @@ namespace Enyim.Caching.Memcached
 		#region [ Hash Factory                  ]
 		static readonly Dictionary<string, Func<HashAlgorithm>> HashFactory = new Dictionary<string, Func<HashAlgorithm>>(StringComparer.OrdinalIgnoreCase)
 		{
-			{ String.Empty, () => MD5.Create() },
-			{ "default", () => MD5.Create() },
 			{ "md5", () => MD5.Create() },
 			{ "sha1", () => SHA1.Create() },
 			{ "tiger", () => new TigerHash() },

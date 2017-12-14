@@ -390,7 +390,7 @@ namespace Enyim.Caching.Configuration
 			return this.NodeLocatorFactory != null
 				? this.NodeLocatorFactory.Create()
 				: this.NodeLocator != null
-					? FastActivator.Create(this.NodeLocator) as INodeLocator
+					? FastActivator.Create(this.NodeLocator) as INodeLocator ?? new DefaultNodeLocator()
 					: new KetamaNodeLocator();
 		}
 

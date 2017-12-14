@@ -104,7 +104,7 @@ namespace Enyim.Caching.Memcached
 
 				if (this._logger.IsEnabled(LogLevel.Warning))
 				{
-					var unread = Encoding.ASCII.GetString(data);
+					var unread = Encoding.UTF8.GetString(data);
 					unread = unread.Length > 255 ? unread.Substring(0, 255) + "..." : unread;
 					this._logger.LogWarning(unread);
 				}
@@ -210,6 +210,10 @@ namespace Enyim.Caching.Memcached
 					if (awaitable.Arguments.SocketError != SocketError.Success)
 						throw new IOException($"Failed to write to the socket '{this._endpoint}'. Error: {awaitable.Arguments.SocketError}");
 				}
+				catch (IOException)
+				{
+					throw;
+				}
 				catch (Exception ex)
 				{
 					this._logger.LogError(ex, "Error occurred while writting into socket");
@@ -251,6 +255,10 @@ namespace Enyim.Caching.Memcached
 					if (awaitable.Arguments.SocketError != SocketError.Success)
 						throw new IOException($"Failed to write to the socket '{this._endpoint}'. Error: {awaitable.Arguments.SocketError}");
 				}
+				catch (IOException)
+				{
+					throw;
+				}
 				catch (Exception ex)
 				{
 					this._logger.LogError(ex, "Error occurred while writting into socket");
@@ -284,11 +292,15 @@ namespace Enyim.Caching.Memcached
 					offset += currentRead;
 					shouldRead -= currentRead;
 				}
+				catch (IOException)
+				{
+					throw;
+				}
 				catch (Exception e)
 				{
 					this._logger.LogError(e, "Error occurred while reading from socket");
 					this._isAlive = false;
-					throw;
+					throw new IOException($"Failed to read from the socket '{this._socket.RemoteEndPoint}'");
 				}
 			return totalRead;
 		}
@@ -323,11 +335,15 @@ namespace Enyim.Caching.Memcached
 						offset += currentRead;
 						shouldRead -= currentRead;
 					}
+					catch (IOException)
+					{
+						throw;
+					}
 					catch (Exception e)
 					{
 						this._logger.LogError(e, "Error occurred while reading from socket");
 						this._isAlive = false;
-						throw;
+						throw new IOException($"Failed to read from the socket '{this._socket.RemoteEndPoint}'");
 					}
 			return totalRead;
 		}

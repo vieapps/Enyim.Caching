@@ -1045,6 +1045,8 @@ namespace Enyim.Caching
 		/// <summary>
 		/// Inserts the data before the specified item's data on the server.
 		/// </summary>
+		/// <param name="key">The key used to reference the item.</param>
+		/// <param name="data">The data to be appended to the item.</param>
 		/// <returns>true if the data was successfully stored; false otherwise.</returns>
 		public bool Prepend(string key, ArraySegment<byte> data)
 		{
@@ -1444,7 +1446,7 @@ namespace Enyim.Caching
 		/// <returns>a Dictionary holding all items indexed by their key.</returns>
 		public IDictionary<string, object> Get(IEnumerable<string> keys)
 		{
-			return this.PerformMultiGet<object>(keys, (mget, kvp) => this._transcoder.Deserialize(kvp.Value));
+			return this.PerformMultiGet<object>(keys, (multigetOp, kvp) => this._transcoder.Deserialize(kvp.Value));
 		}
 
 		/// <summary>
@@ -1455,7 +1457,7 @@ namespace Enyim.Caching
 		/// <returns>a Dictionary holding all items indexed by their key.</returns>
 		public IDictionary<string, T> Get<T>(IEnumerable<string> keys)
 		{
-			return this.PerformMultiGet<T>(keys, (mget, kvp) => this._transcoder.Deserialize<T>(kvp.Value));
+			return this.PerformMultiGet<T>(keys, (multigetOp, kvp) => this._transcoder.Deserialize<T>(kvp.Value));
 		}
 
 		/// <summary>
@@ -1465,10 +1467,10 @@ namespace Enyim.Caching
 		/// <returns></returns>
 		public IDictionary<string, CasResult<object>> GetWithCas(IEnumerable<string> keys)
 		{
-			return this.PerformMultiGet<CasResult<object>>(keys, (mget, kvp) => new CasResult<object>
+			return this.PerformMultiGet<CasResult<object>>(keys, (multigetOp, kvp) => new CasResult<object>
 			{
 				Result = this._transcoder.Deserialize(kvp.Value),
-				Cas = mget.Cas[kvp.Key]
+				Cas = multigetOp.Cas[kvp.Key]
 			});
 		}
 
@@ -1526,7 +1528,7 @@ namespace Enyim.Caching
 		/// <returns>a Dictionary holding all items indexed by their key.</returns>
 		public Task<IDictionary<string, object>> GetAsync(IEnumerable<string> keys)
 		{
-			return this.PerformMultiGetAsync<object>(keys, (mget, kvp) => this._transcoder.Deserialize(kvp.Value));
+			return this.PerformMultiGetAsync<object>(keys, (multigetOp, kvp) => this._transcoder.Deserialize(kvp.Value));
 		}
 
 		/// <summary>
@@ -1537,7 +1539,7 @@ namespace Enyim.Caching
 		/// <returns>a Dictionary holding all items indexed by their key.</returns>
 		public Task<IDictionary<string, T>> GetAsync<T>(IEnumerable<string> keys)
 		{
-			return this.PerformMultiGetAsync<T>(keys, (mget, kvp) => this._transcoder.Deserialize<T>(kvp.Value));
+			return this.PerformMultiGetAsync<T>(keys, (multigetOp, kvp) => this._transcoder.Deserialize<T>(kvp.Value));
 		}
 
 		/// <summary>
@@ -1547,10 +1549,10 @@ namespace Enyim.Caching
 		/// <returns></returns>
 		public Task<IDictionary<string, CasResult<object>>> GetWithCasAsync(IEnumerable<string> keys)
 		{
-			return this.PerformMultiGetAsync<CasResult<object>>(keys, (mget, kvp) => new CasResult<object>
+			return this.PerformMultiGetAsync<CasResult<object>>(keys, (multigetOp, kvp) => new CasResult<object>
 			{
 				Result = this._transcoder.Deserialize(kvp.Value),
-				Cas = mget.Cas[kvp.Key]
+				Cas = multigetOp.Cas[kvp.Key]
 			});
 		}
 		#endregion

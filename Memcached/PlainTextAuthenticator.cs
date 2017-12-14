@@ -1,3 +1,4 @@
+using System.Text;
 using System.Collections.Generic;
 
 namespace Enyim.Caching.Memcached
@@ -8,13 +9,13 @@ namespace Enyim.Caching.Memcached
 	/// <remarks>Either use the parametrized constructor, or pass the "userName" and "password" parameters during initalization.</remarks>
 	public sealed class PlainTextAuthenticator : ISaslAuthenticationProvider
 	{
-		byte[] authData;
+		byte[] _authenticateData;
 
 		public PlainTextAuthenticator() { }
 
 		public PlainTextAuthenticator(string zone, string userName, string password)
 		{
-			this.authData = PlainTextAuthenticator.CreateAuthData(zone, userName, password);
+			this._authenticateData = PlainTextAuthenticator.CreateAuthenticateData(zone, userName, password);
 		}
 
 		string ISaslAuthenticationProvider.Type
@@ -25,7 +26,7 @@ namespace Enyim.Caching.Memcached
 		void ISaslAuthenticationProvider.Initialize(Dictionary<string, object> parameters)
 		{
 			if (parameters != null)
-				this.authData = PlainTextAuthenticator.CreateAuthData(
+				this._authenticateData = PlainTextAuthenticator.CreateAuthenticateData(
 					this.GetParameter(parameters, "zone"),
 					this.GetParameter(parameters, "userName"),
 					this.GetParameter(parameters, "password")
@@ -41,7 +42,7 @@ namespace Enyim.Caching.Memcached
 
 		byte[] ISaslAuthenticationProvider.Authenticate()
 		{
-			return this.authData;
+			return this._authenticateData;
 		}
 
 		byte[] ISaslAuthenticationProvider.Continue(byte[] data)
@@ -49,14 +50,14 @@ namespace Enyim.Caching.Memcached
 			return null;
 		}
 
-		static byte[] CreateAuthData(string zone, string userName, string password)
+		static byte[] CreateAuthenticateData(string zone, string userName, string password)
 		{
-			//message   = [authzid] UTF8NUL authcid UTF8NUL passwd
-			//authcid   = 1*SAFE ; MUST accept up to 255 octets
-			//authzid   = 1*SAFE ; MUST accept up to 255 octets
-			//passwd    = 1*SAFE ; MUST accept up to 255 octets
-			//UTF8NUL   = %x00 ; UTF-8 encoded NUL character
-			return System.Text.Encoding.UTF8.GetBytes(zone + "\0" + userName + "\0" + password);
+			// message  = [authzid] UTF8NUL authcid UTF8NUL passwd
+			// authcid = 1*SAFE ; MUST accept up to 255 octets
+			// authzid = 1*SAFE ; MUST accept up to 255 octets
+			// passwd = 1*SAFE ; MUST accept up to 255 octets
+			// UTF8NUL = %x00 ; UTF-8 encoded NUL character
+			return Encoding.UTF8.GetBytes(zone + "\0" + userName + "\0" + password);
 		}
 	}
 }
