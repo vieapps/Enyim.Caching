@@ -6,26 +6,26 @@ namespace Enyim.Caching.Configuration
 {
 	public class SocketPoolConfiguration : ISocketPoolConfiguration
 	{
-		private int minPoolSize = 10;
-		private int maxPoolSize = 20;
-		private TimeSpan connectionTimeout = new TimeSpan(0, 0, 10);
-		private TimeSpan receiveTimeout = new TimeSpan(0, 0, 10);
-		private TimeSpan deadTimeout = new TimeSpan(0, 0, 10);
-		private TimeSpan queueTimeout = new TimeSpan(0, 0, 0, 0, 100);
-		private INodeFailurePolicyFactory policyFactory = new FailImmediatelyPolicyFactory();
+		int _minPoolSize = 10;
+		int _maxPoolSize = 20;
+		TimeSpan _connectionTimeout = new TimeSpan(0, 0, 10);
+		TimeSpan _receiveTimeout = new TimeSpan(0, 0, 10);
+		TimeSpan _deadTimeout = new TimeSpan(0, 0, 10);
+		TimeSpan _queueTimeout = new TimeSpan(0, 0, 0, 0, 100);
+		INodeFailurePolicyFactory _policyFactory = new FailImmediatelyPolicyFactory();
 
 		int ISocketPoolConfiguration.MinPoolSize
 		{
-			get { return this.minPoolSize; }
+			get { return this._minPoolSize; }
 			set
 			{
 				if (value < 0)
 					throw new ArgumentOutOfRangeException("value", "MinPoolSize must be >= 0!");
 
-				if (value > this.maxPoolSize)
+				if (value > this._maxPoolSize)
 					throw new ArgumentOutOfRangeException("value", "MinPoolSize must be <= MaxPoolSize!");
 
-				this.minPoolSize = value;
+				this._minPoolSize = value;
 			}
 		}
 
@@ -36,73 +36,73 @@ namespace Enyim.Caching.Configuration
 		/// <remarks>It should be 0.75 * (number of threads) for optimal performance.</remarks>
 		int ISocketPoolConfiguration.MaxPoolSize
 		{
-			get { return this.maxPoolSize; }
+			get { return this._maxPoolSize; }
 			set
 			{
-				if (value < this.minPoolSize)
+				if (value < this._minPoolSize)
 					throw new ArgumentOutOfRangeException("value", "MaxPoolSize must be >= MinPoolSize!");
 
-				this.maxPoolSize = value;
+				this._maxPoolSize = value;
 			}
 		}
 
 		TimeSpan ISocketPoolConfiguration.ConnectionTimeout
 		{
-			get { return this.connectionTimeout; }
+			get { return this._connectionTimeout; }
 			set
 			{
 				if (value < TimeSpan.Zero)
 					throw new ArgumentOutOfRangeException("value", "value must be positive");
 
-				this.connectionTimeout = value;
+				this._connectionTimeout = value;
 			}
 		}
 
 		TimeSpan ISocketPoolConfiguration.ReceiveTimeout
 		{
-			get { return this.receiveTimeout; }
+			get { return this._receiveTimeout; }
 			set
 			{
 				if (value < TimeSpan.Zero)
 					throw new ArgumentOutOfRangeException("value", "value must be positive");
 
-				this.receiveTimeout = value;
+				this._receiveTimeout = value;
 			}
 		}
 
 		TimeSpan ISocketPoolConfiguration.QueueTimeout
 		{
-			get { return this.queueTimeout; }
+			get { return this._queueTimeout; }
 			set
 			{
 				if (value < TimeSpan.Zero)
 					throw new ArgumentOutOfRangeException("value", "value must be positive");
 
-				this.queueTimeout = value;
+				this._queueTimeout = value;
 			}
 		}
 
 		TimeSpan ISocketPoolConfiguration.DeadTimeout
 		{
-			get { return this.deadTimeout; }
+			get { return this._deadTimeout; }
 			set
 			{
 				if (value < TimeSpan.Zero)
 					throw new ArgumentOutOfRangeException("value", "value must be positive");
 
-				this.deadTimeout = value;
+				this._deadTimeout = value;
 			}
 		}
 
 		INodeFailurePolicyFactory ISocketPoolConfiguration.FailurePolicyFactory
 		{
-			get { return this.policyFactory; }
+			get { return this._policyFactory; }
 			set
 			{
 				if (value == null)
 					throw new ArgumentNullException("value");
 
-				this.policyFactory = value;
+				this._policyFactory = value;
 			}
 		}
 	}

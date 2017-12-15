@@ -12,8 +12,21 @@ namespace Enyim.Caching.Memcached
 	/// </summary>
 	public sealed class KetamaNodeLocator : INodeLocator
 	{
-		const string DefaultHashName = "md5";
-		const int ServerAddressMutations = 160;
+		static int ServerAddressMutations = 160;
+		static Dictionary<string, Func<HashAlgorithm>> Factories = new Dictionary<string, Func<HashAlgorithm>>(StringComparer.OrdinalIgnoreCase)
+		{
+			{ "md5", () => MD5.Create() },
+			{ "sha1", () => SHA1.Create() },
+			{ "tiger", () => new TigerHash() },
+			{ "crc", () => new HashkitCrc32() },
+			{ "fnv1_32", () => new FNV1() },
+			{ "fnv1_64", () => new FNV1a() },
+			{ "fnv1a_32", () => new FNV64() },
+			{ "fnv1a_64", () => new FNV64a() },
+			{ "murmur", () => new HashkitMurmur() },
+			{ "oneatatime", () => new HashkitOneAtATime() }
+		};
+
 
 		LookupData _lookupData;
 		string _hashName;
@@ -40,8 +53,8 @@ namespace Enyim.Caching.Memcached
 		/// <remarks>If the hashName does not match any of the item on the list it will be passed to HashAlgorithm.Create, the default hash (MD5) will be used</remarks>
 		public KetamaNodeLocator(string hashName = null)
 		{
-			this._hashName = hashName ?? KetamaNodeLocator.DefaultHashName;
-			if (!KetamaNodeLocator.HashFactory.TryGetValue(this._hashName.ToLower(), out this._hashFactory))
+			this._hashName = hashName ?? "md5";
+			if (!KetamaNodeLocator.Factories.TryGetValue(this._hashName, out this._hashFactory))
 				this._hashFactory = () => MD5.Create();
 		}
 
@@ -72,8 +85,8 @@ namespace Enyim.Caching.Memcached
 				// i.e. hash is 64 bit:
 				// 01 02 03 04 05 06 07
 				// server will be stored with keys 0x07060504 & 0x03020100
-				string address = currentNode.EndPoint.ToString();
-				for (int mutation = 0; mutation < KetamaNodeLocator.ServerAddressMutations / partCount; mutation++)
+				var address = currentNode.EndPoint.ToString();
+				for (var mutation = 0; mutation < KetamaNodeLocator.ServerAddressMutations / partCount; mutation++)
 				{
 					var data = hashAlgorithm.ComputeHash(Encoding.ASCII.GetBytes(address + "-" + mutation));
 					for (var part = 0; part < partCount; part++)
@@ -103,10 +116,9 @@ namespace Enyim.Caching.Memcached
 
 		uint GetKeyHash(string key)
 		{
+			var keyData = Encoding.UTF8.GetBytes(key);
 			var hashAlgorithm = this._hashFactory();
 			var uintHash = hashAlgorithm as IUIntHashAlgorithm;
-
-			var keyData = Encoding.UTF8.GetBytes(key);
 
 			// shortcut for internal hash algorithms
 			if (uintHash == null)
@@ -114,10 +126,8 @@ namespace Enyim.Caching.Memcached
 				var data = hashAlgorithm.ComputeHash(keyData);
 				return ((uint)data[3] << 24) | ((uint)data[2] << 16) | ((uint)data[1] << 8) | ((uint)data[0]);
 			}
-			else
-			{
-				return uintHash.ComputeHash(keyData);
-			}
+
+			return uintHash.ComputeHash(keyData);
 		}
 
 		IMemcachedNode INodeLocator.Locate(string key)
@@ -176,33 +186,31 @@ namespace Enyim.Caching.Memcached
 		static IMemcachedNode LocateNode(LookupData id, uint itemKeyHash)
 		{
 			// get the index of the server assigned to this hash
-			var foundIndex = Array.BinarySearch<uint>(id.keys, itemKeyHash);
+			var index = Array.BinarySearch<uint>(id.keys, itemKeyHash);
 
 			// no exact match
-			if (foundIndex < 0)
+			if (index < 0)
 			{
 				// this is the nearest server in the list
-				foundIndex = ~foundIndex;
+				index = ~index;
 
 				// it's smaller than everything, so use the last server (with the highest key)
-				if (foundIndex == 0)
-					foundIndex = id.keys.Length - 1;
+				if (index == 0)
+					index = id.keys.Length - 1;
 
 				// the key was larger than all server keys, so return the first server
-				else if (foundIndex >= id.keys.Length)
-					foundIndex = 0;
+				else if (index >= id.keys.Length)
+					index = 0;
 			}
 
-			return foundIndex < 0 || foundIndex > id.keys.Length
+			return index < 0 || index > id.keys.Length
 				? null
-				: id.KeyToServer[id.keys[foundIndex]];
+				: id.KeyToServer[id.keys[index]];
 		}
 
-		#region [ LookupData                   ]
 		/// <summary>
-		/// this will encapsulate all the indexes we need for lookup
-		/// so the instance can be reinitialized without locking
-		/// in case an IMemcachedConfig implementation returns the same instance form the CreateLocator()
+		/// This will encapsulate all the indexes we need for lookup so the instance can be reinitialized without locking
+		/// in case an <see cref="Enyim.Caching.Configuration.IMemcachedClientConfiguration"/> implementation returns the same instance form the CreateLocator()
 		/// </summary>
 		class LookupData
 		{
@@ -214,24 +222,6 @@ namespace Enyim.Caching.Memcached
 			// used to lookup a server based on its key
 			public Dictionary<uint, IMemcachedNode> KeyToServer;
 		}
-		#endregion
-
-		#region [ Hash Factory                  ]
-		static readonly Dictionary<string, Func<HashAlgorithm>> HashFactory = new Dictionary<string, Func<HashAlgorithm>>(StringComparer.OrdinalIgnoreCase)
-		{
-			{ "md5", () => MD5.Create() },
-			{ "sha1", () => SHA1.Create() },
-			{ "tiger", () => new TigerHash() },
-			{ "crc", () => new HashkitCrc32() },
-			{ "fnv1_32", () => new FNV1() },
-			{ "fnv1_64", () => new FNV1a() },
-			{ "fnv1a_32", () => new FNV64() },
-			{ "fnv1a_64", () => new FNV64a() },
-			{ "murmur", () => new HashkitMurmur() },
-			{ "oneatatime", () => new HashkitOneAtATime() }
-		};
-		#endregion
-
 	}
 }
 

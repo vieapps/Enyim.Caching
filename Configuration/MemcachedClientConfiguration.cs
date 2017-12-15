@@ -31,7 +31,6 @@ namespace Enyim.Caching.Configuration
 		{
 			this.PrepareLogger(loggerFactory);
 
-			this.Protocol = MemcachedProtocol.Binary;
 			this.Servers = new List<EndPoint>();
 			this.SocketPool = new SocketPoolConfiguration();
 			this.Authentication = new AuthenticationConfiguration();
@@ -62,29 +61,22 @@ namespace Enyim.Caching.Configuration
 
 			this.SocketPool = configuration.SocketPool;
 
-			if (configuration.Authentication != null && !string.IsNullOrEmpty(configuration.Authentication.Type))
+			if (!string.IsNullOrWhiteSpace(configuration.Authentication?.Type))
 			{
 				try
 				{
-					var type = Type.GetType(configuration.Authentication.Type);
-					if (type != null)
+					this.Authentication = new AuthenticationConfiguration()
 					{
+						Type = configuration.Authentication.Type
+					};
+					foreach (var parameter in configuration.Authentication.Parameters)
+					{
+						this.Authentication.Parameters[parameter.Key] = parameter.Value;
 						if (this._logger.IsEnabled(LogLevel.Debug))
-							this._logger.LogDebug($"User '{type}' authentication");
-
-						this.Authentication = new AuthenticationConfiguration()
-						{
-							Type = configuration.Authentication.Type
-						};
-						foreach (var parameter in configuration.Authentication.Parameters)
-						{
-							this.Authentication.Parameters[parameter.Key] = parameter.Value;
-							if (this._logger.IsEnabled(LogLevel.Debug))
-								this._logger.LogDebug($"Authentication {parameter.Key} is '{parameter.Value}'.");
-						}
+							this._logger.LogDebug($"Authentication {parameter.Key} is '{parameter.Value}'.");
 					}
-					else
-						this._logger.LogError($"Unable to load '{configuration.Authentication.Type}' authentication");
+					if (this._logger.IsEnabled(LogLevel.Debug))
+						this._logger.LogDebug($"User '{configuration.Authentication.Type}' authentication");
 				}
 				catch (Exception ex)
 				{
@@ -143,9 +135,8 @@ namespace Enyim.Caching.Configuration
 
 			this.PrepareLogger(loggerFactory);
 
-			if (!Enum.TryParse<MemcachedProtocol>(configuration.Section.Attributes["protocol"]?.Value ?? "Binary", out MemcachedProtocol protocol))
-				protocol = MemcachedProtocol.Binary;
-			this.Protocol = protocol;
+			if (Enum.TryParse<MemcachedProtocol>(configuration.Section.Attributes["protocol"]?.Value ?? "Binary", out MemcachedProtocol protocol))
+				this.Protocol = protocol;
 
 			this.Servers = new List<EndPoint>();
 			if (configuration.Section.SelectNodes("servers/add") is XmlNodeList servers)
@@ -174,8 +165,7 @@ namespace Enyim.Caching.Configuration
 				if (socketpool.Attributes["receiveTimeout"]?.Value != null)
 					this.SocketPool.ReceiveTimeout = TimeSpan.Parse(socketpool.Attributes["receiveTimeout"].Value);
 
-				var failurePolicy = socketpool.Attributes["failurePolicy"]?.Value;
-				if ("throttling" == failurePolicy)
+				if ("throttling" == socketpool.Attributes["failurePolicy"]?.Value)
 					try
 					{
 						var failureThreshold = Convert.ToInt32(socketpool.Attributes["failureThreshold"]?.Value ?? "4");
@@ -192,25 +182,18 @@ namespace Enyim.Caching.Configuration
 				if (authentication.Attributes["type"]?.Value != null)
 					try
 					{
-						var type = Type.GetType(authentication.Attributes["type"].Value);
-						if (type != null)
+						this.Authentication = new AuthenticationConfiguration()
 						{
-							if (this._logger.IsEnabled(LogLevel.Debug))
-								this._logger.LogDebug($"Use '{type}' authentication");
-
-							this.Authentication = new AuthenticationConfiguration()
-							{
-								Type = authentication.Attributes["type"].Value
-							};
-							if (authentication.Attributes["zone"]?.Value != null)
-								this.Authentication.Parameters.Add("zone", authentication.Attributes["zone"].Value);
-							if (authentication.Attributes["userName"]?.Value != null)
-								this.Authentication.Parameters.Add("userName", authentication.Attributes["userName"].Value);
-							if (authentication.Attributes["password"]?.Value != null)
-								this.Authentication.Parameters.Add("password", authentication.Attributes["password"].Value);
-						}
-						else
-							this._logger.LogError($"Unable to load '{authentication.Attributes["type"].Value}' authentication");
+							Type = authentication.Attributes["type"].Value
+						};
+						if (authentication.Attributes["zone"]?.Value != null)
+							this.Authentication.Parameters.Add("zone", authentication.Attributes["zone"].Value);
+						if (authentication.Attributes["userName"]?.Value != null)
+							this.Authentication.Parameters.Add("userName", authentication.Attributes["userName"].Value);
+						if (authentication.Attributes["password"]?.Value != null)
+							this.Authentication.Parameters.Add("password", authentication.Attributes["password"].Value);
+						if (this._logger.IsEnabled(LogLevel.Debug))
+							this._logger.LogDebug($"Use '{authentication.Attributes["type"].Value}' authentication");
 					}
 					catch (Exception ex)
 					{
@@ -260,7 +243,7 @@ namespace Enyim.Caching.Configuration
 		void PrepareLogger(ILoggerFactory loggerFactory)
 		{
 			Logger.AssignLoggerFactory(loggerFactory);
-			this._logger = Logger.CreateLogger<IMemcachedClientConfiguration>();
+			this._logger = Logger.CreateLogger<MemcachedClientConfiguration>();
 		}
 
 		/// <summary>
@@ -286,6 +269,11 @@ namespace Enyim.Caching.Configuration
 		/// Gets a list of <see cref="IPEndPoint"/> each representing a Memcached server in the pool.
 		/// </summary>
 		public IList<EndPoint> Servers { get; internal set; }
+
+		/// <summary>
+		/// Gets or sets the type of the communication between client and server.
+		/// </summary>
+		public MemcachedProtocol Protocol { get; set; } = MemcachedProtocol.Binary;
 
 		/// <summary>
 		/// Gets the configuration of the socket pool.
@@ -350,11 +338,6 @@ namespace Enyim.Caching.Configuration
 		/// <remarks>If both <see cref="NodeLocator"/> and  <see cref="NodeLocatorFactory"/> are assigned then the latter takes precedence.</remarks>
 		public IProviderFactory<INodeLocator> NodeLocatorFactory { get; set; }
 
-		/// <summary>
-		/// Gets or sets the type of the communication between client and server.
-		/// </summary>
-		public MemcachedProtocol Protocol { get; set; }
-
 		IList<EndPoint> IMemcachedClientConfiguration.Servers
 		{
 			get { return this.Servers; }
@@ -393,15 +376,9 @@ namespace Enyim.Caching.Configuration
 
 		IServerPool IMemcachedClientConfiguration.CreatePool()
 		{
-			switch (this.Protocol)
-			{
-				case MemcachedProtocol.Text:
-					return new DefaultServerPool(this, new TextOperationFactory());
-
-				case MemcachedProtocol.Binary:
-					return new BinaryPool(this);
-			}
-			throw new ArgumentOutOfRangeException($"Unknown protocol: [{this.Protocol}]");
+			return this.Protocol.Equals(MemcachedProtocol.Text)
+				? new DefaultServerPool(this, new TextOperationFactory())
+				: new BinaryPool(this);
 		}
 	}
 
