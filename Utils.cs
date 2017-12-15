@@ -19,7 +19,7 @@ namespace Microsoft.Extensions.DependencyInjection
 	public static partial class ServiceCollectionExtensions
 	{
 		/// <summary>
-		/// Adds the service of <see cref="Enyim.Caching.IMemcachedClient">memcached</see> into the collection of services for using with dependency injection
+		/// Adds the <see cref="IMemcachedClient">Memcached</see> service into the collection of services for using with dependency injection
 		/// </summary>
 		/// <param name="services"></param>
 		/// <param name="setupAction">The action to bind options of 'Memcached' section from appsettings.json file</param>
@@ -51,7 +51,7 @@ namespace Microsoft.AspNetCore.Builder
 	public static partial class ApplicationBuilderExtensions
 	{
 		/// <summary>
-		/// Calls to use the service of <see cref="Enyim.Caching.IMemcachedClient">memcached</see>
+		/// Calls to use the <see cref="IMemcachedClient">Memcached</see> service
 		/// </summary>
 		/// <param name="appBuilder"></param>
 		/// <returns></returns>
@@ -59,11 +59,11 @@ namespace Microsoft.AspNetCore.Builder
 		{
 			try
 			{
-				appBuilder.ApplicationServices.GetService<ILogger<IMemcachedClient>>().LogInformation($"Memcached is {(appBuilder.ApplicationServices.GetService<IMemcachedClient>() != null ? "" : "not-")}started");
+				appBuilder.ApplicationServices.GetService<ILogger<IMemcachedClient>>().LogInformation($"Memcached service is {(appBuilder.ApplicationServices.GetService<IMemcachedClient>() != null ? "" : "not-")}started");
 			}
 			catch (Exception ex)
 			{
-				appBuilder.ApplicationServices.GetService<ILogger<IMemcachedClient>>().LogError(ex, "Memcached is failed to start");
+				appBuilder.ApplicationServices.GetService<ILogger<IMemcachedClient>>().LogError(ex, "Memcached service is failed to start");
 			}
 			return appBuilder;
 		}
@@ -81,7 +81,7 @@ namespace CacheUtils
 		/// <summary>
 		/// Gets the Unix epoch
 		/// </summary>
-		public static readonly DateTime UnixEpoch = new DateTime(1970, 1, 1, 0, 0, 1);
+		public static readonly DateTime UnixEpoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
 
 		/// <summary>
 		/// Converts this date-time to time-span with Unix epoch
@@ -311,25 +311,25 @@ namespace CacheUtils
 
 			start = start > -1 ? start : 0;
 			count = count > -1 ? count : data.Length;
-			var tmp = new byte[0];
 
 			if (typeFlag.Equals(Helper.FlagOfRawData))
 			{
 				if (start > 0)
 				{
-					tmp = new byte[count];
-					Buffer.BlockCopy(data, start, tmp, 0, count);
-					return tmp;
+					var temp = new byte[count];
+					Buffer.BlockCopy(data, start, temp, 0, count);
+					return temp;
 				}
 				else
 					return data;
 			}
 
+			var bytes = new byte[0];
 			var typeCode = (TypeCode)(typeFlag & 0xff);
 			if (!typeCode.Equals(TypeCode.Empty) && !typeCode.Equals(TypeCode.DBNull) && !typeCode.Equals(TypeCode.Object))
 			{
-				tmp = new byte[count];
-				Buffer.BlockCopy(data, start, tmp, 0, count);
+				bytes = new byte[count];
+				Buffer.BlockCopy(data, start, bytes, 0, count);
 			}
 
 			switch (typeCode)
@@ -339,51 +339,51 @@ namespace CacheUtils
 					return null;
 
 				case TypeCode.Boolean:
-					return BitConverter.ToBoolean(tmp, 0);
+					return BitConverter.ToBoolean(bytes, 0);
 
 				case TypeCode.DateTime:
-					return DateTime.FromBinary(BitConverter.ToInt64(tmp, 0));
+					return DateTime.FromBinary(BitConverter.ToInt64(bytes, 0));
 
 				case TypeCode.Char:
-					return BitConverter.ToChar(tmp, 0);
+					return BitConverter.ToChar(bytes, 0);
 
 				case TypeCode.String:
-					return Encoding.UTF8.GetString(tmp, 0, tmp.Length);
+					return Encoding.UTF8.GetString(bytes, 0, bytes.Length);
 
 				case TypeCode.Byte:
-					return tmp[0];
+					return bytes[0];
 
 				case TypeCode.SByte:
-					return (sbyte)tmp[0];
+					return (sbyte)bytes[0];
 
 				case TypeCode.Int16:
-					return BitConverter.ToInt16(tmp, 0);
+					return BitConverter.ToInt16(bytes, 0);
 
 				case TypeCode.UInt16:
-					return BitConverter.ToUInt16(tmp, 0);
+					return BitConverter.ToUInt16(bytes, 0);
 
 				case TypeCode.Int32:
-					return BitConverter.ToInt32(tmp, 0);
+					return BitConverter.ToInt32(bytes, 0);
 
 				case TypeCode.UInt32:
-					return BitConverter.ToUInt32(tmp, 0);
+					return BitConverter.ToUInt32(bytes, 0);
 
 				case TypeCode.Int64:
-					return BitConverter.ToInt64(tmp, 0);
+					return BitConverter.ToInt64(bytes, 0);
 
 				case TypeCode.UInt64:
-					return BitConverter.ToUInt64(tmp, 0);
+					return BitConverter.ToUInt64(bytes, 0);
 
 				case TypeCode.Single:
-					return BitConverter.ToSingle(tmp, 0);
+					return BitConverter.ToSingle(bytes, 0);
 
 				case TypeCode.Double:
-					return BitConverter.ToDouble(tmp, 0);
+					return BitConverter.ToDouble(bytes, 0);
 
 				case TypeCode.Decimal:
 					var bits = new int[4];
 					for (var index = 0; index < 16; index += 4)
-						bits[index / 4] = BitConverter.ToInt32(tmp, index);
+						bits[index / 4] = BitConverter.ToInt32(bytes, index);
 					return new Decimal(bits);
 
 				default:

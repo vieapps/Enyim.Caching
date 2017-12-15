@@ -226,11 +226,27 @@ namespace Enyim.Reflection
 		/// <summary>
 		/// Creates an instance of the specified type using a generated factory to avoid using Reflection.
 		/// </summary>
+		/// <param name="type">The type to be created.</param>
+		/// <returns>The newly created instance.</returns>
+		public static object Create(Type type)
+		{
+			if (!FastActivator.Factories.TryGetValue(type, out Func<object> func))
+				lock (FastActivator.Factories)
+				{
+					if (!FastActivator.Factories.TryGetValue(type, out func))
+						FastActivator.Factories[type] = func = Expression.Lambda<Func<object>>(Expression.New(type)).Compile();
+				}
+			return func();
+		}
+
+		/// <summary>
+		/// Creates an instance of the specified type using a generated factory to avoid using Reflection.
+		/// </summary>
 		/// <typeparam name="T">The type to be created.</typeparam>
 		/// <returns>The newly created instance.</returns>
 		public static T Create<T>()
 		{
-			return TypeFactory<T>.Create();
+			return (T)FastActivator.Create(typeof(T));
 		}
 
 		/// <summary>
@@ -238,20 +254,9 @@ namespace Enyim.Reflection
 		/// </summary>
 		/// <param name="type">The type to be created.</param>
 		/// <returns>The newly created instance.</returns>
-		public static object Create(Type type)
+		public static object Create(string type)
 		{
-			if (!FastActivator.Factories.TryGetValue(type, out Func<object> func))
-				lock (FastActivator.Factories)
-					if (!FastActivator.Factories.TryGetValue(type, out func))
-					{
-						FastActivator.Factories[type] = func = Expression.Lambda<Func<object>>(Expression.New(type)).Compile();
-					}
-			return func();
-		}
-
-		static class TypeFactory<T>
-		{
-			public static readonly Func<T> Create = Expression.Lambda<Func<T>>(Expression.New(typeof(T))).Compile();
+			return FastActivator.Create(Type.GetType(type));
 		}
 	}
 	#endregion

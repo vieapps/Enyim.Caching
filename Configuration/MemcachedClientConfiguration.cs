@@ -18,7 +18,6 @@ namespace Enyim.Caching.Configuration
 {
 	public class MemcachedClientConfiguration : IMemcachedClientConfiguration
 	{
-		// these are lazy initialized in the getters
 		Type _nodeLocator;
 		ITranscoder _transcoder;
 		IKeyTransformer _keyTransformer;
@@ -97,13 +96,9 @@ namespace Enyim.Caching.Configuration
 			{
 				try
 				{
-					var keyTransformerType = Type.GetType(configuration.KeyTransformer);
-					if (keyTransformerType != null)
-					{
-						this._keyTransformer = FastActivator.Create(keyTransformerType) as IKeyTransformer;
-						if (this._logger.IsEnabled(LogLevel.Debug))
-							this._logger.LogDebug($"Use '{configuration.KeyTransformer}' key-transformer");
-					}
+					this._keyTransformer = FastActivator.Create(configuration.KeyTransformer) as IKeyTransformer;
+					if (this._logger.IsEnabled(LogLevel.Debug))
+						this._logger.LogDebug($"Use '{configuration.KeyTransformer}' key-transformer");
 				}
 				catch (Exception ex)
 				{
@@ -114,7 +109,7 @@ namespace Enyim.Caching.Configuration
 			if (!string.IsNullOrWhiteSpace(configuration.Transcoder))
 				try
 				{
-					this._transcoder = FastActivator.Create(Type.GetType(configuration.Transcoder)) as ITranscoder;
+					this._transcoder = FastActivator.Create(configuration.Transcoder) as ITranscoder;
 					if (this._logger.IsEnabled(LogLevel.Debug))
 						this._logger.LogDebug($"Use '{configuration.Transcoder}' transcoder");
 				}
@@ -226,7 +221,7 @@ namespace Enyim.Caching.Configuration
 				if (keyTransformer.Attributes["type"]?.Value != null)
 					try
 					{
-						this._keyTransformer = FastActivator.Create(Type.GetType(keyTransformer.Attributes["type"].Value)) as IKeyTransformer;
+						this._keyTransformer = FastActivator.Create(keyTransformer.Attributes["type"].Value) as IKeyTransformer;
 						if (this._logger.IsEnabled(LogLevel.Debug))
 							this._logger.LogDebug($"Use '{keyTransformer.Attributes["type"].Value}' key-transformer");
 					}
@@ -239,7 +234,7 @@ namespace Enyim.Caching.Configuration
 				if (transcoder.Attributes["type"]?.Value != null)
 					try
 					{
-						this._transcoder = FastActivator.Create(Type.GetType(transcoder.Attributes["type"].Value)) as ITranscoder;
+						this._transcoder = FastActivator.Create(transcoder.Attributes["type"].Value) as ITranscoder;
 						if (this._logger.IsEnabled(LogLevel.Debug))
 							this._logger.LogDebug($"Use '{transcoder.Attributes["type"].Value}' transcoder");
 					}
@@ -265,7 +260,7 @@ namespace Enyim.Caching.Configuration
 		void PrepareLogger(ILoggerFactory loggerFactory)
 		{
 			Logger.AssignLoggerFactory(loggerFactory);
-			this._logger = Logger.CreateLogger<MemcachedClientConfiguration>();
+			this._logger = Logger.CreateLogger<IMemcachedClientConfiguration>();
 		}
 
 		/// <summary>
@@ -390,8 +385,10 @@ namespace Enyim.Caching.Configuration
 			return this.NodeLocatorFactory != null
 				? this.NodeLocatorFactory.Create()
 				: this.NodeLocator != null
-					? FastActivator.Create(this.NodeLocator) as INodeLocator ?? new DefaultNodeLocator()
-					: new KetamaNodeLocator();
+					? FastActivator.Create(this.NodeLocator) as INodeLocator ?? new DefaultNodeLocator() as INodeLocator
+					: this.Servers.Count > 1
+						? new KetamaNodeLocator() as INodeLocator
+						: new SingleNodeLocator() as INodeLocator;
 		}
 
 		IServerPool IMemcachedClientConfiguration.CreatePool()
