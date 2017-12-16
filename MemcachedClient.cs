@@ -1176,7 +1176,7 @@ namespace Enyim.Caching
 		#endregion
 
 		#region Get
-		protected virtual IGetOperationResult PerformTryGet(string key, out ulong cas, out object value)
+		protected virtual IGetOperationResult PerformGet(string key, out ulong cas, out object value)
 		{
 			var hashedKey = this._keyTransformer.Transform(key);
 			var node = this._serverPool.Locate(hashedKey);
@@ -1216,7 +1216,7 @@ namespace Enyim.Caching
 		/// <returns>The <value>true</value> if the item was successfully retrieved.</returns>
 		public bool TryGet(string key, out object value)
 		{
-			return this.PerformTryGet(key, out ulong cas, out value).Success;
+			return this.PerformGet(key, out ulong cas, out value).Success;
 		}
 
 		/// <summary>
@@ -1226,7 +1226,7 @@ namespace Enyim.Caching
 		/// <returns>The retrieved item, or <value>null</value> if the key was not found.</returns>
 		public object Get(string key)
 		{
-			return this.PerformTryGet(key, out ulong cas, out object value).Success ? value : null;
+			return this.PerformGet(key, out ulong cas, out object value).Success ? value : null;
 		}
 
 		/// <summary>
@@ -1253,7 +1253,7 @@ namespace Enyim.Caching
 		/// <returns></returns>
 		public bool TryGetWithCas(string key, out CasResult<object> value)
 		{
-			var result = this.PerformTryGet(key, out ulong cas, out object tmp);
+			var result = this.PerformGet(key, out ulong cas, out object tmp);
 			value = new CasResult<object>()
 			{
 				Cas = cas,
@@ -1288,7 +1288,7 @@ namespace Enyim.Caching
 			return this.GetWithCas<object>(key);
 		}
 
-		protected virtual async Task<IGetOperationResult> PerformTryGetAsync(string key)
+		protected virtual async Task<IGetOperationResult> PerformGetAsync(string key)
 		{
 			var hashedKey = this._keyTransformer.Transform(key);
 			var node = this._serverPool.Locate(hashedKey);
@@ -1325,7 +1325,7 @@ namespace Enyim.Caching
 		/// <returns>The retrieved item, or <value>null</value> if the key was not found.</returns>
 		public async Task<object> GetAsync(string key)
 		{
-			var result = await this.PerformTryGetAsync(key).ConfigureAwait(false);
+			var result = await this.PerformGetAsync(key).ConfigureAwait(false);
 			return result.Success ? result.Value : null;
 		}
 
@@ -1353,7 +1353,7 @@ namespace Enyim.Caching
 		/// <returns></returns>
 		public async Task<CasResult<T>> GetWithCasAsync<T>(string key)
 		{
-			var result = await this.PerformTryGetAsync(key).ConfigureAwait(false);
+			var result = await this.PerformGetAsync(key).ConfigureAwait(false);
 			return new CasResult<T>()
 			{
 				Cas = result.Cas,

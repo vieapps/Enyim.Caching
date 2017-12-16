@@ -134,7 +134,7 @@ namespace Enyim.Caching
 		/// <returns>The <value>true</value> if the item was successfully retrieved.</returns>
 		public IGetOperationResult ExecuteTryGet(string key, out object value)
 		{
-			return this.PerformTryGet(key, out ulong cas, out value);
+			return this.PerformGet(key, out ulong cas, out value);
 		}
 
 		/// <summary>

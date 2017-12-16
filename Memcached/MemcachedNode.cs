@@ -543,8 +543,7 @@ namespace Enyim.Caching.Memcached
 				{
 					var startTime = DateTime.Now;
 					var socket = result.Value;
-					var buffer = op.GetBuffer();
-					socket.Write(buffer);
+					socket.Write(op.GetBuffer());
 
 					if (this._logger.IsEnabled(LogLevel.Debug))
 					{
@@ -587,14 +586,13 @@ namespace Enyim.Caching.Memcached
 				{
 					var startTime = DateTime.Now;
 					var socket = result.Value;
-					var buffer = op.GetBuffer();
-					await socket.WriteSync(buffer).ConfigureAwait(false);
+					await socket.WriteSync(op.GetBuffer()).ConfigureAwait(false);
 
 					if (this._logger.IsEnabled(LogLevel.Debug))
 					{
 						var duration = (DateTime.Now - startTime).TotalMilliseconds;
 						if (duration > 50)
-							this._logger.LogWarning($"Cost for writting into socket when execute operation: {duration}ms");
+							this._logger.LogWarning($"Cost for writting into socket when execute operation (async): {duration}ms");
 					}
 
 					var readResult = await op.ReadResponseAsync(socket).ConfigureAwait(false);
@@ -626,26 +624,22 @@ namespace Enyim.Caching.Memcached
 		protected virtual bool ExecuteOperationAsync(IOperation op, Action<bool> next)
 		{
 			var socket = this.Acquire().Value;
-			if (socket == null)
-				return false;
-
-			try
-			{
-				var buffer = op.GetBuffer();
-				socket.Write(buffer);
-				return op.ReadResponseAsync(socket, readSuccess =>
+			if (socket != null)
+				try
 				{
+					socket.Write(op.GetBuffer());
+					return op.ReadResponseAsync(socket, readSuccess =>
+					{
+						((IDisposable)socket).Dispose();
+						next(readSuccess);
+					});
+				}
+				catch (Exception e)
+				{
+					this._logger.LogError(e, "Error occurred while executing an operation (with next action)");
 					((IDisposable)socket).Dispose();
-					next(readSuccess);
-				});
-			}
-			catch (Exception e)
-			{
-				this._logger.LogError(e, "Error occurred while executing an operation (with next action)");
-
-				((IDisposable)socket).Dispose();
-				return false;
-			}
+				}
+			return false;
 		}
 		#endregion
 
@@ -672,7 +666,7 @@ namespace Enyim.Caching.Memcached
 
 		async Task<IOperationResult> IMemcachedNode.ExecuteAsync(IOperation op)
 		{
-			return await this.ExecuteOperationAsync(op);
+			return await this.ExecuteOperationAsync(op).ConfigureAwait(false);
 		}
 
 		bool IMemcachedNode.ExecuteAsync(IOperation op, Action<bool> next)
