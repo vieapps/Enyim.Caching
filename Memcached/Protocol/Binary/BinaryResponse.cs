@@ -31,7 +31,7 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 		public byte DataType;
 		public int StatusCode;
 
-		public int CorrelationId;
+		public int CorrelationID;
 		public ulong CAS;
 
 		public ArraySegment<byte> Extra;
@@ -233,7 +233,7 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 				this.StatusCode = BinaryConverter.DecodeUInt16(buffer, HEADER_STATUS);
 
 				this.KeyLength = BinaryConverter.DecodeUInt16(buffer, HEADER_KEY);
-				this.CorrelationId = BinaryConverter.DecodeInt32(buffer, HEADER_OPAQUE);
+				this.CorrelationID = BinaryConverter.DecodeInt32(buffer, HEADER_OPAQUE);
 				this.CAS = BinaryConverter.DecodeUInt64(buffer, HEADER_CAS);
 
 				dataLength = BinaryConverter.DecodeInt32(buffer, HEADER_BODY);

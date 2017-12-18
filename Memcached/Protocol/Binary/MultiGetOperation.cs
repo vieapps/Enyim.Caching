@@ -83,14 +83,14 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 				this.StatusCode = response.StatusCode;
 
 				// found the noop, quit
-				if (response.CorrelationId == this._noopId)
+				if (response.CorrelationID == this._noopId)
 					return result.Pass();
 
 				// find the key to the response
-				if (!this._idToKey.TryGetValue(response.CorrelationId, out string key))
+				if (!this._idToKey.TryGetValue(response.CorrelationID, out string key))
 				{
 					// we're not supposed to get here
-					this._logger.LogWarning($"Multi-Get: Found response with correlation ID ({response.CorrelationId}), but no key is matching it");
+					this._logger.LogWarning($"Multi-Get: Found response with correlation ID ({response.CorrelationID}), but no key is matching it");
 					continue;
 				}
 
@@ -104,7 +104,7 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 			}
 
 			// finished reading but we did not find the NOOP
-			return result.Fail($"Found response with correlation ID {response.CorrelationId}, but no key is matching it");
+			return result.Fail($"Found response with correlation ID {response.CorrelationID}, but no key is matching it");
 		}
 
 		protected internal override async Task<IOperationResult> ReadResponseAsync(PooledSocket socket)
@@ -119,14 +119,14 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 				this.StatusCode = response.StatusCode;
 
 				// found the noop, quit
-				if (response.CorrelationId == this._noopId)
+				if (response.CorrelationID == this._noopId)
 					return result.Pass();
 
 				// find the key to the response
-				if (!this._idToKey.TryGetValue(response.CorrelationId, out string key))
+				if (!this._idToKey.TryGetValue(response.CorrelationID, out string key))
 				{
 					// we're not supposed to get here
-					this._logger.LogWarning($"Multi-Get: Found response with correlation ID ({response.CorrelationId}), but no key is matching it");
+					this._logger.LogWarning($"Multi-Get: Found response with correlation ID ({response.CorrelationID}), but no key is matching it");
 					continue;
 				}
 
@@ -140,7 +140,7 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 			}
 
 			// finished reading but we did not find the NOOP
-			return result.Fail($"Found response with correlation ID {response.CorrelationId}, but no key is matching it");
+			return result.Fail($"Found response with correlation ID {response.CorrelationID}, but no key is matching it");
 		}
 
 		protected internal override bool ReadResponseAsync(PooledSocket socket, Action<bool> next)
@@ -170,7 +170,7 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 
 				if (!readSuccess)
 					this._loopState = false;
-				else if (reader.CorrelationId == this._noopId)
+				else if (reader.CorrelationID == this._noopId)
 					this._loopState = true;
 				else
 					this.StoreResult(reader);
@@ -185,7 +185,7 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 		{
 			if (!readSuccess)
 				this._loopState = false;
-			else if (this._response.CorrelationId == this._noopId)
+			else if (this._response.CorrelationID == this._noopId)
 				this._loopState = true;
 			else
 				this.StoreResult(this._response);
@@ -196,8 +196,8 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 		void StoreResult(BinaryResponse reader)
 		{
 			// find the key to the response
-			if (!this._idToKey.TryGetValue(reader.CorrelationId, out string key))
-				this._logger.LogWarning($"Multi-Get: Found response with correlation ID ({reader.CorrelationId}), but no key is matching it."); // we're not supposed to get here
+			if (!this._idToKey.TryGetValue(reader.CorrelationID, out string key))
+				this._logger.LogWarning($"Multi-Get: Found response with correlation ID ({reader.CorrelationID}), but no key is matching it."); // we're not supposed to get here
 
 			else
 			{
