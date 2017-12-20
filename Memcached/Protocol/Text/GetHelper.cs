@@ -47,8 +47,8 @@ namespace Enyim.Caching.Memcached.Protocol.Text
 			var allData = new byte[length];
 			var eod = new byte[2];
 
-			socket.Read(allData, 0, length);
-			socket.Read(eod, 0, 2); // data is terminated by \r\n
+			socket.Receive(allData, 0, length);
+			socket.Receive(eod, 0, 2); // data is terminated by \r\n
 
 			var result = new GetResponse(parts[1], flags, cas, allData);
 

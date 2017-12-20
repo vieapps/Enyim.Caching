@@ -100,7 +100,7 @@ namespace Enyim.Caching.Memcached
 					this._logger.LogWarning($"Socket bound to {this._socket.RemoteEndPoint} has {available} unread data! This is probably a bug in the code. Instance ID was {this.InstanceID}.");
 
 				var data = new byte[available];
-				this.Read(data, 0, available);
+				this.Receive(data, 0, available);
 
 				if (this._logger.IsEnabled(LogLevel.Warning))
 				{
@@ -174,12 +174,12 @@ namespace Enyim.Caching.Memcached
 		}
 
 		/// <summary>
-		/// Writes data into socket
+		/// Sends data to socket
 		/// </summary>
 		/// <param name="buffer"></param>
 		/// <param name="offset"></param>
 		/// <param name="length"></param>
-		public void Write(byte[] buffer, int offset, int length)
+		public void Send(byte[] buffer, int offset, int length)
 		{
 			this.CheckDisposed();
 
@@ -192,13 +192,13 @@ namespace Enyim.Caching.Memcached
 		}
 
 		/// <summary>
-		/// Writes data into socket
+		/// Sends data to socket
 		/// </summary>
 		/// <param name="buffer"></param>
 		/// <param name="offset"></param>
 		/// <param name="length"></param>
 		/// <returns></returns>
-		public async Task WriteSync(byte[] buffer, int offset, int length)
+		public async Task SendAsync(byte[] buffer, int offset, int length)
 		{
 			this.CheckDisposed();
 
@@ -223,10 +223,10 @@ namespace Enyim.Caching.Memcached
 		}
 
 		/// <summary>
-		/// Writes data into socket
+		/// Sends data to socket
 		/// </summary>
 		/// <param name="buffers"></param>
-		public void Write(IList<ArraySegment<byte>> buffers)
+		public void Send(IList<ArraySegment<byte>> buffers)
 		{
 			this.CheckDisposed();
 
@@ -239,11 +239,11 @@ namespace Enyim.Caching.Memcached
 		}
 
 		/// <summary>
-		/// Writes data into socket
+		/// Sends data to socket
 		/// </summary>
 		/// <param name="buffers"></param>
 		/// <returns></returns>
-		public async Task WriteSync(IList<ArraySegment<byte>> buffers)
+		public async Task SendAsync(IList<ArraySegment<byte>> buffers)
 		{
 			this.CheckDisposed();
 
@@ -268,14 +268,14 @@ namespace Enyim.Caching.Memcached
 		}
 
 		/// <summary>
-		/// Reads data from the server's response into the specified buffer.
+		/// Receives data from the server's response
 		/// </summary>
 		/// <param name="buffer">An array of <see cref="System.Byte"/> that is the storage location for the received data.</param>
 		/// <param name="offset">The location in buffer to store the received data.</param>
 		/// <param name="count">The number of bytes to read.</param>
 		/// <returns>The number of read bytes</returns>
 		/// <remarks>This method blocks and will not return until the specified amount of bytes are read.</remarks>
-		public int Read(byte[] buffer, int offset, int count)
+		public int Receive(byte[] buffer, int offset, int count)
 		{
 			this.CheckDisposed();
 
@@ -306,13 +306,13 @@ namespace Enyim.Caching.Memcached
 		}
 
 		/// <summary>
-		/// Reads data from the server's response into the specified buffer.
+		/// Receives data from the server's response
 		/// </summary>
 		/// <param name="buffer">An array of <see cref="System.Byte"/> that is the storage location for the received data.</param>
 		/// <param name="offset">The location in buffer to store the received data.</param>
 		/// <param name="count">The number of bytes to read.</param>
 		/// <returns>The number of read bytes</returns>
-		public async Task<int> ReadAsync(byte[] buffer, int offset, int count)
+		public async Task<int> ReceiveAsync(byte[] buffer, int offset, int count)
 		{
 			this.CheckDisposed();
 
@@ -349,23 +349,23 @@ namespace Enyim.Caching.Memcached
 		}
 
 		/// <summary>
-		/// Reads the next byte from the server's response.
+		/// Receives the next byte from the server's response
 		/// </summary>
 		/// <remarks>This method blocks and will not return until the value is read.</remarks>
-		public byte Read()
+		public byte Receive()
 		{
 			var buffer = new byte[1];
-			return this.Read(buffer, 0, 1) > 0 ? buffer[0] : (byte)0;
+			return this.Receive(buffer, 0, 1) > 0 ? buffer[0] : (byte)0;
 		}
 
 		/// <summary>
-		/// Reads the next byte from the server's response.
+		/// Receives the next byte from the server's response
 		/// </summary>
 		/// <remarks>This method blocks and will not return until the value is read.</remarks>
-		public async Task<byte> ReadAsync()
+		public async Task<byte> ReceiveAsync()
 		{
 			var buffer = new byte[1];
-			return await this.ReadAsync(buffer, 0, 1).ConfigureAwait(false) > 0 ? buffer[0] : (byte)0;
+			return await this.ReceiveAsync(buffer, 0, 1).ConfigureAwait(false) > 0 ? buffer[0] : (byte)0;
 		}
 
 		/// <summary>

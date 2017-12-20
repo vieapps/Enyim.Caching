@@ -543,7 +543,7 @@ namespace Enyim.Caching.Memcached
 				{
 					var startTime = DateTime.Now;
 					var socket = result.Value;
-					socket.Write(op.GetBuffer());
+					socket.Send(op.GetBuffer());
 
 					if (this._logger.IsEnabled(LogLevel.Debug))
 					{
@@ -586,7 +586,7 @@ namespace Enyim.Caching.Memcached
 				{
 					var startTime = DateTime.Now;
 					var socket = result.Value;
-					await socket.WriteSync(op.GetBuffer()).ConfigureAwait(false);
+					await socket.SendAsync(op.GetBuffer()).ConfigureAwait(false);
 
 					if (this._logger.IsEnabled(LogLevel.Debug))
 					{
@@ -627,7 +627,7 @@ namespace Enyim.Caching.Memcached
 			if (socket != null)
 				try
 				{
-					socket.Write(op.GetBuffer());
+					socket.Send(op.GetBuffer());
 					return op.ReadResponseAsync(socket, readSuccess =>
 					{
 						((IDisposable)socket).Dispose();

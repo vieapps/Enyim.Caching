@@ -45,7 +45,7 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 		bool Authenticate(PooledSocket socket)
 		{
 			SaslStep step = new SaslStart(this._authenticationProvider);
-			socket.Write(step.GetBuffer());
+			socket.Send(step.GetBuffer());
 
 			while (!step.ReadResponse(socket).Success)
 			{
@@ -53,7 +53,7 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 				if (step.StatusCode == 0x21)
 				{
 					step = new SaslContinue(this._authenticationProvider, step.Data);
-					socket.Write(step.GetBuffer());
+					socket.Send(step.GetBuffer());
 				}
 
 				// invalid credentials or other error
