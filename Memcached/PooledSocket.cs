@@ -68,14 +68,14 @@ namespace Enyim.Caching.Memcached
 			}
 
 			var completed = new AutoResetEvent(false);
-			var args = new SocketAsyncEventArgs()
+			var socketArgs = new SocketAsyncEventArgs()
 			{
 				RemoteEndPoint = endpoint,
 				UserToken = completed
 			};
-			args.Completed += (sender, arguments) => (arguments.UserToken as EventWaitHandle)?.Set();
+			socketArgs.Completed += (sender, args) => (args.UserToken as EventWaitHandle)?.Set();
 
-			socket.ConnectAsync(args);
+			socket.ConnectAsync(socketArgs);
 			if (!completed.WaitOne(timeout) || !socket.Connected)
 				using (socket)
 				{
@@ -96,8 +96,7 @@ namespace Enyim.Caching.Memcached
 			var available = this._socket.Available;
 			if (available > 0)
 			{
-				if (this._logger.IsEnabled(LogLevel.Warning))
-					this._logger.LogWarning($"Socket bound to {this._socket.RemoteEndPoint} has {available} unread data! This is probably a bug in the code. Instance ID was {this.InstanceID}.");
+				this._logger.LogWarning($"Socket bound to {this._socket.RemoteEndPoint} has {available} unread data! This is probably a bug in the code. Instance ID was {this.InstanceID}.");
 
 				var data = new byte[available];
 				this.Receive(data, 0, available);
