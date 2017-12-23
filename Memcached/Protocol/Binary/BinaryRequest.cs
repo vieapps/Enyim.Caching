@@ -9,7 +9,7 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 		static int InstanceCounter;
 
 		public byte Operation;
-		public readonly int CorrelationId;
+		public readonly int CorrelationID;
 
 		public string Key;
 		public ulong Cas;
@@ -23,7 +23,7 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 		public BinaryRequest(byte commandCode)
 		{
 			this.Operation = commandCode;
-			this.CorrelationId = Interlocked.Increment(ref InstanceCounter); // session ID
+			this.CorrelationID = Interlocked.Increment(ref InstanceCounter); // session ID
 		}
 
 		public unsafe IList<ArraySegment<byte>> CreateBuffer()
@@ -36,7 +36,6 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 			// key size 
 			var keyData = BinaryConverter.EncodeKey(this.Key);
 			var keyLength = keyData == null ? 0 : keyData.Length;
-
 			if (keyLength > 0xffff)
 				throw new InvalidOperationException("KeyTooLong");
 
@@ -80,10 +79,10 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 				buffer[0x0a] = (byte)(totalLength >> 8);
 				buffer[0x0b] = (byte)(totalLength & 255);
 
-				buffer[0x0c] = (byte)(this.CorrelationId >> 24);
-				buffer[0x0d] = (byte)(this.CorrelationId >> 16);
-				buffer[0x0e] = (byte)(this.CorrelationId >> 8);
-				buffer[0x0f] = (byte)(this.CorrelationId & 255);
+				buffer[0x0c] = (byte)(this.CorrelationID >> 24);
+				buffer[0x0d] = (byte)(this.CorrelationID >> 16);
+				buffer[0x0e] = (byte)(this.CorrelationID >> 8);
+				buffer[0x0f] = (byte)(this.CorrelationID & 255);
 
 				// CAS
 				ulong cas = this.Cas;

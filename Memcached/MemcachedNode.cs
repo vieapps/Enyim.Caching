@@ -24,7 +24,7 @@ namespace Enyim.Caching.Memcached
 	{
 
 		#region Attributes
-		static object locker = new Object();
+		static object Locker = new Object();
 
 		ILogger _logger;
 
@@ -90,7 +90,7 @@ namespace Enyim.Caching.Memcached
 			try
 			{
 				// we could connect to the server, let's recreate the socket pool
-				lock (locker)
+				lock (MemcachedNode.Locker)
 				{
 					if (this._isDisposed)
 						return false;
@@ -192,11 +192,9 @@ namespace Enyim.Caching.Memcached
 
 			GC.SuppressFinalize(this);
 
-			// this is not a graceful shutdown
-			// if someone uses a pooled item then it's 99% that an exception will be thrown
-			// somewhere. But since the dispose is mostly used when everyone else is finished
-			// this should not kill any kittens
-			lock (locker)
+			// this is not a graceful shutdown if someone uses a pooled item then it's 99% that an exception will be thrown somewhere,
+			// but since the dispose is mostly used when everyone else is finished this should not kill any kittens
+			lock (MemcachedNode.Locker)
 			{
 				if (this._isDisposed)
 					return;
@@ -212,7 +210,7 @@ namespace Enyim.Caching.Memcached
 		}
 		#endregion
 
-		#region [ InternalPoolImpl             ]
+		#region [ InternalPoolImpl                  ]
 		class InternalPoolImpl : IDisposable
 		{
 			/// <summary>
@@ -517,7 +515,7 @@ namespace Enyim.Caching.Memcached
 		}
 		#endregion
 
-		#region [ Comparer                     ]
+		#region [ Comparer                                  ]
 		internal sealed class Comparer : IEqualityComparer<IMemcachedNode>
 		{
 			public static readonly Comparer Instance = new Comparer();
@@ -534,7 +532,7 @@ namespace Enyim.Caching.Memcached
 		}
 		#endregion
 
-		#region [ Execute an operation   ]
+		#region [ Execute an operation         ]
 		protected virtual IPooledSocketResult ExecuteOperation(IOperation op)
 		{
 			var result = this.Acquire();

@@ -57,16 +57,16 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 				request.CreateBuffer(buffer);
 
 				// we use this to map the responses to the keys
-				this._idToKey[request.CorrelationId] = key;
+				this._idToKey[request.CorrelationID] = key;
 			}
 
 			// uncork the server
 			var noop = new BinaryRequest(OpCode.NoOp);
-			this._noopId = noop.CorrelationId;
+			this._noopId = noop.CorrelationID;
 			noop.CreateBuffer(buffer);
 
 			if (this._logger.IsEnabled(LogLevel.Debug))
-				this._logger.LogInformation($"Multi-Get: Building {keys.Count} keys - Correlation ID: {noop.CorrelationId}");
+				this._logger.LogInformation($"Multi-Get: Building {keys.Count} keys - Correlation ID: {noop.CorrelationID}");
 
 			return buffer;
 		}

@@ -57,7 +57,7 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 
 			try
 			{
-				var header = new byte[HeaderLength];
+				var header = new byte[BinaryResponse.HeaderLength];
 				socket.Receive(header, 0, header.Length);
 
 				this.DeserializeHeader(header, out int dataLength, out int extraLength);
@@ -94,7 +94,7 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 
 			try
 			{
-				var header = new byte[HeaderLength];
+				var header = new byte[BinaryResponse.HeaderLength];
 				await socket.ReceiveAsync(header, 0, header.Length).ConfigureAwait(false);
 
 				this.DeserializeHeader(header, out int dataLength, out int extraLength);
@@ -136,7 +136,7 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 
 			var asyncEvent = new AsyncIOArgs
 			{
-				Count = HeaderLength,
+				Count = BinaryResponse.HeaderLength,
 				Next = this.DoDecodeHeaderAsync
 			};
 
@@ -226,7 +226,7 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 			fixed (byte* buffer = header)
 			{
 				if (buffer[0] != MAGIC_VALUE)
-					throw new InvalidOperationException($"DeserializeHeader: Expected magic value '{MAGIC_VALUE}' but received '{buffer[0]}'");
+					throw new InvalidOperationException($"Expected magic value '{MAGIC_VALUE}' but received '{buffer[0]}'");
 
 				this.DataType = buffer[HEADER_DATATYPE];
 				this.Opcode = buffer[HEADER_OPCODE];

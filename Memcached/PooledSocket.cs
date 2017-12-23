@@ -278,18 +278,18 @@ namespace Enyim.Caching.Memcached
 		{
 			this.CheckDisposed();
 
-			var totalRead = 0;
-			var shouldRead = count;
-			while (totalRead < count)
+			var total = 0;
+			var should = count;
+			while (total < count)
 				try
 				{
-					var currentRead = this._socket.Receive(buffer, offset, shouldRead, SocketFlags.None, out SocketError errorCode);
-					if (errorCode != SocketError.Success || currentRead == 0)
+					var current = this._socket.Receive(buffer, offset, should, SocketFlags.None, out SocketError errorCode);
+					if (errorCode != SocketError.Success || current == 0)
 						throw new IOException($"Failed to read from the socket '{this._socket.RemoteEndPoint}'. Error: {(errorCode == SocketError.Success ? "?" : errorCode.ToString())}");
 
-					totalRead += currentRead;
-					offset += currentRead;
-					shouldRead -= currentRead;
+					total += current;
+					offset += current;
+					should -= current;
 				}
 				catch (IOException)
 				{
@@ -301,7 +301,7 @@ namespace Enyim.Caching.Memcached
 					this._isAlive = false;
 					throw new IOException($"Failed to read from the socket '{this._socket.RemoteEndPoint}'");
 				}
-			return totalRead;
+			return total;
 		}
 
 		/// <summary>
@@ -315,24 +315,24 @@ namespace Enyim.Caching.Memcached
 		{
 			this.CheckDisposed();
 
-			var totalRead = 0;
-			var shouldRead = count;
+			var total = 0;
+			var should = count;
 			using (var awaitable = new SocketAwaitable() { ShouldCaptureContext = false })
-				while (totalRead < count)
+				while (total < count)
 					try
 					{
-						awaitable.Buffer = new ArraySegment<byte>(new byte[shouldRead], 0, shouldRead);
+						awaitable.Buffer = new ArraySegment<byte>(new byte[should], 0, should);
 						await this._socket.ReceiveAsync(awaitable);
 						if (awaitable.Arguments.SocketError != SocketError.Success)
 							throw new IOException($"Failed to read from the socket '{this._socket.RemoteEndPoint}'. Error: {awaitable.Arguments.SocketError}");
 
-						var currentRead = awaitable.Transferred.Count;
-						if (currentRead > 0)
-							Buffer.BlockCopy(awaitable.Transferred.Array, 0, buffer, offset, currentRead);
+						var current = awaitable.Transferred.Count;
+						if (current > 0)
+							Buffer.BlockCopy(awaitable.Transferred.Array, 0, buffer, offset, current);
 
-						totalRead += currentRead;
-						offset += currentRead;
-						shouldRead -= currentRead;
+						total += current;
+						offset += current;
+						should -= current;
 					}
 					catch (IOException)
 					{
@@ -344,7 +344,7 @@ namespace Enyim.Caching.Memcached
 						this._isAlive = false;
 						throw new IOException($"Failed to read from the socket '{this._socket.RemoteEndPoint}'");
 					}
-			return totalRead;
+			return total;
 		}
 
 		/// <summary>
