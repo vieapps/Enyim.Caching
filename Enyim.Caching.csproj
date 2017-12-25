@@ -8,11 +8,11 @@
 		<AssemblyTitle>Enyim Memcached</AssemblyTitle>
 		<AssemblyVersion>1.4.0.1801</AssemblyVersion>
 		<FileVersion>1.4.0.1801</FileVersion>
-		<InformationalVersion>v1.4.netstandard-2+rev:2018.01.02</InformationalVersion>
+		<InformationalVersion>v1.4.netstandard-2+rev:2017.12.25</InformationalVersion>
 		<Product>Enyim Memcached</Product>
 		<Company>VIEApps.net</Company>
 		<GeneratePackageOnBuild>false</GeneratePackageOnBuild>
-		<PackageId>VIEApps.Enyim.Caching</PackageId>
+		<PackageId>VIEApps.Enyim.Caching.StrongName</PackageId>
 		<Version>1.4.0.1801</Version>
 		<SignAssembly>false</SignAssembly>
 		<DelaySign>false</DelaySign>
