@@ -1393,7 +1393,7 @@ namespace Enyim.Caching
 		{
 			// transform the keys and index them by hashed => original
 			// the multi-get results will be mapped using this index
-			var hashed = keys.ToDictionary(key => this._keyTransformer.Transform(key), key => key);
+			var hashed = keys.Distinct(StringComparer.OrdinalIgnoreCase).ToDictionary(key => this._keyTransformer.Transform(key), key => key);
 			var values = new Dictionary<string, T>(hashed.Count);
 
 			// execute get commands in parallel
@@ -1478,7 +1478,7 @@ namespace Enyim.Caching
 		{
 			// transform the keys and index them by hashed => original
 			// the multi-get results will be mapped using this index
-			var hashed = keys.ToDictionary(key => this._keyTransformer.Transform(key), key => key);
+			var hashed = keys.Distinct(StringComparer.OrdinalIgnoreCase).ToDictionary(key => this._keyTransformer.Transform(key), key => key);
 			var values = new Dictionary<string, T>(hashed.Count);
 
 			// action to execute command in parallel
