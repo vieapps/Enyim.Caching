@@ -24,11 +24,10 @@ namespace Enyim.Caching.Memcached
 	public class PooledSocket : IDisposable
 	{
 		ILogger _logger;
-
-		bool _isAlive;
 		Socket _socket;
 		EndPoint _endpoint;
 		AsyncSocketHelper _helper;
+		bool _isAlive;
 
 		public PooledSocket(EndPoint endpoint, TimeSpan connectionTimeout, TimeSpan receiveTimeout)
 		{

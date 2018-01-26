@@ -22,18 +22,15 @@ namespace Enyim.Caching.Memcached
 	[DebuggerDisplay("Address: {EndPoint}, Alive = {IsAlive}")]
 	public class MemcachedNode : IMemcachedNode
 	{
-
-		#region Attributes
 		static object Locker = new Object();
 
+		#region Attributes
 		ILogger _logger;
-
-		bool _isDisposed, _isInitialized;
 		EndPoint _endpoint;
 		ISocketPoolConfiguration _config;
 		InternalPoolImpl _internalPoolImpl;
-
 		INodeFailurePolicy _failurePolicy;
+		bool _isDisposed, _isInitialized;
 
 		public event Action<IMemcachedNode> Failed = null;
 		#endregion

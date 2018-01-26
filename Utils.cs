@@ -1,3 +1,4 @@
+#region Related components
 using System;
 using System.IO;
 using System.Text;
@@ -11,66 +12,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.DependencyInjection;
-
-namespace Microsoft.Extensions.DependencyInjection
-{
-
-	#region Extensions for working with .NET Core dependency injection
-	public static partial class ServiceCollectionExtensions
-	{
-		/// <summary>
-		/// Adds the <see cref="IMemcachedClient">Memcached</see> service into the collection of services for using with dependency injection
-		/// </summary>
-		/// <param name="services"></param>
-		/// <param name="setupAction">The action to bind options of 'Memcached' section from appsettings.json file</param>
-		/// <param name="addInstanceOfIDistributedCache">true to add the memcached service as an instance of IDistributedCache</param>
-		/// <returns></returns>
-		public static IServiceCollection AddMemcached(this IServiceCollection services, Action<MemcachedClientOptions> setupAction, bool addInstanceOfIDistributedCache = true)
-		{
-			if (setupAction == null)
-				throw new ArgumentNullException(nameof(setupAction));
-
-			services.AddOptions();
-			services.Configure(setupAction);
-			services.Add(ServiceDescriptor.Singleton<IMemcachedClientConfiguration, MemcachedClientConfiguration>());
-			services.Add(ServiceDescriptor.Singleton<IMemcachedClient, MemcachedClient>(s => MemcachedClient.GetInstance(s)));
-			if (addInstanceOfIDistributedCache)
-				services.Add(ServiceDescriptor.Singleton<IDistributedCache, MemcachedClient>(s => MemcachedClient.GetInstance(s)));
-
-			return services;
-		}
-	}
-	#endregion
-
-}
-
-namespace Microsoft.AspNetCore.Builder
-{
-
-	#region Extensions for working with ASP.NET Core
-	public static partial class ApplicationBuilderExtensions
-	{
-		/// <summary>
-		/// Calls to use the <see cref="IMemcachedClient">Memcached</see> service
-		/// </summary>
-		/// <param name="appBuilder"></param>
-		/// <returns></returns>
-		public static IApplicationBuilder UseMemcached(this IApplicationBuilder appBuilder)
-		{
-			try
-			{
-				appBuilder.ApplicationServices.GetService<ILogger<IMemcachedClient>>().LogInformation($"Memcached service is {(appBuilder.ApplicationServices.GetService<IMemcachedClient>() != null ? "" : "not-")}started");
-			}
-			catch (Exception ex)
-			{
-				appBuilder.ApplicationServices.GetService<ILogger<IMemcachedClient>>().LogError(ex, "Memcached service is failed to start");
-			}
-			return appBuilder;
-		}
-	}
-	#endregion
-
-}
+#endregion
 
 namespace CacheUtils
 {
@@ -396,6 +338,66 @@ namespace CacheUtils
 		#endregion
 
 	}
+}
+
+namespace Microsoft.Extensions.DependencyInjection
+{
+
+	#region Extensions for working with .NET Core dependency injection
+	public static partial class ServiceCollectionExtensions
+	{
+		/// <summary>
+		/// Adds the <see cref="IMemcachedClient">Memcached</see> service into the collection of services for using with dependency injection
+		/// </summary>
+		/// <param name="services"></param>
+		/// <param name="setupAction">The action to bind options of 'Memcached' section from appsettings.json file</param>
+		/// <param name="addInstanceOfIDistributedCache">true to add the memcached service as an instance of IDistributedCache</param>
+		/// <returns></returns>
+		public static IServiceCollection AddMemcached(this IServiceCollection services, Action<MemcachedClientOptions> setupAction, bool addInstanceOfIDistributedCache = true)
+		{
+			if (setupAction == null)
+				throw new ArgumentNullException(nameof(setupAction));
+
+			services.AddOptions();
+			services.Configure(setupAction);
+			services.Add(ServiceDescriptor.Singleton<IMemcachedClientConfiguration, MemcachedClientConfiguration>());
+			services.Add(ServiceDescriptor.Singleton<IMemcachedClient, MemcachedClient>(s => MemcachedClient.GetInstance(s)));
+			if (addInstanceOfIDistributedCache)
+				services.Add(ServiceDescriptor.Singleton<IDistributedCache, MemcachedClient>(s => MemcachedClient.GetInstance(s)));
+
+			return services;
+		}
+	}
+	#endregion
+
+}
+
+namespace Microsoft.AspNetCore.Builder
+{
+
+	#region Extensions for working with ASP.NET Core
+	public static partial class ApplicationBuilderExtensions
+	{
+		/// <summary>
+		/// Calls to use the <see cref="IMemcachedClient">Memcached</see> service
+		/// </summary>
+		/// <param name="appBuilder"></param>
+		/// <returns></returns>
+		public static IApplicationBuilder UseMemcached(this IApplicationBuilder appBuilder)
+		{
+			try
+			{
+				appBuilder.ApplicationServices.GetService<ILogger<IMemcachedClient>>().LogInformation($"Memcached service is {(appBuilder.ApplicationServices.GetService<IMemcachedClient>() != null ? "" : "not-")}started");
+			}
+			catch (Exception ex)
+			{
+				appBuilder.ApplicationServices.GetService<ILogger<IMemcachedClient>>().LogError(ex, "Memcached service is failed to start");
+			}
+			return appBuilder;
+		}
+	}
+	#endregion
+
 }
 
 #region [ License information          ]
