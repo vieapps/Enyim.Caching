@@ -6,14 +6,14 @@
 		<RootNamespace>Enyim</RootNamespace>
 		<AssemblyName>Enyim.Caching</AssemblyName>
 		<AssemblyTitle>Enyim Memcached</AssemblyTitle>
-		<AssemblyVersion>1.4.2.1802</AssemblyVersion>
-		<FileVersion>1.4.2.1802</FileVersion>
-		<InformationalVersion>v1.4.netstandard-2+rev:2018.01.31</InformationalVersion>
+		<AssemblyVersion>1.4.3.1802</AssemblyVersion>
+		<FileVersion>1.4.3.1802</FileVersion>
+		<InformationalVersion>v1.4.netstandard-2+rev:2018.02.22</InformationalVersion>
 		<Product>Enyim Memcached</Product>
 		<Company>VIEApps.net</Company>
 		<GeneratePackageOnBuild>false</GeneratePackageOnBuild>
 		<PackageId>VIEApps.Enyim.Caching</PackageId>
-		<Version>1.4.2.1802</Version>
+		<Version>1.4.3.1802</Version>
 		<SignAssembly>false</SignAssembly>
 		<DelaySign>false</DelaySign>
 		<AssemblyOriginatorKeyFile>../VIEApps.Components.snk</AssemblyOriginatorKeyFile>

@@ -58,7 +58,6 @@ namespace Enyim.Caching
 		{
 			if (configuration == null)
 				throw new ArgumentNullException(nameof(configuration));
-
 			this.Prepare(loggerFactory, configuration);
 		}
 
@@ -71,7 +70,6 @@ namespace Enyim.Caching
 		{
 			if (configuration == null)
 				throw new ArgumentNullException(nameof(configuration));
-
 			this.Prepare(loggerFactory, new MemcachedClientConfiguration(loggerFactory, configuration));
 		}
 
@@ -145,6 +143,7 @@ namespace Enyim.Caching
 					result.Pass();
 				else
 					commandResult.Combine(result);
+
 				return result;
 			}
 
@@ -237,6 +236,7 @@ namespace Enyim.Caching
 					result.Pass();
 				else
 					commandResult.Combine(result);
+
 				return result;
 			}
 
@@ -536,6 +536,7 @@ namespace Enyim.Caching
 					result.InnerResult = commandResult;
 					result.Fail("Mutate operation failed, see InnerResult or StatusCode for more details");
 				}
+
 				return result;
 			}
 
@@ -779,6 +780,7 @@ namespace Enyim.Caching
 					result.InnerResult = commandResult;
 					result.Fail("Mutate operation failed, see InnerResult or StatusCode for more details");
 				}
+
 				return result;
 			}
 
@@ -1022,6 +1024,7 @@ namespace Enyim.Caching
 					result.InnerResult = commandResult;
 					result.Fail("Concat operation failed, see InnerResult or StatusCode for details");
 				}
+
 				return result;
 			}
 
@@ -1112,6 +1115,7 @@ namespace Enyim.Caching
 					result.InnerResult = commandResult;
 					result.Fail("Concat operation failed, see InnerResult or StatusCode for details");
 				}
+
 				return result;
 			}
 
@@ -1197,6 +1201,7 @@ namespace Enyim.Caching
 				}
 				else
 					commandResult.Combine(result);
+
 				return result;
 			}
 
@@ -1307,6 +1312,7 @@ namespace Enyim.Caching
 				}
 				else
 					commandResult.Combine(result);
+
 				return result;
 			}
 
@@ -1446,7 +1452,7 @@ namespace Enyim.Caching
 		/// <returns>a Dictionary holding all items indexed by their key.</returns>
 		public IDictionary<string, object> Get(IEnumerable<string> keys)
 		{
-			return this.PerformMultiGet<object>(keys, (multigetOp, kvp) => this._transcoder.Deserialize(kvp.Value));
+			return this.PerformMultiGet<object>(keys, (op, kvp) => this._transcoder.Deserialize(kvp.Value));
 		}
 
 		/// <summary>
@@ -1457,7 +1463,7 @@ namespace Enyim.Caching
 		/// <returns>a Dictionary holding all items indexed by their key.</returns>
 		public IDictionary<string, T> Get<T>(IEnumerable<string> keys)
 		{
-			return this.PerformMultiGet<T>(keys, (multigetOp, kvp) => this._transcoder.Deserialize<T>(kvp.Value));
+			return this.PerformMultiGet<T>(keys, (op, kvp) => this._transcoder.Deserialize<T>(kvp.Value));
 		}
 
 		/// <summary>
@@ -1467,10 +1473,10 @@ namespace Enyim.Caching
 		/// <returns></returns>
 		public IDictionary<string, CasResult<object>> GetWithCas(IEnumerable<string> keys)
 		{
-			return this.PerformMultiGet<CasResult<object>>(keys, (multigetOp, kvp) => new CasResult<object>
+			return this.PerformMultiGet<CasResult<object>>(keys, (op, kvp) => new CasResult<object>
 			{
 				Result = this._transcoder.Deserialize(kvp.Value),
-				Cas = multigetOp.Cas[kvp.Key]
+				Cas = op.Cas[kvp.Key]
 			});
 		}
 
@@ -1528,7 +1534,7 @@ namespace Enyim.Caching
 		/// <returns>a Dictionary holding all items indexed by their key.</returns>
 		public Task<IDictionary<string, object>> GetAsync(IEnumerable<string> keys)
 		{
-			return this.PerformMultiGetAsync<object>(keys, (multigetOp, kvp) => this._transcoder.Deserialize(kvp.Value));
+			return this.PerformMultiGetAsync<object>(keys, (op, kvp) => this._transcoder.Deserialize(kvp.Value));
 		}
 
 		/// <summary>
@@ -1539,7 +1545,7 @@ namespace Enyim.Caching
 		/// <returns>a Dictionary holding all items indexed by their key.</returns>
 		public Task<IDictionary<string, T>> GetAsync<T>(IEnumerable<string> keys)
 		{
-			return this.PerformMultiGetAsync<T>(keys, (multigetOp, kvp) => this._transcoder.Deserialize<T>(kvp.Value));
+			return this.PerformMultiGetAsync<T>(keys, (op, kvp) => this._transcoder.Deserialize<T>(kvp.Value));
 		}
 
 		/// <summary>
@@ -1549,10 +1555,10 @@ namespace Enyim.Caching
 		/// <returns></returns>
 		public Task<IDictionary<string, CasResult<object>>> GetWithCasAsync(IEnumerable<string> keys)
 		{
-			return this.PerformMultiGetAsync<CasResult<object>>(keys, (multigetOp, kvp) => new CasResult<object>
+			return this.PerformMultiGetAsync<CasResult<object>>(keys, (op, kvp) => new CasResult<object>
 			{
 				Result = this._transcoder.Deserialize(kvp.Value),
-				Cas = multigetOp.Cas[kvp.Key]
+				Cas = op.Cas[kvp.Key]
 			});
 		}
 		#endregion
@@ -1576,6 +1582,7 @@ namespace Enyim.Caching
 					result.InnerResult = commandResult;
 					result.Fail("Failed to remove item, see InnerResult or StatusCode for details");
 				}
+
 				return result;
 			}
 
@@ -1612,6 +1619,7 @@ namespace Enyim.Caching
 					result.InnerResult = commandResult;
 					result.Fail("Failed to remove item, see InnerResult or StatusCode for details");
 				}
+
 				return result;
 			}
 
@@ -1820,7 +1828,7 @@ namespace Enyim.Caching
 		Task<byte[]> IDistributedCache.GetAsync(string key, CancellationToken token = default(CancellationToken))
 		{
 			return string.IsNullOrWhiteSpace(key)
-				? throw new ArgumentNullException(nameof(key))
+				? Task.FromException<byte[]>(new ArgumentNullException(nameof(key)))
 				: this.GetAsync<byte[]>(key);
 		}
 
@@ -1855,7 +1863,7 @@ namespace Enyim.Caching
 		Task IDistributedCache.RemoveAsync(string key, CancellationToken token = default(CancellationToken))
 		{
 			return string.IsNullOrWhiteSpace(key)
-				? throw new ArgumentNullException(nameof(key))
+				? Task.FromException(new ArgumentNullException(nameof(key)))
 				: Task.WhenAll(
 					this.RemoveAsync(key),
 					this.RemoveAsync(key.GetIDistributedCacheExpirationKey())

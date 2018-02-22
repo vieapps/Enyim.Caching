@@ -3,6 +3,7 @@ using System;
 using System.IO;
 using System.Text;
 using System.Linq;
+using System.Numerics;
 using System.Runtime.Serialization.Formatters.Binary;
 
 using Enyim.Caching;
