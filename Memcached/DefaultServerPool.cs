@@ -73,7 +73,7 @@ namespace Enyim.Caching.Memcached
 			{
 				if (this._isDisposed)
 				{
-					if (this._logger.IsEnabled(LogLevel.Warning))
+					if (this._logger.IsEnabled(LogLevel.Debug))
 						this._logger.LogWarning("IsAlive timer was triggered but the pool is already disposed. Ignoring.");
 					return;
 				}
@@ -139,8 +139,7 @@ namespace Enyim.Caching.Memcached
 
 		void NodeFail(IMemcachedNode node)
 		{
-			var isDebug = this._logger.IsEnabled(LogLevel.Debug);
-			if (isDebug)
+			if (this._logger.IsEnabled(LogLevel.Debug))
 				this._logger.LogDebug($"Node {node.EndPoint} is dead");
 
 			// the timer is stopped until we encounter the first dead server
@@ -149,7 +148,7 @@ namespace Enyim.Caching.Memcached
 			{
 				if (this._isDisposed)
 				{
-					if (this._logger.IsEnabled(LogLevel.Warning))
+					if (this._logger.IsEnabled(LogLevel.Debug))
 						this._logger.LogWarning("Got a node fail but the pool is already disposed. Ignoring.");
 					return;
 				}
@@ -166,7 +165,7 @@ namespace Enyim.Caching.Memcached
 				// when we have one, we trigger it and it will run after DeadTimeout has elapsed
 				if (!this._isTimerActive)
 				{
-					if (isDebug)
+					if (this._logger.IsEnabled(LogLevel.Debug))
 						this._logger.LogDebug("Starting the recovery timer");
 
 					if (this._resurrectTimer == null)
@@ -175,7 +174,8 @@ namespace Enyim.Caching.Memcached
 						this._resurrectTimer.Change(this._deadTimeoutMsec, Timeout.Infinite);
 
 					this._isTimerActive = true;
-					if (isDebug)
+
+					if (this._logger.IsEnabled(LogLevel.Debug))
 						this._logger.LogDebug("Recovery timer is started");
 				}
 			}

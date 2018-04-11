@@ -6,15 +6,15 @@
 		<RootNamespace>Enyim</RootNamespace>
 		<AssemblyName>Enyim.Caching</AssemblyName>
 		<AssemblyTitle>Enyim Memcached</AssemblyTitle>
-		<AssemblyVersion>1.4.3.1802</AssemblyVersion>
-		<FileVersion>1.4.3.1802</FileVersion>
-		<InformationalVersion>v1.4.netstandard-2+rev:2018.02.22</InformationalVersion>
+		<AssemblyVersion>1.4.4.1804</AssemblyVersion>
+		<FileVersion>1.4.4.1804</FileVersion>
+		<InformationalVersion>v1.4.netstandard-2+rev:2018.04.12</InformationalVersion>
 		<Product>Enyim Memcached</Product>
 		<Company>VIEApps.net</Company>
-		<GeneratePackageOnBuild>false</GeneratePackageOnBuild>
-		<PackageId>VIEApps.Enyim.Caching</PackageId>
-		<Version>1.4.3.1802</Version>
-		<SignAssembly>false</SignAssembly>
+		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+		<PackageId>VIEApps.Enyim.Caching.StrongName</PackageId>
+		<Version>1.4.4.1804</Version>
+		<SignAssembly>true</SignAssembly>
 		<DelaySign>false</DelaySign>
 		<AssemblyOriginatorKeyFile>../VIEApps.Components.snk</AssemblyOriginatorKeyFile>
 		<Title>Enyim Memcached</Title>
@@ -22,6 +22,7 @@
 		<Authors>VIEApps.net</Authors>
 		<Copyright>© 2010 Attila Kiskó, © 2016 CNBlogs, © 2018 VIEApps.net</Copyright>
 		<PackageTags>cache;caching;distributed;distributedcache;memcached;enyim;enyimmemcached;enyim.memcached;enyim.caching;vieapps;vieapps.components</PackageTags>
+		<PackageReleaseNotes>Fix bugs that not mark a node is dead while got an error while working with socket</PackageReleaseNotes>
 		<PackageProjectUrl>https://github.com/vieapps/Enyim.Caching</PackageProjectUrl>
 		<RepositoryUrl>https://github.com/vieapps/Enyim.Caching</RepositoryUrl>
 	</PropertyGroup>
@@ -47,13 +48,13 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Microsoft.AspNetCore.Http.Abstractions" Version="2.0.1" />
-		<PackageReference Include="Microsoft.Extensions.Caching.Abstractions" Version="2.0.0" />
-		<PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="2.0.0" />
+		<PackageReference Include="Microsoft.AspNetCore.Http.Abstractions" Version="2.0.2" />
+		<PackageReference Include="Microsoft.Extensions.Caching.Abstractions" Version="2.0.1" />
+		<PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="2.0.1" />
 		<PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="2.0.0" />
-		<PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="2.0.0" />
-		<PackageReference Include="Microsoft.Extensions.Options" Version="2.0.0" />
-		<PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="2.0.0" />
+		<PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="2.0.1" />
+		<PackageReference Include="Microsoft.Extensions.Options" Version="2.0.1" />
+		<PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="2.0.1" />
 		<PackageReference Include="System.Configuration.ConfigurationManager" Version="4.4.1" />
 	</ItemGroup>
 	

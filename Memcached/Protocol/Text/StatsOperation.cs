@@ -46,7 +46,7 @@ namespace Enyim.Caching.Memcached.Protocol.Text
 				// expected response is STAT item_name item_value
 				if (line.Length < 6 || String.Compare(line, 0, "STAT ", 0, 5, StringComparison.Ordinal) != 0)
 				{
-					if (this._logger.IsEnabled(LogLevel.Warning))
+					if (this._logger.IsEnabled(LogLevel.Debug))
 						this._logger.LogWarning("Unknow response: " + line);
 
 					continue;
@@ -56,7 +56,7 @@ namespace Enyim.Caching.Memcached.Protocol.Text
 				string[] parts = line.Remove(0, 5).Split(' ');
 				if (parts.Length != 2)
 				{
-					if (this._logger.IsEnabled(LogLevel.Warning))
+					if (this._logger.IsEnabled(LogLevel.Debug))
 						this._logger.LogWarning("Unknow response: " + line);
 
 					continue;

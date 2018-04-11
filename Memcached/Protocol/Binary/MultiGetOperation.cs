@@ -39,7 +39,7 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 			var keys = this.Keys;
 			if (keys == null || keys.Count == 0)
 			{
-				if (this._logger.IsEnabled(LogLevel.Warning))
+				if (this._logger.IsEnabled(LogLevel.Debug))
 					this._logger.LogWarning("Multi-Get: Empty multi-get (no key)");
 
 				return new ArraySegment<byte>[0];

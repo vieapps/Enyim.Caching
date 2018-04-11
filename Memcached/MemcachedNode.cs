@@ -417,7 +417,7 @@ namespace Enyim.Caching.Memcached
 
 				if (shouldFail)
 				{
-					if (this._logger.IsEnabled(LogLevel.Warning))
+					if (this._logger.IsEnabled(LogLevel.Debug))
 						this._logger.LogWarning($"Marking node {this._endPoint} is dead");
 
 					this._isAlive = false;

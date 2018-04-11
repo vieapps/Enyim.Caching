@@ -1403,7 +1403,7 @@ namespace Enyim.Caching
 			var values = new Dictionary<string, T>(hashed.Count);
 
 			// execute get commands in parallel
-			Func<IMemcachedNode, IList<string>, Task> func = (node, nodeKeys) =>
+			Task mget(IMemcachedNode node, IList<string> nodeKeys)
 			{
 				return Task.Run(() =>
 				{
@@ -1431,11 +1431,11 @@ namespace Enyim.Caching
 						this._logger.LogError(ex, $"Perform multi-get for {keys.Count()} keys failed");
 					}
 				});
-			};
+			}
 
 			// execute each list of keys on their respective node (in parallel)
 			var tasks = this.GroupByServer(hashed.Keys)
-				.Select(slice => func(slice.Key, slice.Value))
+				.Select(slice => mget(slice.Key, slice.Value))
 				.ToArray();
 
 			// wait for all nodes to finish
@@ -1488,7 +1488,7 @@ namespace Enyim.Caching
 			var values = new Dictionary<string, T>(hashed.Count);
 
 			// action to execute command in parallel
-			Func<IMemcachedNode, IList<string>, Task> func = async (node, nodeKeys) =>
+			async Task mget(IMemcachedNode node, IList<string> nodeKeys)
 			{
 				try
 				{
@@ -1513,11 +1513,11 @@ namespace Enyim.Caching
 				{
 					this._logger.LogError(ex, $"Perform multi-get (async) for {keys.Count()} keys failed");
 				}
-			};
+			}
 
 			// execute each list of keys on their respective node (in parallel)
 			var tasks = this.GroupByServer(hashed.Keys)
-				.Select(slice => func(slice.Key, slice.Value))
+				.Select(slice => mget(slice.Key, slice.Value))
 				.ToList();
 
 			// wait for all nodes to finish
