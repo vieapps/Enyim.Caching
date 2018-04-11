@@ -11,10 +11,10 @@
 		<InformationalVersion>v1.4.netstandard-2+rev:2018.04.12</InformationalVersion>
 		<Product>Enyim Memcached</Product>
 		<Company>VIEApps.net</Company>
-		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+		<GeneratePackageOnBuild>false</GeneratePackageOnBuild>
 		<PackageId>VIEApps.Enyim.Caching.StrongName</PackageId>
 		<Version>1.4.4.1804</Version>
-		<SignAssembly>true</SignAssembly>
+		<SignAssembly>false</SignAssembly>
 		<DelaySign>false</DelaySign>
 		<AssemblyOriginatorKeyFile>../VIEApps.Components.snk</AssemblyOriginatorKeyFile>
 		<Title>Enyim Memcached</Title>
