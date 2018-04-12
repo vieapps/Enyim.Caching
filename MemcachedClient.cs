@@ -142,7 +142,16 @@ namespace Enyim.Caching
 				if (commandResult.Success)
 					result.Pass();
 				else
+				{
 					commandResult.Combine(result);
+					if (this._logger.IsEnabled(LogLevel.Debug))
+					{
+						if (result.Message.StartsWith("Too large."))
+							this._logger.LogWarning(result.Exception, $"Failed to execute Store command: Object too large to cache");
+						else
+							this._logger.LogDebug(result.Exception, $"Failed to execute Store command: {result.Message}");
+					}
+				}
 
 				return result;
 			}
@@ -235,7 +244,16 @@ namespace Enyim.Caching
 				if (commandResult.Success)
 					result.Pass();
 				else
+				{
 					commandResult.Combine(result);
+					if (this._logger.IsEnabled(LogLevel.Debug))
+					{
+						if (result.Message.StartsWith("Too large."))
+							this._logger.LogWarning(result.Exception, $"Failed to execute Store command: Object too large to cache");
+						else
+							this._logger.LogDebug(result.Exception, $"Failed to execute Store command: {result.Message}");
+					}
+				}
 
 				return result;
 			}

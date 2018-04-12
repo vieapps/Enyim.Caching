@@ -23,7 +23,7 @@ namespace Enyim.Caching.Memcached.Protocol.Text
 		/// </summary>
 		/// <returns>The data sent by the memcached server.</returns>
 		/// <exception cref="System.InvalidOperationException">The server did not sent a response or an empty line was returned.</exception>
-		/// <exception cref="Enyim.Caching.Memcached.MemcachedException">The server did not specified any reason just returned the string ERROR. - or - The server returned a SERVER_ERROR, in this case the Message of the exception is the message returned by the server.</exception>
+		/// <exception cref="Enyim.Caching.Memcached.MemcachedClientException">The server did not specified any reason just returned the string ERROR. - or - The server returned a SERVER_ERROR, in this case the Message of the exception is the message returned by the server.</exception>
 		/// <exception cref="Enyim.Caching.Memcached.MemcachedClientException">The server did not recognize the request sent by the client. The Message of the exception is the message returned by the server.</exception>
 		public static string ReadResponse(PooledSocket socket)
 		{
@@ -45,7 +45,7 @@ namespace Enyim.Caching.Memcached.Protocol.Text
 					throw new MemcachedClientException(response.Remove(0, TextSocketHelper.ErrorResponseLength));
 
 				else if (String.Compare(response, 0, TextSocketHelper.ServerErrorResponse, 0, TextSocketHelper.ErrorResponseLength, StringComparison.Ordinal) == 0)
-					throw new MemcachedException(response.Remove(0, TextSocketHelper.ErrorResponseLength));
+					throw new MemcachedClientException(response.Remove(0, TextSocketHelper.ErrorResponseLength));
 			}
 
 			return response;

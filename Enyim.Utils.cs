@@ -282,13 +282,21 @@ namespace Enyim.Caching
 		}
 
 		/// <summary>
+		/// Gets a logger factory
+		/// </summary>
+		public static ILoggerFactory GetLoggerFactory()
+		{
+			return Logger.LoggerFactory ?? new NullLoggerFactory();
+		}
+
+		/// <summary>
 		/// Creates a logger
 		/// </summary>
 		/// <param name="type"></param>
 		/// <returns></returns>
 		public static ILogger CreateLogger(Type type)
 		{
-			return (Logger.LoggerFactory ?? new NullLoggerFactory()).CreateLogger(type);
+			return Logger.GetLoggerFactory ().CreateLogger(type);
 		}
 
 		/// <summary>
