@@ -96,7 +96,7 @@ namespace Enyim.Caching.Memcached
 					using (var socket = this.CreateSocket())
 					{
 						if (this._logger.IsEnabled(LogLevel.Debug))
-							this._logger.LogInformation($"Try to connect to the server: {this._endpoint}");
+							this._logger.LogInformation($"Try to connect to the memcached server: {this._endpoint}");
 					}
 
 					if (this._internalPoolImpl.IsAlive)
@@ -221,7 +221,7 @@ namespace Enyim.Caching.Memcached
 			int _minItems, _maxItems;
 
 			MemcachedNode _ownerNode;
-			EndPoint _endPoint;
+			EndPoint _endpoint;
 			TimeSpan _queueTimeout;
 			Semaphore _semaphore;
 
@@ -240,7 +240,7 @@ namespace Enyim.Caching.Memcached
 
 				this._ownerNode = ownerNode;
 				this._isAlive = true;
-				this._endPoint = ownerNode.EndPoint;
+				this._endpoint = ownerNode.EndPoint;
 				this._queueTimeout = config.QueueTimeout;
 
 				this._minItems = config.MinPoolSize;
@@ -268,11 +268,11 @@ namespace Enyim.Caching.Memcached
 						}
 
 					if (this._logger.IsEnabled(LogLevel.Debug))
-						this._logger.LogInformation($"Pool has been initialized for {this._endPoint} with {this._minItems} sockets");
+						this._logger.LogInformation($"Pool has been initialized for '{this._endpoint}' with {this._minItems} sockets");
 				}
 				catch (Exception e)
 				{
-					this._logger.LogError(e, $"Could not initialize pool of sockets for {this._endPoint}");
+					this._logger.LogError(e, $"Could not initialize pool of sockets for '{this._endpoint}'");
 					this.MarkAsDead();
 				}
 			}
@@ -304,11 +304,11 @@ namespace Enyim.Caching.Memcached
 				var message = string.Empty;
 
 				if (this._isDebugEnabled)
-					this._logger.LogDebug($"Acquiring stream from pool ({this._endPoint})");
+					this._logger.LogDebug($"Acquiring stream from pool ({this._endpoint})");
 
 				if (!this._isAlive || this._isDisposed)
 				{
-					message = $"Pool is dead or disposed, returning null ({this._endPoint})";
+					message = $"Pool is dead or disposed, returning null ({this._endpoint})";
 					result.Fail(message);
 
 					if (this._isDebugEnabled)
@@ -319,7 +319,7 @@ namespace Enyim.Caching.Memcached
 
 				if (!this._semaphore.WaitOne(this._queueTimeout))
 				{
-					message = $"Pool is full, timeouting ({this._endPoint})";
+					message = $"Pool is full, timeouting ({this._endpoint})";
 					result.Fail(message, new TimeoutException());
 
 					if (this._isDebugEnabled)
@@ -332,7 +332,7 @@ namespace Enyim.Caching.Memcached
 				// maybe we died while waiting
 				if (!this._isAlive)
 				{
-					message = $"Pool is dead, returning null ({this._endPoint})";
+					message = $"Pool is dead, returning null ({this._endpoint})";
 					result.Fail(message);
 
 					if (this._isDebugEnabled)
@@ -368,7 +368,7 @@ namespace Enyim.Caching.Memcached
 					}
 
 				// free item pool is empty
-				message = $"Could not get a socket from the pool, creating a new item ({this._endPoint})";
+				message = $"Could not get a socket from the pool, creating a new item ({this._endpoint})";
 				if (this._isDebugEnabled)
 					this._logger.LogDebug(message);
 
@@ -385,7 +385,7 @@ namespace Enyim.Caching.Memcached
 				}
 				catch (Exception e)
 				{
-					message = $"Failed to create socket ({this._endPoint})";
+					message = $"Failed to create socket ({this._endpoint})";
 					this._logger.LogError(message, e);
 
 					// eventhough this item failed the failure policy may keep the pool alive
@@ -408,7 +408,7 @@ namespace Enyim.Caching.Memcached
 			void MarkAsDead()
 			{
 				if (this._isDebugEnabled)
-					this._logger.LogDebug($"Mark as dead was requested ({this._endPoint})");
+					this._logger.LogDebug($"Mark as dead was requested ({this._endpoint})");
 
 				var shouldFail = this._ownerNode.FailurePolicy.ShouldFail();
 
@@ -418,7 +418,7 @@ namespace Enyim.Caching.Memcached
 				if (shouldFail)
 				{
 					if (this._logger.IsEnabled(LogLevel.Debug))
-						this._logger.LogWarning($"Marking node {this._endPoint} is dead");
+						this._logger.LogWarning($"Marking node {this._endpoint} is dead");
 
 					this._isAlive = false;
 					this._markedAsDeadUtc = DateTime.UtcNow;

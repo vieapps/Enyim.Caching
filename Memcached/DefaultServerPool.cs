@@ -24,7 +24,7 @@ namespace Enyim.Caching.Memcached
 		int _deadTimeoutMsec;
 		bool _isTimerActive, _isDisposed;
 		event Action<IMemcachedNode> _onNodeFailed;
-		System.Threading.Timer _resurrectTimer;
+		Timer _resurrectTimer;
 
 		public DefaultServerPool(IMemcachedClientConfiguration configuration, IOperationFactory opFactory)
 		{

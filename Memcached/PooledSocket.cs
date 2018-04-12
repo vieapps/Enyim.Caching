@@ -13,7 +13,6 @@ using System.Runtime.InteropServices;
 using System.Diagnostics;
 
 using Enyim.Collections;
-using Dawn.Net.Sockets;
 
 using Microsoft.Extensions.Logging;
 #endregion
@@ -34,8 +33,8 @@ namespace Enyim.Caching.Memcached
 			this._logger = Logger.CreateLogger<PooledSocket>();
 
 			var timeout = receiveTimeout == TimeSpan.MaxValue
-			    ? Timeout.Infinite
-			    : (int)receiveTimeout.TotalMilliseconds;
+				? Timeout.Infinite
+				: (int)receiveTimeout.TotalMilliseconds;
 
 			var socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp)
 			{
@@ -62,8 +61,9 @@ namespace Enyim.Caching.Memcached
 				if (address == null)
 					throw new ArgumentException($"Could not resolve host '{host}'.");
 
-				this._logger.LogDebug($"Resolved '{host}' to '{address}'");
 				endpoint = new IPEndPoint(address, dnsEndPoint.Port);
+				if (this._logger.IsEnabled(LogLevel.Debug))
+					this._logger.LogDebug($"Resolved '{host}' to '{address}'");
 			}
 
 			var completed = new AutoResetEvent(false);
@@ -78,7 +78,7 @@ namespace Enyim.Caching.Memcached
 			if (!completed.WaitOne(timeout) || !socket.Connected)
 				using (socket)
 				{
-					throw new TimeoutException($"Could not connect to {endpoint}");
+					throw new TimeoutException($"Could not connect to '{endpoint}'");
 				}
 		}
 
@@ -101,11 +101,7 @@ namespace Enyim.Caching.Memcached
 				this.Receive(data, 0, available);
 
 				if (this._logger.IsEnabled(LogLevel.Debug))
-				{
-					var unread = Encoding.UTF8.GetString(data);
-					unread = unread.Length > 255 ? unread.Substring(0, 255) + "..." : unread;
-					this._logger.LogWarning(unread);
-				}
+					this._logger.LogWarning(Encoding.UTF8.GetString(data.Length > 255 ? data.Take(255).ToArray() : data));
 			}
 
 			if (this._logger.IsEnabled(LogLevel.Debug))
@@ -176,16 +172,15 @@ namespace Enyim.Caching.Memcached
 		/// </summary>
 		/// <param name="buffer"></param>
 		/// <param name="offset"></param>
-		/// <param name="length"></param>
-		public void Send(byte[] buffer, int offset, int length)
+		/// <param name="size"></param>
+		public void Send(byte[] buffer, int offset, int size)
 		{
 			this.CheckDisposed();
-
-			this._socket.Send(buffer, offset, length, SocketFlags.None, out SocketError errorCode);
+			this._socket.Send(buffer, offset, size, SocketFlags.None, out SocketError errorCode);
 			if (errorCode != SocketError.Success)
 			{
 				this._isAlive = false;
-				throw new IOException($"Failed to write to the socket '{this._endpoint}'. Socket error code: {errorCode}");
+				throw new IOException($"Failed to write to the socket '{this._endpoint}'");
 			}
 		}
 
@@ -194,31 +189,26 @@ namespace Enyim.Caching.Memcached
 		/// </summary>
 		/// <param name="buffer"></param>
 		/// <param name="offset"></param>
-		/// <param name="length"></param>
+		/// <param name="size"></param>
 		/// <returns></returns>
-		public async Task SendAsync(byte[] buffer, int offset, int length)
+		public async Task SendAsync(byte[] buffer, int offset, int size)
 		{
 			this.CheckDisposed();
-
-			using (var awaitable = new SocketAwaitable() { ShouldCaptureContext = false })
-				try
-				{
-					awaitable.Arguments.SetBuffer(buffer, offset, length);
-					await this._socket.SendAsync(awaitable);
-					if (awaitable.Arguments.SocketError != SocketError.Success)
-						throw new IOException($"Failed to write to the socket '{this._endpoint}'. Socket error code: {awaitable.Arguments.SocketError}");
-				}
-				catch (IOException)
-				{
-					this._isAlive = false;
-					throw;
-				}
-				catch (Exception ex)
-				{
-					this._isAlive = false;
-					this._logger.LogError(ex, "Error occurred while writting into socket");
-					throw new IOException($"Failed to write to the socket '{this._endpoint}'. Socket error code: {awaitable.Arguments.SocketError}", ex);
-				}
+			try
+			{
+				await this._socket.SendAsync(new ArraySegment<byte>(buffer, offset, size), SocketFlags.None).ConfigureAwait(false);
+			}
+			catch (IOException)
+			{
+				this._isAlive = false;
+				throw;
+			}
+			catch (Exception ex)
+			{
+				this._isAlive = false;
+				this._logger.LogError(ex, $"Failed to write to the socket '{this._endpoint}'");
+				throw new IOException($"Failed to write to the socket '{this._endpoint}'", ex);
+			}
 		}
 
 		/// <summary>
@@ -228,12 +218,11 @@ namespace Enyim.Caching.Memcached
 		public void Send(IList<ArraySegment<byte>> buffers)
 		{
 			this.CheckDisposed();
-
 			this._socket.Send(buffers, SocketFlags.None, out SocketError errorCode);
 			if (errorCode != SocketError.Success)
 			{
 				this._isAlive = false;
-				throw new IOException($"Failed to write to the socket '{this._endpoint}'. Socket error code: {errorCode}");
+				throw new IOException($"Failed to write to the socket '{this._endpoint}'");
 			}
 		}
 
@@ -245,26 +234,21 @@ namespace Enyim.Caching.Memcached
 		public async Task SendAsync(IList<ArraySegment<byte>> buffers)
 		{
 			this.CheckDisposed();
-
-			using (var awaitable = new SocketAwaitable() { ShouldCaptureContext = false })
-				try
-				{
-					awaitable.Arguments.BufferList = buffers;
-					await this._socket.SendAsync(awaitable);
-					if (awaitable.Arguments.SocketError != SocketError.Success)
-						throw new IOException($"Failed to write to the socket '{this._endpoint}'. Socket error code: {awaitable.Arguments.SocketError}");
-				}
-				catch (IOException)
-				{
-					this._isAlive = false;
-					throw;
-				}
-				catch (Exception ex)
-				{
-					this._isAlive = false;
-					this._logger.LogError(ex, "Error occurred while writting into socket");
-					throw new IOException($"Failed to write to the socket '{this._endpoint}'. Socket error code: {awaitable.Arguments.SocketError}", ex);
-				}
+			try
+			{
+				await this._socket.SendAsync(buffers, SocketFlags.None).ConfigureAwait(false);
+			}
+			catch (IOException)
+			{
+				this._isAlive = false;
+				throw;
+			}
+			catch (Exception ex)
+			{
+				this._isAlive = false;
+				this._logger.LogError(ex, $"Failed to write to the socket '{this._endpoint}'");
+				throw new IOException($"Failed to write to the socket '{this._endpoint}'", ex);
+			}
 		}
 
 		/// <summary>
@@ -278,19 +262,17 @@ namespace Enyim.Caching.Memcached
 		public int Receive(byte[] buffer, int offset, int count)
 		{
 			this.CheckDisposed();
-
 			var total = 0;
 			var should = count;
 			while (total < count)
 				try
 				{
-					var current = this._socket.Receive(buffer, offset, should, SocketFlags.None, out SocketError errorCode);
-					if (errorCode != SocketError.Success || current == 0)
-						throw new IOException($"Failed to read from the socket '{this._socket.RemoteEndPoint}'. Socket error code: {(errorCode == SocketError.Success ? "?" : errorCode.ToString())}");
-
-					total += current;
-					offset += current;
-					should -= current;
+					var read = this._socket.Receive(buffer, offset, should, SocketFlags.None, out SocketError errorCode);
+					if (errorCode != SocketError.Success || read == 0)
+						throw new IOException($"Failed to read from the socket '{this._endpoint}'");
+					total += read;
+					offset += read;
+					should -= read;
 				}
 				catch (IOException)
 				{
@@ -300,8 +282,8 @@ namespace Enyim.Caching.Memcached
 				catch (Exception e)
 				{
 					this._isAlive = false;
-					this._logger.LogError(e, "Error occurred while reading from socket");
-					throw new IOException($"Failed to read from the socket '{this._socket.RemoteEndPoint}'");
+					this._logger.LogError(e, $"Failed to read from the socket '{this._endpoint}'");
+					throw new IOException($"Failed to read from the socket '{this._endpoint}'");
 				}
 			return total;
 		}
@@ -316,37 +298,30 @@ namespace Enyim.Caching.Memcached
 		public async Task<int> ReceiveAsync(byte[] buffer, int offset, int count)
 		{
 			this.CheckDisposed();
-
 			var total = 0;
 			var should = count;
-			using (var awaitable = new SocketAwaitable() { ShouldCaptureContext = false })
-				while (total < count)
-					try
-					{
-						awaitable.Buffer = new ArraySegment<byte>(new byte[should], 0, should);
-						await this._socket.ReceiveAsync(awaitable);
-						if (awaitable.Arguments.SocketError != SocketError.Success)
-							throw new IOException($"Failed to read from the socket '{this._socket.RemoteEndPoint}'. Socket error code: {awaitable.Arguments.SocketError}");
-
-						var current = awaitable.Transferred.Count;
-						if (current > 0)
-							Buffer.BlockCopy(awaitable.Transferred.Array, 0, buffer, offset, current);
-
-						total += current;
-						offset += current;
-						should -= current;
-					}
-					catch (IOException)
-					{
-						this._isAlive = false;
-						throw;
-					}
-					catch (Exception e)
-					{
-						this._isAlive = false;
-						this._logger.LogError(e, "Error occurred while reading from socket");
-						throw new IOException($"Failed to read from the socket '{this._socket.RemoteEndPoint}'");
-					}
+			while (total < count)
+				try
+				{
+					var into = new ArraySegment<byte>(new byte[should], 0, should);
+					var read = await this._socket.ReceiveAsync(into, SocketFlags.None).ConfigureAwait(false);
+					if (read > 0)
+						Buffer.BlockCopy(into.Array, 0, buffer, offset, read);
+					total += read;
+					offset += read;
+					should -= read;
+				}
+				catch (IOException)
+				{
+					this._isAlive = false;
+					throw;
+				}
+				catch (Exception ex)
+				{
+					this._isAlive = false;
+					this._logger.LogError(ex, $"Failed to read from the socket '{this._endpoint}'");
+					throw new IOException($"Failed to read from the socket '{this._endpoint}'", ex);
+				}
 			return total;
 		}
 
