@@ -22,11 +22,11 @@ namespace Enyim.Caching.Memcached
 	[DebuggerDisplay("EndPoint: {_endpoint}, Alive = {IsAlive}")]
 	public class PooledSocket : IDisposable
 	{
-		ILogger _logger;
-		Socket _socket;
-		EndPoint _endpoint;
-		AsyncSocketHelper _helper;
-		bool _isAlive;
+		internal ILogger _logger;
+		internal Socket _socket;
+		internal EndPoint _endpoint;
+		internal AsyncSocketHelper _asyncHelper;
+		internal bool _isAlive;
 
 		public PooledSocket(EndPoint endpoint, TimeSpan connectionTimeout, TimeSpan receiveTimeout)
 		{
@@ -91,7 +91,7 @@ namespace Enyim.Caching.Memcached
 
 		public void Reset()
 		{
-			this._helper?.DiscardBuffer();
+			this._asyncHelper?.DiscardBuffer();
 			var available = this._socket.Available;
 			if (available > 0)
 			{
@@ -354,7 +354,6 @@ namespace Enyim.Caching.Memcached
 		public bool ReceiveAsync(AsyncIOArgs args)
 		{
 			this.CheckDisposed();
-
 			if (!this.IsAlive)
 			{
 				args.Fail = true;
@@ -362,298 +361,307 @@ namespace Enyim.Caching.Memcached
 				return false;
 			}
 
-			if (this._helper == null)
-				this._helper = new AsyncSocketHelper(this);
+			this._asyncHelper = this._asyncHelper ?? new AsyncSocketHelper(this);
+			return this._asyncHelper.Read(args);
+		}
+	}
 
-			return this._helper.Read(args);
+	#region Helpers of Async I/O Socket 
+	/// <summary>
+	/// Supports exactly one reader and writer, but they can do IO concurrently
+	/// </summary>
+	internal class AsyncSocketHelper
+	{
+		const int ChunkSize = 65536;
+
+		PooledSocket _socket;
+		SlidingBuffer _buffer;
+
+		AsyncIOArgs _pendingArgs;
+		SocketAsyncEventArgs _readEvent;
+		ManualResetEvent _resetEvent;
+
+		int _remainingRead, _expectedToRead, _isAborted;
+
+		public AsyncSocketHelper(PooledSocket socket)
+		{
+			this._socket = socket;
+			this._buffer = new SlidingBuffer(ChunkSize);
+
+			this._readEvent = new SocketAsyncEventArgs();
+			this._readEvent.Completed += new EventHandler<SocketAsyncEventArgs>(AsyncReadCompleted);
+			this._readEvent.SetBuffer(new byte[ChunkSize], 0, ChunkSize);
+
+			this._resetEvent = new ManualResetEvent(false);
 		}
 
-		#region AsyncSocket Helper
 		/// <summary>
-		/// Supports exactly one reader and writer, but they can do IO concurrently
+		/// returns true if io is pending
 		/// </summary>
-		class AsyncSocketHelper
+		/// <param name="p"></param>
+		/// <returns></returns>
+		public bool Read(AsyncIOArgs p)
 		{
-			const int ChunkSize = 65536;
+			var count = p.Count;
+			if (count < 1)
+				throw new ArgumentOutOfRangeException("count", "count must be > 0");
+			this._expectedToRead = p.Count;
+			this._pendingArgs = p;
 
-			PooledSocket _socket;
-			SlidingBuffer _buffer;
+			p.Fail = false;
+			p.Result = null;
 
-			AsyncIOArgs _pendingArgs;
-			SocketAsyncEventArgs _readEvent;
-			ManualResetEvent _resetEvent;
-
-			int _remainingRead, _expectedToRead, _isAborted;
-
-			public AsyncSocketHelper(PooledSocket socket)
+			if (this._buffer.Available >= count)
 			{
-				this._socket = socket;
-				this._buffer = new SlidingBuffer(ChunkSize);
+				PublishResult(false);
 
-				this._readEvent = new SocketAsyncEventArgs();
-				this._readEvent.Completed += new EventHandler<SocketAsyncEventArgs>(AsyncReadCompleted);
-				this._readEvent.SetBuffer(new byte[ChunkSize], 0, ChunkSize);
-
-				this._resetEvent = new ManualResetEvent(false);
+				return false;
 			}
-
-			/// <summary>
-			/// returns true if io is pending
-			/// </summary>
-			/// <param name="p"></param>
-			/// <returns></returns>
-			public bool Read(AsyncIOArgs p)
+			else
 			{
-				var count = p.Count;
-				if (count < 1)
-					throw new ArgumentOutOfRangeException("count", "count must be > 0");
-				this._expectedToRead = p.Count;
-				this._pendingArgs = p;
+				this._remainingRead = count - this._buffer.Available;
+				this._isAborted = 0;
 
-				p.Fail = false;
-				p.Result = null;
-
-				if (this._buffer.Available >= count)
-				{
-					PublishResult(false);
-
-					return false;
-				}
-				else
-				{
-					this._remainingRead = count - this._buffer.Available;
-					this._isAborted = 0;
-
-					this.BeginReceive();
-
-					return true;
-				}
-			}
-
-			public void DiscardBuffer()
-			{
-				this._buffer.UnsafeClear();
-			}
-
-			void BeginReceive()
-			{
-				while (this._remainingRead > 0)
-				{
-					this._resetEvent.Reset();
-
-					if (this._socket._socket.ReceiveAsync(this._readEvent))
-					{
-						// wait until the timeout elapses, then abort this reading process
-						// EndREceive will be triggered sooner or later but its timeout
-						// may be higher than our read timeout, so it's not reliable
-						if (!this._resetEvent.WaitOne(this._socket._socket.ReceiveTimeout))
-							this.AbortReadAndTryPublishError(false);
-
-						return;
-					}
-
-					this.EndReceive();
-				}
-			}
-
-			void AsyncReadCompleted(object sender, SocketAsyncEventArgs e)
-			{
-				if (this.EndReceive())
-					this.BeginReceive();
-			}
-
-			void AbortReadAndTryPublishError(bool markAsDead)
-			{
-				if (markAsDead)
-					this._socket._isAlive = false;
-
-				// we've been already aborted, so quit
-				// both the EndReceive and the wait on the event can abort the read
-				// but only one should of them should continue the async call chain
-				if (Interlocked.CompareExchange(ref this._isAborted, 1, 0) != 0)
-					return;
-
-				this._remainingRead = 0;
-				var p = this._pendingArgs;
-
-				p.Fail = true;
-				p.Result = null;
-
-				this._pendingArgs.Next(p);
-			}
-
-			/// <summary>
-			/// returns true when io is pending
-			/// </summary>
-			/// <returns></returns>
-			bool EndReceive()
-			{
-				this._resetEvent.Set();
-
-				var read = this._readEvent.BytesTransferred;
-				if (this._readEvent.SocketError != SocketError.Success || read == 0)
-				{
-					this.AbortReadAndTryPublishError(true);
-
-					return false;
-				}
-
-				this._remainingRead -= read;
-				this._buffer.Append(this._readEvent.Buffer, 0, read);
-
-				if (this._remainingRead <= 0)
-				{
-					this.PublishResult(true);
-
-					return false;
-				}
+				this.BeginReceive();
 
 				return true;
 			}
+		}
 
-			void PublishResult(bool isAsync)
+		public void DiscardBuffer()
+		{
+			this._buffer.UnsafeClear();
+		}
+
+		void BeginReceive()
+		{
+			while (this._remainingRead > 0)
 			{
-				var retval = this._pendingArgs;
+				this._resetEvent.Reset();
 
-				var data = new byte[this._expectedToRead];
-				this._buffer.Read(data, 0, retval.Count);
-				this._pendingArgs.Result = data;
+				if (this._socket._socket.ReceiveAsync(this._readEvent))
+				{
+					// wait until the timeout elapses, then abort this reading process
+					// EndREceive will be triggered sooner or later but its timeout
+					// may be higher than our read timeout, so it's not reliable
+					if (!this._resetEvent.WaitOne(this._socket._socket.ReceiveTimeout))
+						this.AbortReadAndTryPublishError(false);
 
-				if (isAsync)
-					this._pendingArgs.Next(this._pendingArgs);
+					return;
+				}
+
+				this.EndReceive();
 			}
 		}
-		#endregion
 
-		#region SlidingBuffer
-		/// <summary>
-		/// Supports exactly one reader and writer, but they can access the buffer concurrently.
-		/// </summary>
-		internal class SlidingBuffer
+		void AsyncReadCompleted(object sender, SocketAsyncEventArgs e)
 		{
-			readonly InterlockedQueue<Segment> _buffers;
-			readonly int _chunkSize;
-			Segment _lastSegment;
-			int _available;
+			if (this.EndReceive())
+				this.BeginReceive();
+		}
 
-			public SlidingBuffer(int chunkSize)
+		void AbortReadAndTryPublishError(bool markAsDead)
+		{
+			if (markAsDead)
+				this._socket._isAlive = false;
+
+			// we've been already aborted, so quit
+			// both the EndReceive and the wait on the event can abort the read
+			// but only one should of them should continue the async call chain
+			if (Interlocked.CompareExchange(ref this._isAborted, 1, 0) != 0)
+				return;
+
+			this._remainingRead = 0;
+			var p = this._pendingArgs;
+
+			p.Fail = true;
+			p.Result = null;
+
+			this._pendingArgs.Next(p);
+		}
+
+		/// <summary>
+		/// returns true when io is pending
+		/// </summary>
+		/// <returns></returns>
+		bool EndReceive()
+		{
+			this._resetEvent.Set();
+
+			var read = this._readEvent.BytesTransferred;
+			if (this._readEvent.SocketError != SocketError.Success || read == 0)
 			{
-				this._chunkSize = chunkSize;
-				this._buffers = new InterlockedQueue<Segment>();
+				this.AbortReadAndTryPublishError(true);
+
+				return false;
 			}
 
-			public int Available { get { return this._available; } }
+			this._remainingRead -= read;
+			this._buffer.Append(this._readEvent.Buffer, 0, read);
 
-			public int Read(byte[] buffer, int offset, int count)
+			if (this._remainingRead <= 0)
 			{
-				var read = 0;
-				Segment segment;
+				this.PublishResult(true);
 
-				while (read < count && this._buffers.Peek(out segment))
+				return false;
+			}
+
+			return true;
+		}
+
+		void PublishResult(bool isAsync)
+		{
+			var retval = this._pendingArgs;
+
+			var data = new byte[this._expectedToRead];
+			this._buffer.Read(data, 0, retval.Count);
+			this._pendingArgs.Result = data;
+
+			if (isAsync)
+				this._pendingArgs.Next(this._pendingArgs);
+		}
+	}
+
+	public class AsyncIOArgs
+	{
+		public Action<AsyncIOArgs> Next { get; set; }
+
+		public int Count { get; set; }
+
+		public byte[] Result { get; internal set; }
+
+		public bool Fail { get; internal set; }
+	}
+	#endregion
+
+	#region SlidingBuffer
+	/// <summary>
+	/// Supports exactly one reader and writer, but they can access the buffer concurrently.
+	/// </summary>
+	internal class SlidingBuffer
+	{
+		readonly InterlockedQueue<Segment> _buffers;
+		readonly int _chunkSize;
+		Segment _lastSegment;
+		int _available;
+
+		public SlidingBuffer(int chunkSize)
+		{
+			this._chunkSize = chunkSize;
+			this._buffers = new InterlockedQueue<Segment>();
+		}
+
+		public int Available { get { return this._available; } }
+
+		public int Read(byte[] buffer, int offset, int count)
+		{
+			var read = 0;
+			Segment segment;
+
+			while (read < count && this._buffers.Peek(out segment))
+			{
+				var available = Math.Min(segment.WriteOffset - segment.ReadOffset, count - read);
+
+				if (available > 0)
 				{
-					var available = Math.Min(segment.WriteOffset - segment.ReadOffset, count - read);
-
-					if (available > 0)
-					{
-						Buffer.BlockCopy(segment.Data, segment.ReadOffset, buffer, offset + read, available);
-						read += available;
-						segment.ReadOffset += available;
-					}
-
-					// are we at the end of the segment?
-					if (segment.ReadOffset == segment.WriteOffset)
-					{
-						// we can dispose the current segment if it's not the last 
-						// (which is probably being written by the receiver)
-						if (this._lastSegment != segment)
-							this._buffers.Dequeue(out segment);
-					}
+					Buffer.BlockCopy(segment.Data, segment.ReadOffset, buffer, offset + read, available);
+					read += available;
+					segment.ReadOffset += available;
 				}
 
-				Interlocked.Add(ref this._available, -read);
-
-				return read;
+				// are we at the end of the segment?
+				if (segment.ReadOffset == segment.WriteOffset)
+				{
+					// we can dispose the current segment if it's not the last 
+					// (which is probably being written by the receiver)
+					if (this._lastSegment != segment)
+						this._buffers.Dequeue(out segment);
+				}
 			}
 
-			public void Append(byte[] buffer, int offset, int count)
+			Interlocked.Add(ref this._available, -read);
+
+			return read;
+		}
+
+		public void Append(byte[] buffer, int offset, int count)
+		{
+			if (buffer == null || buffer.Length == 0 || count == 0)
+				return;
+
+			// try to append the data to the last segment
+			// if the data is larger than the ChunkSize we copy it and append it as one chunk
+			// if the data does not fit into the last segment we allocate a new
+			// so data is never split (at the price of some wasted bytes)
+			var last = this._lastSegment;
+			var shouldQueue = false;
+
+			if (count > this._chunkSize)
 			{
-				if (buffer == null || buffer.Length == 0 || count == 0)
-					return;
+				// big data, append it
+				last = new Segment(new byte[count]);
+				shouldQueue = true;
+			}
+			else
+			{
+				var remaining = last == null
+					? 0
+					: last.Data.Length - last.WriteOffset;
 
-				// try to append the data to the last segment
-				// if the data is larger than the ChunkSize we copy it and append it as one chunk
-				// if the data does not fit into the last segment we allocate a new
-				// so data is never split (at the price of some wasted bytes)
-				var last = this._lastSegment;
-				var shouldQueue = false;
-
-				if (count > this._chunkSize)
+				// no space, create a new chunk
+				if (remaining < count)
 				{
-					// big data, append it
-					last = new Segment(new byte[count]);
+					last = new Segment(new byte[this._chunkSize]);
 					shouldQueue = true;
 				}
-				else
-				{
-					var remaining = last == null
-						? 0
-						: last.Data.Length - last.WriteOffset;
-
-					// no space, create a new chunk
-					if (remaining < count)
-					{
-						last = new Segment(new byte[this._chunkSize]);
-						shouldQueue = true;
-					}
-				}
-
-				Buffer.BlockCopy(buffer, offset, last.Data, last.WriteOffset, count);
-
-				// first we update the lastSegment reference, then we enque the new segment
-				// this way Read can safely dequeue (discard) the last item it processed and 
-				// continue  on the next one
-				// doing it in reverse would make Read dequeue the current segment (the one we just inserted)
-				if (shouldQueue)
-				{
-					Interlocked.Exchange(ref this._lastSegment, last);
-					this._buffers.Enqueue(last);
-				}
-
-				// advertise that we have more data available for reading
-				// we have to use Interlocked because in the same time the reader
-				// can remove data and will decrease the value of Available
-				Interlocked.Add(ref last.WriteOffset, count);
-				Interlocked.Add(ref this._available, count);
 			}
 
-			public void UnsafeClear()
+			Buffer.BlockCopy(buffer, offset, last.Data, last.WriteOffset, count);
+
+			// first we update the lastSegment reference, then we enque the new segment
+			// this way Read can safely dequeue (discard) the last item it processed and 
+			// continue  on the next one
+			// doing it in reverse would make Read dequeue the current segment (the one we just inserted)
+			if (shouldQueue)
 			{
-				Segment tmp;
-
-				this._lastSegment = null;
-				while (this._buffers.Dequeue(out tmp)) ;
-
-				this._available = 0;
+				Interlocked.Exchange(ref this._lastSegment, last);
+				this._buffers.Enqueue(last);
 			}
 
-			#region [ Segment                      ]
-			private class Segment
+			// advertise that we have more data available for reading
+			// we have to use Interlocked because in the same time the reader
+			// can remove data and will decrease the value of Available
+			Interlocked.Add(ref last.WriteOffset, count);
+			Interlocked.Add(ref this._available, count);
+		}
+
+		public void UnsafeClear()
+		{
+			Segment tmp;
+
+			this._lastSegment = null;
+			while (this._buffers.Dequeue(out tmp)) ;
+
+			this._available = 0;
+		}
+
+		#region [ Segment                      ]
+		private class Segment
+		{
+			public Segment(byte[] data)
 			{
-				public Segment(byte[] data)
-				{
-					this.Data = data;
-				}
-
-				public readonly byte[] Data;
-				public int WriteOffset;
-				public int ReadOffset;
+				this.Data = data;
 			}
-			#endregion
 
+			public readonly byte[] Data;
+			public int WriteOffset;
+			public int ReadOffset;
 		}
 		#endregion
 
 	}
+	#endregion
+
 }
 
 #region [ License information          ]

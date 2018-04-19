@@ -138,7 +138,7 @@ namespace Enyim.Caching.Memcached
 						this._isInitialized = true;
 
 						if (this._logger.IsEnabled(LogLevel.Debug))
-							this._logger.LogDebug($"Cost for initiaizing pool: {(DateTime.Now - startTime).TotalMilliseconds}ms");
+							this._logger.LogWarning($"Cost for initiaizing pool: {(DateTime.Now - startTime).TotalMilliseconds}ms");
 					}
 
 			try
