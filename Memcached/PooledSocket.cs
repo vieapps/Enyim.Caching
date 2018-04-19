@@ -42,7 +42,6 @@ namespace Enyim.Caching.Memcached
 				SendTimeout = timeout
 			};
 			socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.KeepAlive, true);
-
 			this.TryConnect(socket, endpoint, connectionTimeout == TimeSpan.MaxValue ? Timeout.Infinite : (int)connectionTimeout.TotalMilliseconds);
 
 			this._socket = socket;
