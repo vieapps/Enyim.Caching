@@ -209,7 +209,7 @@ namespace Enyim.Caching
 			return this.PerformStore(mode, key, value, expiresAt.GetExpiration(), ref tmp, out int status).Success;
 		}
 
-		protected async virtual Task<IStoreOperationResult> PerformStoreAsync(StoreMode mode, string key, object value, uint expires, ulong cas = 0)
+		protected virtual async Task<IStoreOperationResult> PerformStoreAsync(StoreMode mode, string key, object value, uint expires, ulong cas = 0)
 		{
 			var result = this.StoreOperationResultFactory.Create();
 			if (value == null)
@@ -1718,7 +1718,7 @@ namespace Enyim.Caching
 		{
 			var results = new Dictionary<EndPoint, Dictionary<string, string>>();
 
-			Func<IMemcachedNode, IStatsOperation, EndPoint, Task> func = (node, command, endpoint) =>
+			Task executeCommand(IMemcachedNode node, IStatsOperation command, EndPoint endpoint)
 			{
 				return Task.Run(() =>
 				{
@@ -1726,9 +1726,9 @@ namespace Enyim.Caching
 					lock (results)
 						results[endpoint] = command.Result;
 				});
-			};
+			}
 
-			var tasks = this._serverPool.GetWorkingNodes().Select(node => func(node, this._serverPool.OperationFactory.Stats(type), node.EndPoint)).ToArray();
+			var tasks = this._serverPool.GetWorkingNodes().Select(node => executeCommand(node, this._serverPool.OperationFactory.Stats(type), node.EndPoint)).ToArray();
 			if (tasks.Length > 0)
 				Task.WaitAll(tasks, TimeSpan.FromSeconds(13));
 
@@ -1753,14 +1753,14 @@ namespace Enyim.Caching
 		{
 			var results = new Dictionary<EndPoint, Dictionary<string, string>>();
 
-			Func<IMemcachedNode, IStatsOperation, EndPoint, Task> func = async (node, command, endpoint) =>
+			async Task executeCommand(IMemcachedNode node, IStatsOperation command, EndPoint endpoint)
 			{
 				await node.ExecuteAsync(command).ConfigureAwait(false);
 				lock (results)
 					results[endpoint] = command.Result;
-			};
+			}
 
-			var tasks = this._serverPool.GetWorkingNodes().Select(node => func(node, this._serverPool.OperationFactory.Stats(type), node.EndPoint)).ToList();
+			var tasks = this._serverPool.GetWorkingNodes().Select(node => executeCommand(node, this._serverPool.OperationFactory.Stats(type), node.EndPoint)).ToList();
 			if (tasks.Count > 0)
 				await Task.WhenAll(tasks).ConfigureAwait(false);
 
@@ -1816,10 +1816,12 @@ namespace Enyim.Caching
 		{
 			if (string.IsNullOrWhiteSpace(key))
 				throw new ArgumentNullException(nameof(key));
-			var expires = options == null ? TimeSpan.Zero : options.GetExpiration();
+			var expires = options == null
+				? TimeSpan.Zero
+				: options.GetExpiration();
 			var validFor = expires is TimeSpan
 				? (TimeSpan)expires
-				: CacheUtils.Helper.UnixEpoch.AddSeconds((long)expires).ToTimeSpan();
+				: Helper.UnixEpoch.AddSeconds((long)expires).ToTimeSpan();
 			if (this.Store(StoreMode.Set, key, value, validFor) && expires is TimeSpan && validFor != TimeSpan.Zero)
 				this.Store(StoreMode.Set, key.GetIDistributedCacheExpirationKey(), expires, validFor);
 		}
@@ -1828,10 +1830,12 @@ namespace Enyim.Caching
 		{
 			if (string.IsNullOrWhiteSpace(key))
 				throw new ArgumentNullException(nameof(key));
-			var expires = options == null ? TimeSpan.Zero : options.GetExpiration();
+			var expires = options == null
+				? TimeSpan.Zero
+				: options.GetExpiration();
 			var validFor = expires is TimeSpan
 				? (TimeSpan)expires
-				: CacheUtils.Helper.UnixEpoch.AddSeconds((long)expires).ToTimeSpan();
+				: Helper.UnixEpoch.AddSeconds((long)expires).ToTimeSpan();
 			if (await this.StoreAsync(StoreMode.Set, key, value, validFor).ConfigureAwait(false) && expires is TimeSpan && validFor != TimeSpan.Zero)
 				await this.StoreAsync(StoreMode.Set, key.GetIDistributedCacheExpirationKey(), expires, validFor).ConfigureAwait(false);
 		}
@@ -1855,7 +1859,9 @@ namespace Enyim.Caching
 			if (string.IsNullOrWhiteSpace(key))
 				throw new ArgumentNullException(nameof(key));
 			var value = this.Get<byte[]>(key);
-			var expires = value != null ? this.Get(key.GetIDistributedCacheExpirationKey()) : null;
+			var expires = value != null
+				? this.Get(key.GetIDistributedCacheExpirationKey())
+				: null;
 			if (value != null && expires != null && expires is TimeSpan && this.Store(StoreMode.Replace, key, value, (TimeSpan)expires))
 				this.Store(StoreMode.Replace, key.GetIDistributedCacheExpirationKey(), expires, (TimeSpan)expires);
 		}
@@ -1865,7 +1871,9 @@ namespace Enyim.Caching
 			if (string.IsNullOrWhiteSpace(key))
 				throw new ArgumentNullException(nameof(key));
 			var value = await this.GetAsync<byte[]>(key).ConfigureAwait(false);
-			var expires = value != null ? await this.GetAsync(key.GetIDistributedCacheExpirationKey()).ConfigureAwait(false) : null;
+			var expires = value != null
+				? await this.GetAsync(key.GetIDistributedCacheExpirationKey()).ConfigureAwait(false)
+				: null;
 			if (value != null && expires != null && expires is TimeSpan && await this.StoreAsync(StoreMode.Replace, key, value, (TimeSpan)expires).ConfigureAwait(false))
 				await this.StoreAsync(StoreMode.Replace, key.GetIDistributedCacheExpirationKey(), expires, (TimeSpan)expires).ConfigureAwait(false);
 		}
@@ -1882,10 +1890,7 @@ namespace Enyim.Caching
 		{
 			return string.IsNullOrWhiteSpace(key)
 				? Task.FromException(new ArgumentNullException(nameof(key)))
-				: Task.WhenAll(
-					this.RemoveAsync(key),
-					this.RemoveAsync(key.GetIDistributedCacheExpirationKey())
-				);
+				: Task.WhenAll(this.RemoveAsync(key), this.RemoveAsync(key.GetIDistributedCacheExpirationKey()));
 		}
 		#endregion
 

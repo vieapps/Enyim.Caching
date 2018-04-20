@@ -51,7 +51,7 @@ namespace Enyim.Caching.Memcached
 
 		void TryConnect(Socket socket, EndPoint endpoint, int timeout)
 		{
-			if (endpoint is DnsEndPoint && !RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+			if (endpoint is DnsEndPoint)
 			{
 				var dnsEndPoint = endpoint as DnsEndPoint;
 				var host = dnsEndPoint.Host;

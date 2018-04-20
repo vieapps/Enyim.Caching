@@ -67,37 +67,34 @@ namespace Enyim.Caching.Memcached
 
 			// sizeof(uint)
 			const int KeyLength = 4;
-			var hashAlgorithm = this._hashFactory();
-
-			int partCount = hashAlgorithm.HashSize / 8 / KeyLength; // HashSize is in bits, uint is 4 bytes long
-			if (partCount < 1)
-				throw new ArgumentOutOfRangeException("The hash algorithm must provide at least 32 bits long hashes");
-
 			var keys = new List<uint>(nodes.Count * KetamaNodeLocator.ServerAddressMutations);
 			var keyToServer = new Dictionary<uint, IMemcachedNode>(keys.Count, new UIntEqualityComparer());
-
-			for (int nodeIndex = 0; nodeIndex < nodes.Count; nodeIndex++)
+			using (var hashAlgorithm = this._hashFactory())
 			{
-				var currentNode = nodes[nodeIndex];
+				int partCount = hashAlgorithm.HashSize / 8 / KeyLength; // HashSize is in bits, uint is 4 bytes long
+				if (partCount < 1)
+					throw new ArgumentOutOfRangeException("The hash algorithm must provide at least 32 bits long hashes");
 
-				// every server is registered numberOfKeys times
-				// using UInt32s generated from the different parts of the hash
-				// i.e. hash is 64 bit:
-				// 01 02 03 04 05 06 07
-				// server will be stored with keys 0x07060504 & 0x03020100
-				var address = currentNode.EndPoint.ToString();
-				for (var mutation = 0; mutation < KetamaNodeLocator.ServerAddressMutations / partCount; mutation++)
+				for (int nodeIndex = 0; nodeIndex < nodes.Count; nodeIndex++)
 				{
-					var data = hashAlgorithm.ComputeHash(Encoding.ASCII.GetBytes(address + "-" + mutation));
-					for (var part = 0; part < partCount; part++)
+					var currentNode = nodes[nodeIndex];
+
+					// every server is registered numberOfKeys times
+					// using UInt32s generated from the different parts of the hash
+					// i.e. hash is 64 bit:
+					// 01 02 03 04 05 06 07
+					// server will be stored with keys 0x07060504 & 0x03020100
+					var address = currentNode.EndPoint.ToString();
+					for (var mutation = 0; mutation < KetamaNodeLocator.ServerAddressMutations / partCount; mutation++)
 					{
-						var tmp = part * 4;
-						var key = ((uint)data[tmp + 3] << 24)
-							| ((uint)data[tmp + 2] << 16)
-							| ((uint)data[tmp + 1] << 8)
-							| ((uint)data[tmp]);
-						keys.Add(key);
-						keyToServer[key] = currentNode;
+						var data = hashAlgorithm.ComputeHash(Encoding.ASCII.GetBytes(address + "-" + mutation));
+						for (var part = 0; part < partCount; part++)
+						{
+							var tmp = part * 4;
+							var key = ((uint)data[tmp + 3] << 24) | ((uint)data[tmp + 2] << 16) | ((uint)data[tmp + 1] << 8) | ((uint)data[tmp]);
+							keys.Add(key);
+							keyToServer[key] = currentNode;
+						}
 					}
 				}
 			}
@@ -116,18 +113,20 @@ namespace Enyim.Caching.Memcached
 
 		uint GetKeyHash(string key)
 		{
-			var keyData = Encoding.UTF8.GetBytes(key);
-			var hashAlgorithm = this._hashFactory();
-			var uintHash = hashAlgorithm as IUIntHashAlgorithm;
-
-			// shortcut for internal hash algorithms
-			if (uintHash == null)
+			using (var hashAlgorithm = this._hashFactory())
 			{
-				var data = hashAlgorithm.ComputeHash(keyData);
-				return ((uint)data[3] << 24) | ((uint)data[2] << 16) | ((uint)data[1] << 8) | ((uint)data[0]);
-			}
+				var uintHash = hashAlgorithm as IUIntHashAlgorithm;
+				var keyData = Encoding.UTF8.GetBytes(key);
 
-			return uintHash.ComputeHash(keyData);
+				// shortcut for internal hash algorithms
+				if (uintHash == null)
+				{
+					var data = hashAlgorithm.ComputeHash(keyData);
+					return ((uint)data[3] << 24) | ((uint)data[2] << 16) | ((uint)data[1] << 8) | ((uint)data[0]);
+				}
+
+				return uintHash.ComputeHash(keyData);
+			}
 		}
 
 		IMemcachedNode INodeLocator.Locate(string key)

@@ -22,11 +22,8 @@ namespace Enyim.Caching.Memcached
 
 		IMemcachedNode INodeLocator.Locate(string key)
 		{
-			if (!this._isInitialized)
-				throw new InvalidOperationException("You must call Initialize first");
-
-			return this._node == null
-				? null
+			return !this._isInitialized
+				? throw new InvalidOperationException("You must call Initialize first")
 				: this._node;
 		}
 
