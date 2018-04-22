@@ -2,9 +2,10 @@
 using System;
 using System.Net;
 using System.Linq;
-using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Collections.Generic;
+using System.Collections.Concurrent;
 
 using Enyim.Caching.Configuration;
 using Enyim.Caching.Memcached;
@@ -1415,13 +1416,14 @@ namespace Enyim.Caching
 
 		protected virtual IDictionary<string, T> PerformMultiGet<T>(IEnumerable<string> keys, Func<IMultiGetOperation, KeyValuePair<string, CacheItem>, T> collector)
 		{
-			// transform the keys and index them by hashed => original
-			// the multi-get results will be mapped using this index
+			// transform the keys and index them by hashed => original, the multi-get results will be mapped using this index
 			var hashed = keys.Distinct(StringComparer.OrdinalIgnoreCase).ToDictionary(key => this._keyTransformer.Transform(key), key => key);
-			var values = new Dictionary<string, T>(hashed.Count);
+
+			// dictionary to store values
+			var results = new ConcurrentDictionary<string, T>();
 
 			// execute get commands in parallel
-			Task mget(IMemcachedNode node, IList<string> nodeKeys)
+			Task executeCmdAsync(IMemcachedNode node, IList<string> nodeKeys)
 			{
 				return Task.Run(() =>
 				{
@@ -1435,14 +1437,7 @@ namespace Enyim.Caching
 						if (commandResult.Success)
 							foreach (var kvp in command.Result)
 								if (hashed.TryGetValue(kvp.Key, out string original))
-								{
-									// collect the cached item
-									var result = collector(command, kvp);
-
-									// the lock will serialize the merge, but at least the commands were not waiting on each other
-									lock (values)
-										values[original] = result;
-								}
+									results.TryAdd(original, collector(command, kvp));
 					}
 					catch (Exception ex)
 					{
@@ -1453,14 +1448,14 @@ namespace Enyim.Caching
 
 			// execute each list of keys on their respective node (in parallel)
 			var tasks = this.GroupByServer(hashed.Keys)
-				.Select(slice => mget(slice.Key, slice.Value))
+				.Select(slice => executeCmdAsync(slice.Key, slice.Value))
 				.ToArray();
 
 			// wait for all nodes to finish
 			if (tasks.Length > 0)
 				Task.WaitAll(tasks, TimeSpan.FromSeconds(13));
 
-			return values;
+			return results;
 		}
 
 		/// <summary>
@@ -1500,13 +1495,14 @@ namespace Enyim.Caching
 
 		protected virtual async Task<IDictionary<string, T>> PerformMultiGetAsync<T>(IEnumerable<string> keys, Func<IMultiGetOperation, KeyValuePair<string, CacheItem>, T> collector)
 		{
-			// transform the keys and index them by hashed => original
-			// the multi-get results will be mapped using this index
-			var hashed = keys.Distinct(StringComparer.OrdinalIgnoreCase).ToDictionary(key => this._keyTransformer.Transform(key), key => key);
-			var values = new Dictionary<string, T>(hashed.Count);
+			// transform the keys and index them by hashed => original, the multi-get results will be mapped using this index
+			var hashedKeys = keys.Distinct(StringComparer.OrdinalIgnoreCase).ToDictionary(key => this._keyTransformer.Transform(key), key => key);
+
+			// dictionary to store values
+			var results = new ConcurrentDictionary<string, T>();
 
 			// action to execute command in parallel
-			async Task mget(IMemcachedNode node, IList<string> nodeKeys)
+			async Task executeCmdAsync(IMemcachedNode node, IList<string> nodeKeys)
 			{
 				try
 				{
@@ -1517,15 +1513,8 @@ namespace Enyim.Caching
 					// deserialize the items in the dictionary
 					if (commandResult.Success)
 						foreach (var kvp in command.Result)
-							if (hashed.TryGetValue(kvp.Key, out string original))
-							{
-								// collect the cached item
-								var result = collector(command, kvp);
-
-								// the lock will serialize the merge, but at least the commands were not waiting on each other
-								lock (values)
-									values[original] = result;
-							}
+							if (hashedKeys.TryGetValue(kvp.Key, out string original))
+								results.TryAdd(original, collector(command, kvp));
 				}
 				catch (Exception ex)
 				{
@@ -1534,15 +1523,15 @@ namespace Enyim.Caching
 			}
 
 			// execute each list of keys on their respective node (in parallel)
-			var tasks = this.GroupByServer(hashed.Keys)
-				.Select(slice => mget(slice.Key, slice.Value))
+			var tasks = this.GroupByServer(hashedKeys.Keys)
+				.Select(slice => executeCmdAsync(slice.Key, slice.Value))
 				.ToList();
 
 			// wait for all nodes to finish
 			if (tasks.Count > 0)
 				await Task.WhenAll(tasks).ConfigureAwait(false);
 
-			return values;
+			return results;
 		}
 
 		/// <summary>
@@ -1695,8 +1684,7 @@ namespace Enyim.Caching
 		/// </summary>
 		public void FlushAll()
 		{
-			foreach (var node in this._serverPool.GetWorkingNodes())
-				node.Execute(this._serverPool.OperationFactory.Flush());
+			Task.WaitAll(this._serverPool.GetWorkingNodes().Select(node => Task.Run(() => node.Execute(this._serverPool.OperationFactory.Flush()))).ToArray(), TimeSpan.FromSeconds(13));
 		}
 
 		/// <summary>
@@ -1716,19 +1704,21 @@ namespace Enyim.Caching
 		/// <returns></returns>
 		public ServerStats Stats(string type)
 		{
-			var results = new Dictionary<EndPoint, Dictionary<string, string>>();
+			var results = new ConcurrentDictionary<EndPoint, Dictionary<string, string>>();
 
-			Task executeCommand(IMemcachedNode node, IStatsOperation command, EndPoint endpoint)
+			Task executeCmdAsync(IMemcachedNode node, IStatsOperation command, EndPoint endpoint)
 			{
 				return Task.Run(() =>
 				{
 					node.Execute(command);
-					lock (results)
-						results[endpoint] = command.Result;
+					results.TryAdd(endpoint, command.Result);
 				});
 			}
 
-			var tasks = this._serverPool.GetWorkingNodes().Select(node => executeCommand(node, this._serverPool.OperationFactory.Stats(type), node.EndPoint)).ToArray();
+			var tasks = this._serverPool.GetWorkingNodes()
+				.Select(node => executeCmdAsync(node, this._serverPool.OperationFactory.Stats(type), node.EndPoint))
+				.ToArray();
+
 			if (tasks.Length > 0)
 				Task.WaitAll(tasks, TimeSpan.FromSeconds(13));
 
@@ -1751,16 +1741,18 @@ namespace Enyim.Caching
 		/// <returns></returns>
 		public async Task<ServerStats> StatsAsync(string type)
 		{
-			var results = new Dictionary<EndPoint, Dictionary<string, string>>();
+			var results = new ConcurrentDictionary<EndPoint, Dictionary<string, string>>();
 
-			async Task executeCommand(IMemcachedNode node, IStatsOperation command, EndPoint endpoint)
+			async Task executeCmdAsync(IMemcachedNode node, IStatsOperation command, EndPoint endpoint)
 			{
 				await node.ExecuteAsync(command).ConfigureAwait(false);
-				lock (results)
-					results[endpoint] = command.Result;
+				results.TryAdd(endpoint, command.Result);
 			}
 
-			var tasks = this._serverPool.GetWorkingNodes().Select(node => executeCommand(node, this._serverPool.OperationFactory.Stats(type), node.EndPoint)).ToList();
+			var tasks = this._serverPool.GetWorkingNodes()
+				.Select(node => executeCmdAsync(node, this._serverPool.OperationFactory.Stats(type), node.EndPoint))
+				.ToList();
+
 			if (tasks.Count > 0)
 				await Task.WhenAll(tasks).ConfigureAwait(false);
 

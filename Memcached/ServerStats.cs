@@ -51,9 +51,9 @@ namespace Enyim.Caching.Memcached
 		};
 		#endregion
 
-		Dictionary<EndPoint, Dictionary<string, string>> results;
+		IDictionary<EndPoint, Dictionary<string, string>> results;
 
-		internal ServerStats(Dictionary<EndPoint, Dictionary<string, string>> results)
+		internal ServerStats(IDictionary<EndPoint, Dictionary<string, string>> results)
 		{
 			this._logger = Logger.CreateLogger<ServerStats>();
 			this.results = results;
@@ -70,15 +70,12 @@ namespace Enyim.Caching.Memcached
 			// asked for a specific server
 			if (server.Address != IPAddress.Any)
 			{
-				// error check
-				string tmp = this.GetRaw(server, item);
-				if (String.IsNullOrEmpty(tmp))
-					throw new ArgumentException("Item was not found: " + item);
-
-				if (Int64.TryParse(tmp, out long value))
-					return value;
-
-				throw new ArgumentException("Invalid value string was returned: " + tmp);
+				var tmp = this.GetRaw(server, item);
+				return string.IsNullOrEmpty(tmp)
+					?  throw new ArgumentException("Item was not found: " + item)
+					: Int64.TryParse(tmp, out long value)
+						? value
+						: throw new ArgumentException("Invalid value string was returned: " + tmp);
 			}
 
 			// check if we can sum the value for all servers
@@ -99,11 +96,10 @@ namespace Enyim.Caching.Memcached
 		/// <returns>The version of memcached</returns>
 		public Version GetVersion(IPEndPoint server)
 		{
-			string version = this.GetRaw(server, StatItem.Version);
-			if (String.IsNullOrEmpty(version))
-				throw new ArgumentException("No version found for the server " + server);
-
-			return new Version(version);
+			var version = this.GetRaw(server, StatItem.Version);
+			return String.IsNullOrEmpty(version)
+				? throw new ArgumentException("No version found for the server " + server)
+				: new Version(version);
 		}
 
 		/// <summary>
@@ -114,13 +110,11 @@ namespace Enyim.Caching.Memcached
 		public TimeSpan GetUptime(IPEndPoint server)
 		{
 			string uptime = this.GetRaw(server, StatItem.Uptime);
-			if (String.IsNullOrEmpty(uptime))
-				throw new ArgumentException("No uptime found for the server " + server);
-
-			if (!Int64.TryParse(uptime, out long value))
-				throw new ArgumentException("Invalid uptime string was returned: " + uptime);
-
-			return TimeSpan.FromSeconds(value);
+			return string.IsNullOrEmpty(uptime)
+				? throw new ArgumentException("No uptime found for the server " + server)
+				: !Int64.TryParse(uptime, out long value)
+					? throw new ArgumentException("Invalid uptime string was returned: " + uptime)
+					: TimeSpan.FromSeconds(value);
 		}
 
 		/// <summary>
@@ -156,10 +150,9 @@ namespace Enyim.Caching.Memcached
 		/// <returns>The value of the stat item</returns>
 		public string GetRaw(IPEndPoint server, StatItem item)
 		{
-			if ((int)item < ServerStats.StatKeys.Length && (int)item >= 0)
-				return this.GetRaw(server, ServerStats.StatKeys[(int)item]);
-
-			throw new ArgumentOutOfRangeException("item");
+			return (int)item < ServerStats.StatKeys.Length && (int)item >= 0
+				? this.GetRaw(server, ServerStats.StatKeys[(int)item])
+				: throw new ArgumentOutOfRangeException(nameof(item));
 		}
 
 		public IEnumerable<KeyValuePair<EndPoint, string>> GetRaw(string key)

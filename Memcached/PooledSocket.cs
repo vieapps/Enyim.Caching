@@ -32,15 +32,12 @@ namespace Enyim.Caching.Memcached
 		{
 			this._logger = Logger.CreateLogger<PooledSocket>();
 
-			var timeout = receiveTimeout == TimeSpan.MaxValue
-				? Timeout.Infinite
-				: (int)receiveTimeout.TotalMilliseconds;
-
 			var socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp)
 			{
-				ReceiveTimeout = timeout,
-				SendTimeout = timeout
+				ReceiveTimeout = receiveTimeout == TimeSpan.MaxValue ? Timeout.Infinite : (int)receiveTimeout.TotalMilliseconds,
+				SendTimeout = receiveTimeout == TimeSpan.MaxValue ? Timeout.Infinite : (int)receiveTimeout.TotalMilliseconds
 			};
+
 			socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.KeepAlive, true);
 			this.TryConnect(socket, endpoint, connectionTimeout == TimeSpan.MaxValue ? Timeout.Infinite : (int)connectionTimeout.TotalMilliseconds);
 
