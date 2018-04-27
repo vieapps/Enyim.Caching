@@ -18,11 +18,11 @@
 		<DelaySign>false</DelaySign>
 		<AssemblyOriginatorKeyFile>../VIEApps.Components.snk</AssemblyOriginatorKeyFile>
 		<Title>Enyim Memcached</Title>
-		<Description>The .NET Standard 2.0 memcached client library, fully async with various transcoders (binary formatter, bson, protobuf, msgpack)</Description>
+		<Description>The memcached client library, fully async with various transcoders (binary formatter, bson, protobuf, msgpack) on .NET Standard 2.0</Description>
 		<Authors>VIEApps.net</Authors>
 		<Copyright>© 2010 Attila Kiskó, © 2016 CNBlogs, © 2018 VIEApps.net</Copyright>
 		<PackageTags>cache;caching;distributed;distributedcache;memcached;enyim;enyimmemcached;enyim.memcached;enyim.caching;vieapps;vieapps.components</PackageTags>
-		<PackageReleaseNotes>Improvement: logs, socket send/receive (async), switch to use concurrent dictionary to avoid locking</PackageReleaseNotes>
+		<PackageReleaseNotes>Improvement: logs, socket send/receive (async), switch to use concurrent dictionary to avoid locking, and add supports of cancellation token</PackageReleaseNotes>
 		<PackageProjectUrl>https://github.com/vieapps/Enyim.Caching</PackageProjectUrl>
 		<RepositoryUrl>https://github.com/vieapps/Enyim.Caching</RepositoryUrl>
 	</PropertyGroup>

@@ -1,6 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
+using System.Collections.Generic;
 
 using Enyim.Caching.Memcached;
 using Enyim.Caching.Memcached.Results;
@@ -49,7 +50,7 @@ namespace Enyim.Caching
 		/// <param name="value">The object to be inserted into the cache.</param>
 		/// <remarks>The item does not expire unless it is removed due memory pressure.</remarks>
 		/// <returns>true if the item was successfully stored in the cache; false otherwise.</returns>
-		Task<bool> StoreAsync(StoreMode mode, string key, object value);
+		Task<bool> StoreAsync(StoreMode mode, string key, object value, CancellationToken cancellationToken = default(CancellationToken));
 
 		/// <summary>
 		/// Inserts an item into the cache with a cache key to reference its location.
@@ -59,7 +60,7 @@ namespace Enyim.Caching
 		/// <param name="value">The object to be inserted into the cache.</param>
 		/// <param name="validFor">The interval after the item is invalidated in the cache.</param>
 		/// <returns>true if the item was successfully stored in the cache; false otherwise.</returns>
-		Task<bool> StoreAsync(StoreMode mode, string key, object value, TimeSpan validFor);
+		Task<bool> StoreAsync(StoreMode mode, string key, object value, TimeSpan validFor, CancellationToken cancellationToken = default(CancellationToken));
 
 		/// <summary>
 		/// Inserts an item into the cache with a cache key to reference its location.
@@ -69,7 +70,7 @@ namespace Enyim.Caching
 		/// <param name="value">The object to be inserted into the cache.</param>
 		/// <param name="expiresAt">The time when the item is invalidated in the cache.</param>
 		/// <returns>true if the item was successfully stored in the cache; false otherwise.</returns>
-		Task<bool> StoreAsync(StoreMode mode, string key, object value, DateTime expiresAt);
+		Task<bool> StoreAsync(StoreMode mode, string key, object value, DateTime expiresAt, CancellationToken cancellationToken = default(CancellationToken));
 
 		/// <summary>
 		/// Inserts an item into the cache with a cache key to reference its location and returns its version.
@@ -122,7 +123,7 @@ namespace Enyim.Caching
 		/// <param name="value">The object to be inserted into the cache.</param>
 		/// <remarks>The item does not expire unless it is removed due memory pressure. The text protocol does not support this operation, you need to Store then GetWithCas.</remarks>
 		/// <returns>A CasResult object containing the version of the item and the result of the operation (true if the item was successfully stored in the cache; false otherwise).</returns>
-		Task<CasResult<bool>> CasAsync(StoreMode mode, string key, object value);
+		Task<CasResult<bool>> CasAsync(StoreMode mode, string key, object value, CancellationToken cancellationToken = default(CancellationToken));
 
 		/// <summary>
 		/// Inserts an item into the cache with a cache key to reference its location and returns its version.
@@ -132,7 +133,7 @@ namespace Enyim.Caching
 		/// <param name="value">The object to be inserted into the cache.</param>
 		/// <param name="cas">The cas value which must match the item's version.</param>
 		/// <returns>A CasResult object containing the version of the item and the result of the operation (true if the item was successfully stored in the cache; false otherwise).</returns>
-		Task<CasResult<bool>> CasAsync(StoreMode mode, string key, object value, ulong cas);
+		Task<CasResult<bool>> CasAsync(StoreMode mode, string key, object value, ulong cas, CancellationToken cancellationToken = default(CancellationToken));
 
 		/// <summary>
 		/// Inserts an item into the cache with a cache key to reference its location and returns its version.
@@ -143,7 +144,7 @@ namespace Enyim.Caching
 		/// <param name="expiresAt">The time when the item is invalidated in the cache.</param>
 		/// <param name="cas">The cas value which must match the item's version.</param>
 		/// <returns>A CasResult object containing the version of the item and the result of the operation (true if the item was successfully stored in the cache; false otherwise).</returns>
-		Task<CasResult<bool>> CasAsync(StoreMode mode, string key, object value, DateTime expiresAt, ulong cas);
+		Task<CasResult<bool>> CasAsync(StoreMode mode, string key, object value, DateTime expiresAt, ulong cas, CancellationToken cancellationToken = default(CancellationToken));
 
 		/// <summary>
 		/// Inserts an item into the cache with a cache key to reference its location and returns its version.
@@ -154,7 +155,7 @@ namespace Enyim.Caching
 		/// <param name="validFor">The interval after the item is invalidated in the cache.</param>
 		/// <param name="cas">The cas value which must match the item's version.</param>
 		/// <returns>A CasResult object containing the version of the item and the result of the operation (true if the item was successfully stored in the cache; false otherwise).</returns>
-		Task<CasResult<bool>> CasAsync(StoreMode mode, string key, object value, TimeSpan validFor, ulong cas);
+		Task<CasResult<bool>> CasAsync(StoreMode mode, string key, object value, TimeSpan validFor, ulong cas, CancellationToken cancellationToken = default(CancellationToken));
 
 		/// <summary>
 		/// Inserts an item into the cache with a cache key to reference its location.
@@ -172,7 +173,7 @@ namespace Enyim.Caching
 		/// <param name="value"></param>
 		/// <param name="cacheMinutes"></param>
 		/// <returns>true if the item was successfully added in the cache; false otherwise.</returns>
-		Task<bool> SetAsync(string key, object value, int cacheMinutes);
+		Task<bool> SetAsync(string key, object value, int cacheMinutes, CancellationToken cancellationToken = default(CancellationToken));
 
 		/// <summary>
 		/// Inserts an item into the cache with a cache key to reference its location.
@@ -190,7 +191,7 @@ namespace Enyim.Caching
 		/// <param name="value"></param>
 		/// <param name="cacheMinutes"></param>
 		/// <returns>true if the item was successfully added in the cache; false otherwise.</returns>
-		Task<bool> AddAsync(string key, object value, int cacheMinutes);
+		Task<bool> AddAsync(string key, object value, int cacheMinutes, CancellationToken cancellationToken = default(CancellationToken));
 
 		/// <summary>
 		/// Replaces an item into the cache with a cache key to reference its location.
@@ -208,7 +209,7 @@ namespace Enyim.Caching
 		/// <param name="value"></param>
 		/// <param name="cacheMinutes"></param>
 		/// <returns>true if the item was successfully replaced in the cache; false otherwise.</returns>
-		Task<bool> ReplaceAsync(string key, object value, int cacheMinutes);
+		Task<bool> ReplaceAsync(string key, object value, int cacheMinutes, CancellationToken cancellationToken = default(CancellationToken));
 
 		/// <summary>
 		/// Increments the value of the specified key by the given amount. The operation is atomic and happens on the server.
@@ -250,7 +251,7 @@ namespace Enyim.Caching
 		/// <param name="delta">The amount by which the client wants to increase the item.</param>
 		/// <returns>The new value of the item or defaultValue if the key was not found.</returns>
 		/// <remarks>If the client uses the Text protocol, the item must be inserted into the cache before it can be changed. It must be inserted as a <see cref="System.String"/>. Moreover the Text protocol only works with <see cref="System.UInt32"/> values, so return value -1 always indicates that the item was not found.</remarks>
-		Task<ulong> IncrementAsync(string key, ulong defaultValue, ulong delta);
+		Task<ulong> IncrementAsync(string key, ulong defaultValue, ulong delta, CancellationToken cancellationToken = default(CancellationToken));
 
 		/// <summary>
 		/// Increments the value of the specified key by the given amount. The operation is atomic and happens on the server.
@@ -261,7 +262,7 @@ namespace Enyim.Caching
 		/// <param name="expiresAt">The time when the item is invalidated in the cache.</param>
 		/// <returns>The new value of the item or defaultValue if the key was not found.</returns>
 		/// <remarks>If the client uses the Text protocol, the item must be inserted into the cache before it can be changed. It must be inserted as a <see cref="System.String"/>. Moreover the Text protocol only works with <see cref="System.UInt32"/> values, so return value -1 always indicates that the item was not found.</remarks>
-		Task<ulong> IncrementAsync(string key, ulong defaultValue, ulong delta, DateTime expiresAt);
+		Task<ulong> IncrementAsync(string key, ulong defaultValue, ulong delta, DateTime expiresAt, CancellationToken cancellationToken = default(CancellationToken));
 
 		/// <summary>
 		/// Increments the value of the specified key by the given amount. The operation is atomic and happens on the server.
@@ -272,7 +273,7 @@ namespace Enyim.Caching
 		/// <param name="validFor">The interval after the item is invalidated in the cache.</param>
 		/// <returns>The new value of the item or defaultValue if the key was not found.</returns>
 		/// <remarks>If the client uses the Text protocol, the item must be inserted into the cache before it can be changed. It must be inserted as a <see cref="System.String"/>. Moreover the Text protocol only works with <see cref="System.UInt32"/> values, so return value -1 always indicates that the item was not found.</remarks>
-		Task<ulong> IncrementAsync(string key, ulong defaultValue, ulong delta, TimeSpan validFor);
+		Task<ulong> IncrementAsync(string key, ulong defaultValue, ulong delta, TimeSpan validFor, CancellationToken cancellationToken = default(CancellationToken));
 
 		/// <summary>
 		/// Increments the value of the specified key by the given amount, but only if the item's version matches the CAS value provided. The operation is atomic and happens on the server.
@@ -318,7 +319,7 @@ namespace Enyim.Caching
 		/// <param name="cas">The cas value which must match the item's version.</param>
 		/// <returns>The new value of the item or defaultValue if the key was not found.</returns>
 		/// <remarks>If the client uses the Text protocol, the item must be inserted into the cache before it can be changed. It must be inserted as a <see cref="System.String"/>. Moreover the Text protocol only works with <see cref="System.UInt32"/> values, so return value -1 always indicates that the item was not found.</remarks>
-		Task<CasResult<ulong>> IncrementAsync(string key, ulong defaultValue, ulong delta, ulong cas);
+		Task<CasResult<ulong>> IncrementAsync(string key, ulong defaultValue, ulong delta, ulong cas, CancellationToken cancellationToken = default(CancellationToken));
 
 		/// <summary>
 		/// Increments the value of the specified key by the given amount, but only if the item's version matches the CAS value provided. The operation is atomic and happens on the server.
@@ -330,7 +331,7 @@ namespace Enyim.Caching
 		/// <param name="cas">The cas value which must match the item's version.</param>
 		/// <returns>The new value of the item or defaultValue if the key was not found.</returns>
 		/// <remarks>If the client uses the Text protocol, the item must be inserted into the cache before it can be changed. It must be inserted as a <see cref="System.String"/>. Moreover the Text protocol only works with <see cref="System.UInt32"/> values, so return value -1 always indicates that the item was not found.</remarks>
-		Task<CasResult<ulong>> IncrementAsync(string key, ulong defaultValue, ulong delta, DateTime expiresAt, ulong cas);
+		Task<CasResult<ulong>> IncrementAsync(string key, ulong defaultValue, ulong delta, DateTime expiresAt, ulong cas, CancellationToken cancellationToken = default(CancellationToken));
 
 		/// <summary>
 		/// Increments the value of the specified key by the given amount, but only if the item's version matches the CAS value provided. The operation is atomic and happens on the server.
@@ -342,7 +343,7 @@ namespace Enyim.Caching
 		/// <param name="cas">The cas value which must match the item's version.</param>
 		/// <returns>The new value of the item or defaultValue if the key was not found.</returns>
 		/// <remarks>If the client uses the Text protocol, the item must be inserted into the cache before it can be changed. It must be inserted as a <see cref="System.String"/>. Moreover the Text protocol only works with <see cref="System.UInt32"/> values, so return value -1 always indicates that the item was not found.</remarks>
-		Task<CasResult<ulong>> IncrementAsync(string key, ulong defaultValue, ulong delta, TimeSpan validFor, ulong cas);
+		Task<CasResult<ulong>> IncrementAsync(string key, ulong defaultValue, ulong delta, TimeSpan validFor, ulong cas, CancellationToken cancellationToken = default(CancellationToken));
 
 		/// <summary>
 		/// Decrements the value of the specified key by the given amount. The operation is atomic and happens on the server.
@@ -384,7 +385,7 @@ namespace Enyim.Caching
 		/// <param name="delta">The amount by which the client wants to decrease the item.</param>
 		/// <returns>The new value of the item or defaultValue if the key was not found.</returns>
 		/// <remarks>If the client uses the Text protocol, the item must be inserted into the cache before it can be changed. It must be inserted as a <see cref="System.String"/>. Moreover the Text protocol only works with <see cref="System.UInt32"/> values, so return value -1 always indicates that the item was not found.</remarks>
-		Task<ulong> DecrementAsync(string key, ulong defaultValue, ulong delta);
+		Task<ulong> DecrementAsync(string key, ulong defaultValue, ulong delta, CancellationToken cancellationToken = default(CancellationToken));
 
 		/// <summary>
 		/// Decrements the value of the specified key by the given amount. The operation is atomic and happens on the server.
@@ -395,7 +396,7 @@ namespace Enyim.Caching
 		/// <param name="expiresAt">The time when the item is invalidated in the cache.</param>
 		/// <returns>The new value of the item or defaultValue if the key was not found.</returns>
 		/// <remarks>If the client uses the Text protocol, the item must be inserted into the cache before it can be changed. It must be inserted as a <see cref="System.String"/>. Moreover the Text protocol only works with <see cref="System.UInt32"/> values, so return value -1 always indicates that the item was not found.</remarks>
-		Task<ulong> DecrementAsync(string key, ulong defaultValue, ulong delta, DateTime expiresAt);
+		Task<ulong> DecrementAsync(string key, ulong defaultValue, ulong delta, DateTime expiresAt, CancellationToken cancellationToken = default(CancellationToken));
 
 		/// <summary>
 		/// Decrements the value of the specified key by the given amount. The operation is atomic and happens on the server.
@@ -406,7 +407,7 @@ namespace Enyim.Caching
 		/// <param name="validFor">The interval after the item is invalidated in the cache.</param>
 		/// <returns>The new value of the item or defaultValue if the key was not found.</returns>
 		/// <remarks>If the client uses the Text protocol, the item must be inserted into the cache before it can be changed. It must be inserted as a <see cref="System.String"/>. Moreover the Text protocol only works with <see cref="System.UInt32"/> values, so return value -1 always indicates that the item was not found.</remarks>
-		Task<ulong> DecrementAsync(string key, ulong defaultValue, ulong delta, TimeSpan validFor);
+		Task<ulong> DecrementAsync(string key, ulong defaultValue, ulong delta, TimeSpan validFor, CancellationToken cancellationToken = default(CancellationToken));
 
 		/// <summary>
 		/// Decrements the value of the specified key by the given amount, but only if the item's version matches the CAS value provided. The operation is atomic and happens on the server.
@@ -452,7 +453,7 @@ namespace Enyim.Caching
 		/// <param name="cas">The cas value which must match the item's version.</param>
 		/// <returns>The new value of the item or defaultValue if the key was not found.</returns>
 		/// <remarks>If the client uses the Text protocol, the item must be inserted into the cache before it can be changed. It must be inserted as a <see cref="System.String"/>. Moreover the Text protocol only works with <see cref="System.UInt32"/> values, so return value -1 always indicates that the item was not found.</remarks>
-		Task<CasResult<ulong>> DecrementAsync(string key, ulong defaultValue, ulong delta, ulong cas);
+		Task<CasResult<ulong>> DecrementAsync(string key, ulong defaultValue, ulong delta, ulong cas, CancellationToken cancellationToken = default(CancellationToken));
 
 		/// <summary>
 		/// Decrements the value of the specified key by the given amount, but only if the item's version matches the CAS value provided. The operation is atomic and happens on the server.
@@ -464,7 +465,7 @@ namespace Enyim.Caching
 		/// <param name="cas">The cas value which must match the item's version.</param>
 		/// <returns>The new value of the item or defaultValue if the key was not found.</returns>
 		/// <remarks>If the client uses the Text protocol, the item must be inserted into the cache before it can be changed. It must be inserted as a <see cref="System.String"/>. Moreover the Text protocol only works with <see cref="System.UInt32"/> values, so return value -1 always indicates that the item was not found.</remarks>
-		Task<CasResult<ulong>> DecrementAsync(string key, ulong defaultValue, ulong delta, DateTime expiresAt, ulong cas);
+		Task<CasResult<ulong>> DecrementAsync(string key, ulong defaultValue, ulong delta, DateTime expiresAt, ulong cas, CancellationToken cancellationToken = default(CancellationToken));
 
 		/// <summary>
 		/// Decrements the value of the specified key by the given amount, but only if the item's version matches the CAS value provided. The operation is atomic and happens on the server.
@@ -476,7 +477,7 @@ namespace Enyim.Caching
 		/// <param name="cas">The cas value which must match the item's version.</param>
 		/// <returns>The new value of the item or defaultValue if the key was not found.</returns>
 		/// <remarks>If the client uses the Text protocol, the item must be inserted into the cache before it can be changed. It must be inserted as a <see cref="System.String"/>. Moreover the Text protocol only works with <see cref="System.UInt32"/> values, so return value -1 always indicates that the item was not found.</remarks>
-		Task<CasResult<ulong>> DecrementAsync(string key, ulong defaultValue, ulong delta, TimeSpan validFor, ulong cas);
+		Task<CasResult<ulong>> DecrementAsync(string key, ulong defaultValue, ulong delta, TimeSpan validFor, ulong cas, CancellationToken cancellationToken = default(CancellationToken));
 
 		/// <summary>
 		/// Appends the data to the end of the specified item's data on the server.
@@ -501,7 +502,7 @@ namespace Enyim.Caching
 		/// <param name="key">The key used to reference the item.</param>
 		/// <param name="data">The data to be appended to the item.</param>
 		/// <returns>true if the data was successfully stored; false otherwise.</returns>
-		Task<bool> AppendAsync(string key, ArraySegment<byte> data);
+		Task<bool> AppendAsync(string key, ArraySegment<byte> data, CancellationToken cancellationToken = default(CancellationToken));
 
 		/// <summary>
 		/// Appends the data to the end of the specified item's data on the server, but only if the item's version matches the CAS value provided.
@@ -510,7 +511,7 @@ namespace Enyim.Caching
 		/// <param name="cas">The cas value which must match the item's version.</param>
 		/// <param name="data">The data to be prepended to the item.</param>
 		/// <returns>true if the data was successfully stored; false otherwise.</returns>
-		Task<CasResult<bool>> AppendAsync(string key, ulong cas, ArraySegment<byte> data);
+		Task<CasResult<bool>> AppendAsync(string key, ulong cas, ArraySegment<byte> data, CancellationToken cancellationToken = default(CancellationToken));
 
 		/// <summary>
 		/// Inserts the data before the specified item's data on the server.
@@ -535,7 +536,7 @@ namespace Enyim.Caching
 		/// <param name="key">The key used to reference the item.</param>
 		/// <param name="data">The data to be appended to the item.</param>
 		/// <returns>true if the data was successfully stored; false otherwise.</returns>
-		Task<bool> PrependAsync(string key, ArraySegment<byte> data);
+		Task<bool> PrependAsync(string key, ArraySegment<byte> data, CancellationToken cancellationToken = default(CancellationToken));
 
 		/// <summary>
 		/// Appends the data to the end of the specified item's data on the server, but only if the item's version matches the CAS value provided.
@@ -544,7 +545,7 @@ namespace Enyim.Caching
 		/// <param name="cas">The cas value which must match the item's version.</param>
 		/// <param name="data">The data to be prepended to the item.</param>
 		/// <returns>true if the data was successfully stored; false otherwise.</returns>
-		Task<CasResult<bool>> PrependAsync(string key, ulong cas, ArraySegment<byte> data);
+		Task<CasResult<bool>> PrependAsync(string key, ulong cas, ArraySegment<byte> data, CancellationToken cancellationToken = default(CancellationToken));
 
 		/// <summary>
 		/// Tries to get an item from the cache.
@@ -574,7 +575,7 @@ namespace Enyim.Caching
 		/// </summary>
 		/// <param name="key">The identifier for the item to retrieve.</param>
 		/// <returns>The retrieved item, or <value>null</value> if the key was not found.</returns>
-		Task<object> GetAsync(string key);
+		Task<object> GetAsync(string key, CancellationToken cancellationToken = default(CancellationToken));
 
 		/// <summary>
 		/// Retrieves the specified item from the cache.
@@ -582,7 +583,7 @@ namespace Enyim.Caching
 		/// <typeparam name="T"></typeparam>
 		/// <param name="key">The identifier for the item to retrieve.</param>
 		/// <returns>The retrieved item, or <value>default(T)</value> if the key was not found.</returns>
-		Task<T> GetAsync<T>(string key);
+		Task<T> GetAsync<T>(string key, CancellationToken cancellationToken = default(CancellationToken));
 
 		/// <summary>
 		/// Tries to get an item from the cache with CAS.
@@ -612,7 +613,7 @@ namespace Enyim.Caching
 		/// </summary>
 		/// <param name="key"></param>
 		/// <returns></returns>
-		Task<CasResult<object>> GetWithCasAsync(string key);
+		Task<CasResult<object>> GetWithCasAsync(string key, CancellationToken cancellationToken = default(CancellationToken));
 
 		/// <summary>
 		/// Retrieves the specified item from the cache.
@@ -620,7 +621,7 @@ namespace Enyim.Caching
 		/// <typeparam name="T"></typeparam>
 		/// <param name="key"></param>
 		/// <returns></returns>
-		Task<CasResult<T>> GetWithCasAsync<T>(string key);
+		Task<CasResult<T>> GetWithCasAsync<T>(string key, CancellationToken cancellationToken = default(CancellationToken));
 
 		/// <summary>
 		/// Retrieves multiple items from the cache.
@@ -634,7 +635,7 @@ namespace Enyim.Caching
 		/// </summary>
 		/// <param name="keys">The list of identifiers for the items to retrieve.</param>
 		/// <returns>a Dictionary holding all items indexed by their key.</returns>
-		Task<IDictionary<string, object>> GetAsync(IEnumerable<string> keys);
+		Task<IDictionary<string, object>> GetAsync(IEnumerable<string> keys, CancellationToken cancellationToken = default(CancellationToken));
 
 		/// <summary>
 		/// Retrieves multiple items from the cache.
@@ -650,7 +651,7 @@ namespace Enyim.Caching
 		/// <typeparam name="T"></typeparam>
 		/// <param name="keys">The list of identifiers for the items to retrieve.</param>
 		/// <returns>a Dictionary holding all items indexed by their key.</returns>
-		Task<IDictionary<string, T>> GetAsync<T>(IEnumerable<string> keys);
+		Task<IDictionary<string, T>> GetAsync<T>(IEnumerable<string> keys, CancellationToken cancellationToken = default(CancellationToken));
 
 		/// <summary>
 		/// Retrieves multiple items from the cache with CAS.
@@ -664,7 +665,7 @@ namespace Enyim.Caching
 		/// </summary>
 		/// <param name="keys"></param>
 		/// <returns></returns>
-		Task<IDictionary<string, CasResult<object>>> GetWithCasAsync(IEnumerable<string> keys);
+		Task<IDictionary<string, CasResult<object>>> GetWithCasAsync(IEnumerable<string> keys, CancellationToken cancellationToken = default(CancellationToken));
 
 		/// <summary>
 		/// Removes the specified item from the cache.
@@ -678,7 +679,7 @@ namespace Enyim.Caching
 		/// </summary>
 		/// <param name="key">The identifier for the item to delete.</param>
 		/// <returns>true if the item was successfully removed from the cache; false otherwise.</returns>
-		Task<bool> RemoveAsync(string key);
+		Task<bool> RemoveAsync(string key, CancellationToken cancellationToken = default(CancellationToken));
 
 		/// <summary>
 		/// Determines whether an item that associated with the key is exists or not
@@ -692,7 +693,7 @@ namespace Enyim.Caching
 		/// </summary>
 		/// <param name="key">The key</param>
 		/// <returns>Returns a boolean value indicating if the object that associates with the key is cached or not</returns>
-		Task<bool> ExistsAsync(string key);
+		Task<bool> ExistsAsync(string key, CancellationToken cancellationToken = default(CancellationToken));
 
 		/// <summary>
 		/// Removes all data from the cache. Note: this will invalidate all data on all servers in the pool.
@@ -702,7 +703,7 @@ namespace Enyim.Caching
 		/// <summary>
 		/// Removes all data from the cache. Note: this will invalidate all data on all servers in the pool.
 		/// </summary>
-		Task FlushAllAsync();
+		Task FlushAllAsync(CancellationToken cancellationToken = default(CancellationToken));
 
 		/// <summary>
 		/// Gets statistics about the servers.
@@ -721,14 +722,14 @@ namespace Enyim.Caching
 		/// Gets statistics about the servers.
 		/// </summary>
 		/// <returns></returns>
-		Task<ServerStats> StatsAsync();
+		Task<ServerStats> StatsAsync(CancellationToken cancellationToken = default(CancellationToken));
 
 		/// <summary>
 		/// Gets statistics about the servers.
 		/// </summary>
 		/// <param name="type"></param>
 		/// <returns></returns>
-		Task<ServerStats> StatsAsync(string type);
+		Task<ServerStats> StatsAsync(string type, CancellationToken cancellationToken = default(CancellationToken));
 	}
 }
 

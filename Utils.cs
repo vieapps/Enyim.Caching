@@ -4,6 +4,8 @@ using System.IO;
 using System.Text;
 using System.Linq;
 using System.Numerics;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Runtime.Serialization.Formatters.Binary;
 
 using Enyim.Caching;
@@ -335,6 +337,30 @@ namespace CacheUtils
 						return new BinaryFormatter().Deserialize(stream);
 					}
 			}
+		}
+		#endregion
+
+		#region Support cancellation token
+		internal static async Task WithCancellationToken(this Task task, CancellationToken cancellationToken)
+		{
+			var tcs = new TaskCompletionSource<bool>();
+			using (cancellationToken.Register(state => ((TaskCompletionSource<bool>)state).TrySetResult(true), tcs, false))
+			{
+				if (task != await Task.WhenAny(task, tcs.Task))
+					throw new OperationCanceledException(cancellationToken);
+			}
+			await task;
+		}
+
+		internal static async Task<T> WithCancellationToken<T>(this Task<T> task, CancellationToken cancellationToken)
+		{
+			var tcs = new TaskCompletionSource<bool>();
+			using (cancellationToken.Register(state => ((TaskCompletionSource<bool>)state).TrySetResult(true), tcs, false))
+			{
+				if (task != await Task.WhenAny(task, tcs.Task))
+					throw new OperationCanceledException(cancellationToken);
+			}
+			return await task;
 		}
 		#endregion
 
