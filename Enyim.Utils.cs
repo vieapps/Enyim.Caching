@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Threading;
 
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace Enyim.Collections
 {
@@ -284,6 +285,7 @@ namespace Enyim.Caching
 		/// <summary>
 		/// Gets a logger factory
 		/// </summary>
+		/// <returns></returns>
 		public static ILoggerFactory GetLoggerFactory()
 		{
 			return Logger.LoggerFactory ?? new NullLoggerFactory();
@@ -296,7 +298,7 @@ namespace Enyim.Caching
 		/// <returns></returns>
 		public static ILogger CreateLogger(Type type)
 		{
-			return Logger.GetLoggerFactory ().CreateLogger(type);
+			return Logger.GetLoggerFactory().CreateLogger(type);
 		}
 
 		/// <summary>
@@ -308,39 +310,88 @@ namespace Enyim.Caching
 		{
 			return Logger.CreateLogger(typeof(T));
 		}
-	}
-	#endregion
 
-	#region NullLogger
-	public class NullLoggerFactory : ILoggerFactory
-	{
-		public void AddProvider(ILoggerProvider provider) { }
-
-		public ILogger CreateLogger(string categoryName)
+		/// <summary>
+		/// Writes a log message
+		/// </summary>
+		/// <param name="logger"></param>
+		/// <param name="mode">Write mode</param>
+		/// <param name="message">The log message</param>
+		/// <param name="exception">The exception</param>
+		public static void Log(this ILogger logger, LogLevel mode, string message, Exception exception = null)
 		{
-			return NullLogger.Instance;
+			switch (mode)
+			{
+				case LogLevel.Trace:
+					if (exception != null)
+						logger.LogTrace(exception, message);
+					else
+						logger.LogTrace(message);
+					break;
+
+				case LogLevel.Information:
+					if (exception != null)
+						logger.LogInformation(exception, message);
+					else
+						logger.LogInformation(message);
+					break;
+
+				case LogLevel.Warning:
+					if (exception != null)
+						logger.LogError(exception, message);
+					else
+						logger.LogError(message);
+					break;
+
+				case LogLevel.Error:
+					if (exception != null)
+						logger.LogError(exception, message);
+					else
+						logger.LogError(message);
+					break;
+
+				case LogLevel.Critical:
+					if (exception != null)
+						logger.LogCritical(exception, message);
+					else
+						logger.LogCritical(message);
+					break;
+
+				default:
+					if (exception != null)
+						logger.LogDebug(exception, message);
+					else
+						logger.LogDebug(message);
+					break;
+			}
 		}
 
-		public void Dispose() { }
-	}
-
-	public class NullLogger : ILogger
-	{
-		internal static NullLogger Instance = new NullLogger();
-
-		private NullLogger() { }
-
-		public IDisposable BeginScope<TState>(TState state)
+		/// <summary>
+		/// Writes a log message
+		/// </summary>
+		/// <param name="logger"></param>
+		/// <param name="minLevel">The minimum level (for checking when write)</param>
+		/// <param name="mode">Write mode</param>
+		/// <param name="message">The log message</param>
+		/// <param name="exception">The exception</param>
+		public static void Log(this ILogger logger, LogLevel minLevel, LogLevel mode, string message, Exception exception = null)
 		{
-			return null;
+			if (logger.IsEnabled(minLevel))
+				logger.Log(mode, message, exception);
 		}
 
-		public bool IsEnabled(LogLevel logLevel)
+		/// <summary>
+		/// Writes a log message
+		/// </summary>
+		/// <typeparam name="T"></typeparam>
+		/// <param name="minLevel">The minimum level (for checking when write)</param>
+		/// <param name="mode">Write mode</param>
+		/// <param name="message">The log message</param>
+		/// <param name="exception">The exception</param>
+		public static void Log<T>(LogLevel minLevel, LogLevel mode, string message, Exception exception = null)
 		{
-			return false;
+			Logger.CreateLogger<T>().Log(minLevel, mode, message, exception);
 		}
-
-		public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception exception, Func<TState, Exception, string> formatter) { }
 	}
 	#endregion
 

@@ -230,10 +230,16 @@ namespace CacheUtils
 							using (var stream = new MemoryStream())
 							{
 								new BinaryFormatter().Serialize(stream, value);
-								data = stream.GetBuffer();
+								if (stream.TryGetBuffer(out ArraySegment<byte> buffer))
+								{
+									data = new byte[buffer.Count];
+									Buffer.BlockCopy(buffer.Array, buffer.Offset, data, 0, buffer.Count);
+								}
+								else
+									data = stream.ToArray();
 							}
 						else
-							throw new ArgumentException($"The type '{value.GetType()}' of '{nameof(value)}' must have Serializable attribute or implemented the ISerializable interface");
+							throw new ArgumentException($"The type '{value.GetType()}' of '{nameof(value)}' must have Serializable attribute");
 					}
 					break;
 			}
@@ -346,10 +352,10 @@ namespace CacheUtils
 			var tcs = new TaskCompletionSource<bool>();
 			using (cancellationToken.Register(state => ((TaskCompletionSource<bool>)state).TrySetResult(true), tcs, false))
 			{
-				if (task != await Task.WhenAny(task, tcs.Task))
+				if (task != await Task.WhenAny(task, tcs.Task).ConfigureAwait(false))
 					throw new OperationCanceledException(cancellationToken);
 			}
-			await task;
+			await task.ConfigureAwait(false);
 		}
 
 		internal static async Task<T> WithCancellationToken<T>(this Task<T> task, CancellationToken cancellationToken)
@@ -357,10 +363,10 @@ namespace CacheUtils
 			var tcs = new TaskCompletionSource<bool>();
 			using (cancellationToken.Register(state => ((TaskCompletionSource<bool>)state).TrySetResult(true), tcs, false))
 			{
-				if (task != await Task.WhenAny(task, tcs.Task))
+				if (task != await Task.WhenAny(task, tcs.Task).ConfigureAwait(false))
 					throw new OperationCanceledException(cancellationToken);
 			}
-			return await task;
+			return await task.ConfigureAwait(false);
 		}
 		#endregion
 
