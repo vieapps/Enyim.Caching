@@ -22,7 +22,7 @@
 		<Authors>VIEApps.net</Authors>
 		<Copyright>© 2010 Attila Kiskó, © 2016 CNBlogs, © 2018 VIEApps.net</Copyright>
 		<PackageTags>cache;caching;distributed;distributedcache;memcached;enyim;enyimmemcached;enyim.memcached;enyim.caching;vieapps;vieapps.components</PackageTags>
-		<PackageReleaseNotes>Update to avoid potential bugs of serialize, and support of cancellation token for all reading/writing operations</PackageReleaseNotes>
+		<PackageReleaseNotes>Add support of cancellation token for all async operations, and update to avoid potential bugs of object serialization</PackageReleaseNotes>
 		<PackageProjectUrl>https://github.com/vieapps/Enyim.Caching</PackageProjectUrl>
 		<RepositoryUrl>https://github.com/vieapps/Enyim.Caching</RepositoryUrl>
 	</PropertyGroup>
@@ -57,5 +57,5 @@
 		<PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="2.0.1" />
 		<PackageReference Include="System.Configuration.ConfigurationManager" Version="4.4.1" />
 	</ItemGroup>
-	
+
 </Project>

@@ -92,17 +92,12 @@ namespace Enyim.Caching.Memcached
 			var available = this._socket.Available;
 			if (available > 0)
 			{
-				this._logger.LogWarning($"Socket bound to {this._socket.RemoteEndPoint} has {available} unread data! This is probably a bug in the code. Instance ID was {this.InstanceID}.");
-
+				this._logger.LogWarning($"Socket bound to {this._endpoint} has {available} unread data! This is probably a bug in the code. Instance ID was {this.InstanceID}.");
 				var data = new byte[available];
 				this.Receive(data, 0, available);
-
-				if (this._logger.IsEnabled(LogLevel.Debug))
-					this._logger.LogWarning(Encoding.UTF8.GetString(data.Length > 255 ? data.Take(255).ToArray() : data));
+				this._logger.Log(LogLevel.Debug, LogLevel.Warning, Encoding.UTF8.GetString(data.Length > 255 ? data.Take(255).ToArray() : data));
 			}
-
-			if (this._logger.IsEnabled(LogLevel.Debug))
-				this._logger.LogDebug($"Socket was reset ({this.InstanceID})");
+			this._logger.Log(LogLevel.Debug, LogLevel.Debug, $"Socket was reset ({this.InstanceID})");
 		}
 
 		/// <summary>
