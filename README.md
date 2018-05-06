@@ -1,33 +1,39 @@
 # VIEApps.Enyim.Caching
+
 The .NET Standard 2.0 memcached client library: 
 - 100% compatible with [EnyimMemcached 2.x](https://github.com/enyim/EnyimMemcached) and [EnyimMemcachedCore](https://github.com/cnblogs/EnyimMemcachedCore)
 - Fully async (EnyimMemcached/EnyimMemcachedCore blocks threads while reading from sockets/response)
 - Multiple nodes supported with Ketama for better distribution
 - Object serialization by various transcoders: Binary Formatter, Protocol Buffers, Json.NET Bson, MessagePack
 - Ready with .NET Core 2.0 and .NET Framework 4.6.1 (and higher) with more useful methods (Set, Add, Replace, Exists)
+
 ### NuGet
-- Package ID: VIEApps.Enyim.Caching
-- Details: https://www.nuget.org/packages/VIEApps.Enyim.Caching/
+
+- Package ID: **VIEApps.Enyim.Caching**
+- Details: https://www.nuget.org/packages/VIEApps.Enyim.Caching
+
 ### Information
+
 - Migrated from the fork [EnyimMemcachedCore](https://github.com/cnblogs/EnyimMemcachedCore) (.NET Core 2.0)
 - Reference from the original [EnyimMemcached](https://github.com/enyim/EnyimMemcached) (.NET Framework 3.5)
+
 ## Usage of ASP.NET Core 2.0 apps
 - Add services.AddMemcached(...) and app.UseMemcached() in Startup.cs
 - Add IMemcachedClient or IDistributedCache into constructor (using dependency injection)
+
 ### Configure (by the appsettings.json file) without authentication
 ```json
 {
 	"Memcached": {
 		"Servers": [
-			{
-				"Address": "192.168.0.2",
-				"Port": 11211
-			},
-			{
-				"Address": "192.168.0.3",
-				"Port": 11211
-			}
-		],
+		{
+			"Address": "192.168.0.2",
+			"Port": 11211
+		},
+		{
+			"Address": "192.168.0.3",
+			"Port": 11211
+		}],
 		"SocketPool": {
 			"MinPoolSize": 10,
 			"MaxPoolSize": 100,
@@ -38,20 +44,20 @@ The .NET Standard 2.0 memcached client library:
 	}
 }
 ```
+
 ### Configure (by the appsettings.json file) with authentication
 ```json
 {
 	"Memcached": {
 		"Servers": [
-			{
-				"Address": "192.168.0.2",
-				"Port": 11211
-			},
-			{
-				"Address": "192.168.0.3",
-				"Port": 11211
-			}
-		],
+		{
+			"Address": "192.168.0.2",
+			"Port": 11211
+		},
+		{
+			"Address": "192.168.0.3",
+			"Port": 11211
+		}],
 		"SocketPool": {
 			"MinPoolSize": 10,
 			"MaxPoolSize": 100,
@@ -70,6 +76,7 @@ The .NET Standard 2.0 memcached client library:
 	}
 }
 ```
+
 ### Startup.cs
 ```cs
 public class Startup
@@ -87,6 +94,7 @@ public class Startup
 	}
 }
 ```
+
 ### Use IMemcachedClient interface
 ```cs
 public class TabNavService
@@ -115,6 +123,7 @@ public class TabNavService
 	}
 }
 ```
+
 ### Use IDistributedCache interface
 ```cs
 public class CreativeService
@@ -149,7 +158,9 @@ public class CreativeService
 	}
 }
 ```
-## Usage of .NET Core 2.0/.NET Framework 4.6.1 (and higher) stand-alone apps
+
+## Usage of .NET Core 2.0/.NET Framework 4.6.1 (and higher) standalone apps
+
 ### Configure (by the app.config/web.config) without authentication
 ```xml
 <?xml version="1.0" encoding="utf-8"?>
@@ -166,6 +177,7 @@ public class CreativeService
 	</memcached>
 </configuration>
 ```
+
 ### Configure (by the app.config/web.config) with authentication
 ```xml
 <?xml version="1.0" encoding="utf-8"?>
@@ -183,6 +195,7 @@ public class CreativeService
 	</memcached>
 </configuration>
 ```
+
 ### Example
 ```cs
 public class CreativeService
@@ -200,7 +213,11 @@ public class CreativeService
 	}
 }
 ```
+
 ## Other transcoders (Protocol Buffers, Json.NET Bson, MessagePack)
+
 See [VIEApps.Enyim.Caching.Transcoders](https://github.com/vieapps/Enyim.Caching.Transcoders)
+
 ## Need a library for working with other distributed cache (Redis) in the same time?
+
 See [VIEApps.Components.Caching](https://github.com/vieapps/Components.Caching)
