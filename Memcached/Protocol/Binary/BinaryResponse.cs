@@ -1,5 +1,6 @@
 using System;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 using Microsoft.Extensions.Logging;
@@ -85,7 +86,7 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 		/// </summary>
 		/// <param name="socket"></param>
 		/// <returns></returns>
-		public async Task<bool> ReadAsync(PooledSocket socket)
+		public async Task<bool> ReadAsync(PooledSocket socket, CancellationToken cancellationToken = default(CancellationToken))
 		{
 			this.StatusCode = -1;
 
@@ -95,20 +96,24 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 			try
 			{
 				var header = new byte[BinaryResponse.HeaderLength];
-				await socket.ReceiveAsync(header, 0, header.Length).ConfigureAwait(false);
+				await socket.ReceiveAsync(header, 0, header.Length, cancellationToken).ConfigureAwait(false);
 
 				this.DeserializeHeader(header, out int dataLength, out int extraLength);
 
 				if (dataLength > 0)
 				{
 					var data = new byte[dataLength];
-					await socket.ReceiveAsync(data, 0, dataLength).ConfigureAwait(false);
+					await socket.ReceiveAsync(data, 0, dataLength, cancellationToken).ConfigureAwait(false);
 
 					this.Extra = new ArraySegment<byte>(data, 0, extraLength);
 					this.Data = new ArraySegment<byte>(data, extraLength, data.Length - extraLength);
 				}
 
 				return this.StatusCode == 0;
+			}
+			catch (OperationCanceledException)
+			{
+				throw;
 			}
 			catch (Exception ex)
 			{

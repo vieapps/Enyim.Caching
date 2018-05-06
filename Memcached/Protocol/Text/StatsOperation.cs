@@ -31,6 +31,11 @@ namespace Enyim.Caching.Memcached.Protocol.Text
 			return TextSocketHelper.GetCommandBuffer(command);
 		}
 
+		Dictionary<string, string> IStatsOperation.Result
+		{
+			get { return _result; }
+		}
+
 		protected internal override IOperationResult ReadResponse(PooledSocket socket)
 		{
 			var serverData = new Dictionary<string, string>();
@@ -71,31 +76,49 @@ namespace Enyim.Caching.Memcached.Protocol.Text
 			return new TextOperationResult().Pass();
 		}
 
-		Dictionary<string, string> IStatsOperation.Result
+		protected internal override async Task<IOperationResult> ReadResponseAsync(PooledSocket socket, CancellationToken cancellationToken = default(CancellationToken))
 		{
-			get { return _result; }
-		}
+			var serverData = new Dictionary<string, string>();
 
-		protected internal override Task<IOperationResult> ReadResponseAsync(PooledSocket socket)
-		{
-			var tcs = new TaskCompletionSource<IOperationResult>();
-			ThreadPool.QueueUserWorkItem(_ =>
+			while (true)
 			{
-				try
+				string line = await TextSocketHelper.ReadResponseAsync(socket, cancellationToken).ConfigureAwait(false);
+
+				// stat values are terminated by END
+				if (String.Compare(line, "END", StringComparison.Ordinal) == 0)
+					break;
+
+				// expected response is STAT item_name item_value
+				if (line.Length < 6 || String.Compare(line, 0, "STAT ", 0, 5, StringComparison.Ordinal) != 0)
 				{
-					tcs.SetResult(this.ReadResponse(socket));
+					if (this._logger.IsEnabled(LogLevel.Debug))
+						this._logger.LogWarning("Unknow response: " + line);
+
+					continue;
 				}
-				catch (Exception ex)
+
+				// get the key&value
+				string[] parts = line.Remove(0, 5).Split(' ');
+				if (parts.Length != 2)
 				{
-					tcs.SetException(ex);
+					if (this._logger.IsEnabled(LogLevel.Debug))
+						this._logger.LogWarning("Unknow response: " + line);
+
+					continue;
 				}
-			});
-			return tcs.Task;
+
+				// store the stat item
+				serverData[parts[0]] = parts[1];
+			}
+
+			this._result = serverData;
+
+			return new TextOperationResult().Pass();
 		}
 
-		protected internal override bool ReadResponseAsync(PooledSocket socket, System.Action<bool> next)
+		protected internal override bool ReadResponseAsync(PooledSocket socket, Action<bool> next)
 		{
-			throw new System.NotSupportedException();
+			throw new NotSupportedException();
 		}
 	}
 }

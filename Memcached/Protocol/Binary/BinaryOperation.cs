@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Enyim.Caching.Memcached.Protocol.Binary
@@ -13,7 +14,7 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 			return this.Build().CreateBuffer();
 		}
 
-		protected internal override Task<Results.IOperationResult> ReadResponseAsync(PooledSocket socket)
+		protected internal override Task<Results.IOperationResult> ReadResponseAsync(PooledSocket socket, CancellationToken cancellationToken = default(CancellationToken))
 		{
 			throw new NotImplementedException();
 		}

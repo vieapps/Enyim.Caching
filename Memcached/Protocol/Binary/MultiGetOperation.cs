@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 
 using Enyim.Caching.Memcached.Results;
@@ -107,14 +108,14 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 			return result.Fail($"Found response with correlation ID {response.CorrelationID}, but no key is matching it");
 		}
 
-		protected internal override async Task<IOperationResult> ReadResponseAsync(PooledSocket socket)
+		protected internal override async Task<IOperationResult> ReadResponseAsync(PooledSocket socket, CancellationToken cancellationToken = default(CancellationToken))
 		{
 			this._result = new Dictionary<string, CacheItem>();
 			this.Cas = new Dictionary<string, ulong>();
 			var result = new TextOperationResult();
 
 			var response = new BinaryResponse();
-			while (await response.ReadAsync(socket).ConfigureAwait(false))
+			while (await response.ReadAsync(socket, cancellationToken).ConfigureAwait(false))
 			{
 				this.StatusCode = response.StatusCode;
 

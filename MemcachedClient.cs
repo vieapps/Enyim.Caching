@@ -233,7 +233,7 @@ namespace Enyim.Caching
 				}
 
 				var command = this.Pool.OperationFactory.Store(mode, hashedKey, item, expires, cas);
-				var commandResult = await node.ExecuteAsync(command).WithCancellationToken(cancellationToken).ConfigureAwait(false);
+				var commandResult = await node.ExecuteAsync(command, cancellationToken).ConfigureAwait(false);
 
 				result.Cas = command.CasValue;
 				result.StatusCode = command.StatusCode;
@@ -780,7 +780,7 @@ namespace Enyim.Caching
 			if (node != null)
 			{
 				var command = this.Pool.OperationFactory.Mutate(mode, hashedKey, defaultValue, delta, expires, cas);
-				var commandResult = await node.ExecuteAsync(command).WithCancellationToken(cancellationToken).ConfigureAwait(false);
+				var commandResult = await node.ExecuteAsync(command, cancellationToken).ConfigureAwait(false);
 
 				result.Cas = command.CasValue;
 				result.StatusCode = command.StatusCode;
@@ -1117,7 +1117,7 @@ namespace Enyim.Caching
 			if (node != null)
 			{
 				var command = this.Pool.OperationFactory.Concat(mode, hashedKey, cas, data);
-				var commandResult = await node.ExecuteAsync(command).WithCancellationToken(cancellationToken).ConfigureAwait(false);
+				var commandResult = await node.ExecuteAsync(command, cancellationToken).ConfigureAwait(false);
 
 				if (commandResult.Success)
 				{
@@ -1317,7 +1317,7 @@ namespace Enyim.Caching
 			if (node != null)
 			{
 				var command = this.Pool.OperationFactory.Get(hashedKey);
-				var commandResult = await node.ExecuteAsync(command).WithCancellationToken(cancellationToken).ConfigureAwait(false);
+				var commandResult = await node.ExecuteAsync(command, cancellationToken).ConfigureAwait(false);
 
 				if (commandResult.Success)
 				{
@@ -1504,13 +1504,17 @@ namespace Enyim.Caching
 				{
 					// execute command
 					var command = this.Pool.OperationFactory.MultiGet(nodeKeys);
-					var commandResult = await node.ExecuteAsync(command).WithCancellationToken(cancellationToken).ConfigureAwait(false);
+					var commandResult = await node.ExecuteAsync(command, cancellationToken).ConfigureAwait(false);
 
 					// deserialize the items in the dictionary
 					if (commandResult.Success)
 						foreach (var kvp in command.Result)
 							if (hashedKeys.TryGetValue(kvp.Key, out string original))
 								results.TryAdd(original, collector(command, kvp));
+				}
+				catch (OperationCanceledException)
+				{
+					throw;
 				}
 				catch (Exception ex)
 				{
@@ -1613,7 +1617,7 @@ namespace Enyim.Caching
 			if (node != null)
 			{
 				var command = this.Pool.OperationFactory.Delete(hashedKey, 0);
-				var commandResult = await node.ExecuteAsync(command).WithCancellationToken(cancellationToken).ConfigureAwait(false);
+				var commandResult = await node.ExecuteAsync(command, cancellationToken).ConfigureAwait(false);
 
 				if (commandResult.Success)
 					result.Pass();
@@ -1688,7 +1692,7 @@ namespace Enyim.Caching
 		/// </summary>
 		public Task FlushAllAsync(CancellationToken cancellationToken = default(CancellationToken))
 		{
-			return Task.WhenAll(this.Pool.GetWorkingNodes().Select(node => node.ExecuteAsync(this.Pool.OperationFactory.Flush()).WithCancellationToken(cancellationToken)));
+			return Task.WhenAll(this.Pool.GetWorkingNodes().Select(node => node.ExecuteAsync(this.Pool.OperationFactory.Flush(), cancellationToken)));
 		}
 		#endregion
 
@@ -1741,7 +1745,7 @@ namespace Enyim.Caching
 
 			async Task executeCmdAsync(IMemcachedNode node, IStatsOperation command, EndPoint endpoint)
 			{
-				await node.ExecuteAsync(command).WithCancellationToken(cancellationToken).ConfigureAwait(false);
+				await node.ExecuteAsync(command, cancellationToken).ConfigureAwait(false);
 				results.TryAdd(endpoint, command.Result);
 			}
 

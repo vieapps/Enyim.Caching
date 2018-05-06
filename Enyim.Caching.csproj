@@ -6,14 +6,14 @@
 		<RootNamespace>Enyim</RootNamespace>
 		<AssemblyName>Enyim.Caching</AssemblyName>
 		<AssemblyTitle>Enyim Memcached</AssemblyTitle>
-		<AssemblyVersion>1.4.5.1805</AssemblyVersion>
-		<FileVersion>1.4.5.1805</FileVersion>
-		<InformationalVersion>v1.4.netstandard-2+rev:2018.05.01</InformationalVersion>
+		<AssemblyVersion>1.5.0.1805</AssemblyVersion>
+		<FileVersion>1.5.0.1805</FileVersion>
+		<InformationalVersion>v1.5.netstandard-2+rev:2018.05.07</InformationalVersion>
 		<Product>Enyim Memcached</Product>
 		<Company>VIEApps.net</Company>
 		<GeneratePackageOnBuild>false</GeneratePackageOnBuild>
 		<PackageId>VIEApps.Enyim.Caching</PackageId>
-		<Version>1.4.5.1805</Version>
+		<Version>1.5.0.1805</Version>
 		<SignAssembly>false</SignAssembly>
 		<DelaySign>false</DelaySign>
 		<AssemblyOriginatorKeyFile>../VIEApps.Components.snk</AssemblyOriginatorKeyFile>
@@ -22,7 +22,7 @@
 		<Authors>VIEApps.net</Authors>
 		<Copyright>© 2010 Attila Kiskó, © 2016 CNBlogs, © 2018 VIEApps.net</Copyright>
 		<PackageTags>cache;caching;distributed;distributedcache;memcached;enyim;enyimmemcached;enyim.memcached;enyim.caching;vieapps;vieapps.components</PackageTags>
-		<PackageReleaseNotes>Improvement: logs, socket send/receive (async), switch to use concurrent dictionary to avoid locking, and add supports of cancellation token</PackageReleaseNotes>
+		<PackageReleaseNotes>Update to avoid potential bugs of serialize, and support of cancellation token for all reading/writing operations</PackageReleaseNotes>
 		<PackageProjectUrl>https://github.com/vieapps/Enyim.Caching</PackageProjectUrl>
 		<RepositoryUrl>https://github.com/vieapps/Enyim.Caching</RepositoryUrl>
 	</PropertyGroup>
@@ -43,7 +43,7 @@
 		<None Remove=".DS_Store" />
 		<None Remove=".gitattributes" />
 		<None Remove=".gitignore" />
-		<None Remove="LICENSE" />
+		<None Remove="LICENSE.md" />
 		<None Remove="README.md" />
 	</ItemGroup>
 

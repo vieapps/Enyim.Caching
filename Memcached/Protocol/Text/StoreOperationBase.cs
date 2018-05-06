@@ -17,8 +17,7 @@ namespace Enyim.Caching.Memcached.Protocol.Text
 		private uint expires;
 		private ulong cas;
 
-		internal StoreOperationBase(StoreCommand mode, string key, CacheItem value, uint expires, ulong cas)
-			: base(key)
+		internal StoreOperationBase(StoreCommand mode, string key, CacheItem value, uint expires, ulong cas) : base(key)
 		{
 			this.command = mode;
 			this.value = value;
@@ -76,26 +75,17 @@ namespace Enyim.Caching.Memcached.Protocol.Text
 			};
 		}
 
-		protected internal override Task<IOperationResult> ReadResponseAsync(PooledSocket socket)
+		protected internal override async Task<IOperationResult> ReadResponseAsync(PooledSocket socket, CancellationToken cancellationToken = default(CancellationToken))
 		{
-			var tcs = new TaskCompletionSource<IOperationResult>();
-			ThreadPool.QueueUserWorkItem(_ =>
+			return new TextOperationResult
 			{
-				try
-				{
-					tcs.SetResult(this.ReadResponse(socket));
-				}
-				catch (Exception ex)
-				{
-					tcs.SetException(ex);
-				}
-			});
-			return tcs.Task;
+				Success = String.Compare(await TextSocketHelper.ReadResponseAsync(socket, cancellationToken).ConfigureAwait(false), "STORED", StringComparison.Ordinal) == 0
+			};
 		}
 
-		protected internal override bool ReadResponseAsync(PooledSocket socket, System.Action<bool> next)
+		protected internal override bool ReadResponseAsync(PooledSocket socket, Action<bool> next)
 		{
-			throw new System.NotSupportedException();
+			throw new NotSupportedException();
 		}
 	}
 }

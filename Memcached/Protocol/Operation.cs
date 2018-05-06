@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 
 using Enyim.Caching.Memcached.Results;
@@ -17,7 +18,7 @@ namespace Enyim.Caching.Memcached.Protocol
 
 		internal protected abstract IOperationResult ReadResponse(PooledSocket socket);
 
-		internal protected abstract Task<IOperationResult> ReadResponseAsync(PooledSocket socket);
+		internal protected abstract Task<IOperationResult> ReadResponseAsync(PooledSocket socket, CancellationToken cancellationToken = default(CancellationToken));
 
 		internal protected abstract bool ReadResponseAsync(PooledSocket socket, Action<bool> next);
 
@@ -31,7 +32,7 @@ namespace Enyim.Caching.Memcached.Protocol
 			return this.ReadResponse(socket);
 		}
 
-		Task<IOperationResult> IOperation.ReadResponseAsync(PooledSocket socket)
+		Task<IOperationResult> IOperation.ReadResponseAsync(PooledSocket socket, CancellationToken cancellationToken = default(CancellationToken))
 		{
 			return this.ReadResponseAsync(socket);
 		}

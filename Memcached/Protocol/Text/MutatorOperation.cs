@@ -59,21 +59,17 @@ namespace Enyim.Caching.Memcached.Protocol.Text
 			return result;
 		}
 
-		protected internal override Task<IOperationResult> ReadResponseAsync(PooledSocket socket)
+		protected internal override async Task<IOperationResult> ReadResponseAsync(PooledSocket socket, CancellationToken cancellationToken = default(CancellationToken))
 		{
-			var tcs = new TaskCompletionSource<IOperationResult>();
-			ThreadPool.QueueUserWorkItem(_ =>
-			{
-				try
-				{
-					tcs.SetResult(this.ReadResponse(socket));
-				}
-				catch (Exception ex)
-				{
-					tcs.SetException(ex);
-				}
-			});
-			return tcs.Task;
+			string response = await TextSocketHelper.ReadResponseAsync(socket, cancellationToken).ConfigureAwait(false);
+			var result = new TextOperationResult();
+
+			//maybe we should throw an exception when the item is not found?
+			if (String.Compare(response, "NOT_FOUND", StringComparison.Ordinal) == 0)
+				return result.Fail("Failed to read response.  Item not found");
+
+			result.Success = UInt64.TryParse(response, NumberStyles.AllowLeadingWhite | NumberStyles.AllowTrailingWhite, CultureInfo.InvariantCulture, out this.result);
+			return result;
 		}
 
 		protected internal override bool ReadResponseAsync(PooledSocket socket, Action<bool> next)

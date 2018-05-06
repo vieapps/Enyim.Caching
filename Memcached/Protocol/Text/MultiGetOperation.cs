@@ -27,6 +27,11 @@ namespace Enyim.Caching.Memcached.Protocol.Text
 			return TextSocketHelper.GetCommandBuffer(command);
 		}
 
+		Dictionary<string, CacheItem> IMultiGetOperation.Result
+		{
+			get { return this._result; }
+		}
+
 		protected internal override IOperationResult ReadResponse(PooledSocket socket)
 		{
 			var result = new Dictionary<string, CacheItem>();
@@ -57,26 +62,38 @@ namespace Enyim.Caching.Memcached.Protocol.Text
 			return new TextOperationResult().Pass();
 		}
 
-		Dictionary<string, CacheItem> IMultiGetOperation.Result
+		protected internal override async Task<IOperationResult> ReadResponseAsync(PooledSocket socket, CancellationToken cancellationToken = default(CancellationToken))
 		{
-			get { return this._result; }
-		}
-
-		protected internal override Task<IOperationResult> ReadResponseAsync(PooledSocket socket)
-		{
-			var tcs = new TaskCompletionSource<IOperationResult>();
-			ThreadPool.QueueUserWorkItem(_ =>
+			var result = new Dictionary<string, CacheItem>();
+			var cas = new Dictionary<string, ulong>();
+			try
 			{
-				try
+				GetResponse response;
+				while ((response = await GetHelper.ReadItemAsync(socket, cancellationToken).ConfigureAwait(false)) != null)
 				{
-					tcs.SetResult(this.ReadResponse(socket));
+					var key = response.Key;
+
+					result[key] = response.Item;
+					cas[key] = response.CasValue;
 				}
-				catch (Exception ex)
-				{
-					tcs.SetException(ex);
-				}
-			});
-			return tcs.Task;
+			}
+			catch (OperationCanceledException)
+			{
+				throw;
+			}
+			catch (NotSupportedException)
+			{
+				throw;
+			}
+			catch (Exception e)
+			{
+				this._logger.LogError(e, "Error occurred while performing multi-get");
+			}
+
+			this._result = result;
+			this.Cas = cas;
+
+			return new TextOperationResult().Pass();
 		}
 
 		protected internal override bool ReadResponseAsync(PooledSocket socket, Action<bool> next)

@@ -2,6 +2,8 @@ using System;
 using System.IO;
 using System.Text;
 using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 
 using Microsoft.Extensions.Logging;
 
@@ -17,39 +19,6 @@ namespace Enyim.Caching.Memcached.Protocol.Text
 		const int ErrorResponseLength = 13;
 
 		static ILogger Logger;
-
-		/// <summary>
-		/// Reads the response of the server.
-		/// </summary>
-		/// <returns>The data sent by the memcached server.</returns>
-		/// <exception cref="System.InvalidOperationException">The server did not sent a response or an empty line was returned.</exception>
-		/// <exception cref="Enyim.Caching.Memcached.MemcachedClientException">The server did not specified any reason just returned the string ERROR. - or - The server returned a SERVER_ERROR, in this case the Message of the exception is the message returned by the server.</exception>
-		/// <exception cref="Enyim.Caching.Memcached.MemcachedClientException">The server did not recognize the request sent by the client. The Message of the exception is the message returned by the server.</exception>
-		public static string ReadResponse(PooledSocket socket)
-		{
-			string response = TextSocketHelper.ReadLine(socket);
-
-			if (String.IsNullOrEmpty(response))
-				throw new MemcachedClientException("Empty response received.");
-
-			if (String.Compare(response, TextSocketHelper.GenericErrorResponse, StringComparison.Ordinal) == 0)
-				throw new NotSupportedException("Operation is not supported by the server or the request was malformed. If the latter please report the bug to the developers.");
-
-			TextSocketHelper.Logger = TextSocketHelper.Logger ?? Caching.Logger.CreateLogger(typeof(TextSocketHelper));
-			if (TextSocketHelper.Logger.IsEnabled(LogLevel.Debug))
-				TextSocketHelper.Logger.LogDebug("Received response: " + response);
-
-			if (response.Length >= ErrorResponseLength)
-			{
-				if (String.Compare(response, 0, TextSocketHelper.ClientErrorResponse, 0, TextSocketHelper.ErrorResponseLength, StringComparison.Ordinal) == 0)
-					throw new MemcachedClientException(response.Remove(0, TextSocketHelper.ErrorResponseLength));
-
-				else if (String.Compare(response, 0, TextSocketHelper.ServerErrorResponse, 0, TextSocketHelper.ErrorResponseLength, StringComparison.Ordinal) == 0)
-					throw new MemcachedClientException(response.Remove(0, TextSocketHelper.ErrorResponseLength));
-			}
-
-			return response;
-		}
 
 		/// <summary>
 		/// Reads a line from the socket. A line is terninated by \r\n.
@@ -93,6 +62,116 @@ namespace Enyim.Caching.Memcached.Protocol.Text
 
 				return result;
 			}
+		}
+
+		/// <summary>
+		/// Reads the response of the server
+		/// </summary>
+		/// <returns>The data sent by the memcached server.</returns>
+		/// <exception cref="InvalidOperationException">The server did not sent a response or an empty line was returned.</exception>
+		/// <exception cref="MemcachedClientException">The server did not specified any reason just returned the string ERROR. - or - The server returned a SERVER_ERROR, in this case the Message of the exception is the message returned by the server.</exception>
+		/// <exception cref="MemcachedClientException">The server did not recognize the request sent by the client. The Message of the exception is the message returned by the server.</exception>
+		public static string ReadResponse(PooledSocket socket)
+		{
+			string response = TextSocketHelper.ReadLine(socket);
+
+			if (String.IsNullOrEmpty(response))
+				throw new MemcachedClientException("Empty response received.");
+
+			if (String.Compare(response, TextSocketHelper.GenericErrorResponse, StringComparison.Ordinal) == 0)
+				throw new NotSupportedException("Operation is not supported by the server or the request was malformed. If the latter please report the bug to the developers.");
+
+			TextSocketHelper.Logger = TextSocketHelper.Logger ?? Caching.Logger.CreateLogger(typeof(TextSocketHelper));
+			if (TextSocketHelper.Logger.IsEnabled(LogLevel.Debug))
+				TextSocketHelper.Logger.LogDebug("Received response: " + response);
+
+			if (response.Length >= TextSocketHelper.ErrorResponseLength)
+			{
+				if (String.Compare(response, 0, TextSocketHelper.ClientErrorResponse, 0, TextSocketHelper.ErrorResponseLength, StringComparison.Ordinal) == 0)
+					throw new MemcachedClientException(response.Remove(0, TextSocketHelper.ErrorResponseLength));
+
+				else if (String.Compare(response, 0, TextSocketHelper.ServerErrorResponse, 0, TextSocketHelper.ErrorResponseLength, StringComparison.Ordinal) == 0)
+					throw new MemcachedClientException(response.Remove(0, TextSocketHelper.ErrorResponseLength));
+			}
+
+			return response;
+		}
+
+		/// <summary>
+		/// Reads a line from the socket. A line is terninated by \r\n.
+		/// </summary>
+		/// <returns></returns>
+		static async Task<string> ReadLineAsync(PooledSocket socket, CancellationToken cancellationToken = default(CancellationToken))
+		{
+			using (var stream = new MemoryStream(50))
+			{
+				var gotR = false;
+				byte data;
+
+				while (true)
+				{
+					data = await socket.ReceiveAsync(cancellationToken).ConfigureAwait(false);
+
+					if (data == 13)
+					{
+						gotR = true;
+						continue;
+					}
+
+					if (gotR)
+					{
+						if (data == 10)
+							break;
+
+						stream.WriteByte(13);
+
+						gotR = false;
+					}
+
+					stream.WriteByte(data);
+				}
+
+				var result = Encoding.ASCII.GetString(stream.ToArray(), 0, (int)stream.Length);
+
+				Logger = Logger ?? Caching.Logger.CreateLogger(typeof(TextSocketHelper));
+				if (Logger.IsEnabled(LogLevel.Debug))
+					Logger.LogDebug("ReadLine (async): " + result);
+
+				return result;
+			}
+		}
+
+		/// <summary>
+		/// Reads the response of the server
+		/// </summary>
+		/// <returns>The data sent by the memcached server.</returns>
+		/// <exception cref="InvalidOperationException">The server did not sent a response or an empty line was returned.</exception>
+		/// <exception cref="MemcachedClientException">The server did not specified any reason just returned the string ERROR. - or - The server returned a SERVER_ERROR, in this case the Message of the exception is the message returned by the server.</exception>
+		/// <exception cref="MemcachedClientException">The server did not recognize the request sent by the client. The Message of the exception is the message returned by the server.</exception>
+		public static async Task<string> ReadResponseAsync(PooledSocket socket, CancellationToken cancellationToken = default(CancellationToken))
+		{
+			string response = await TextSocketHelper.ReadLineAsync(socket, cancellationToken).ConfigureAwait(false);
+
+			if (String.IsNullOrEmpty(response))
+				throw new MemcachedClientException("Empty response received.");
+
+			if (String.Compare(response, TextSocketHelper.GenericErrorResponse, StringComparison.Ordinal) == 0)
+				throw new NotSupportedException("Operation is not supported by the server or the request was malformed. If the latter please report the bug to the developers.");
+
+			TextSocketHelper.Logger = TextSocketHelper.Logger ?? Caching.Logger.CreateLogger(typeof(TextSocketHelper));
+			if (TextSocketHelper.Logger.IsEnabled(LogLevel.Debug))
+				TextSocketHelper.Logger.LogDebug("Received response: " + response);
+
+			if (response.Length >= TextSocketHelper.ErrorResponseLength)
+			{
+				if (String.Compare(response, 0, TextSocketHelper.ClientErrorResponse, 0, TextSocketHelper.ErrorResponseLength, StringComparison.Ordinal) == 0)
+					throw new MemcachedClientException(response.Remove(0, TextSocketHelper.ErrorResponseLength));
+
+				else if (String.Compare(response, 0, TextSocketHelper.ServerErrorResponse, 0, TextSocketHelper.ErrorResponseLength, StringComparison.Ordinal) == 0)
+					throw new MemcachedClientException(response.Remove(0, TextSocketHelper.ErrorResponseLength));
+			}
+
+			return response;
 		}
 
 		/// <summary>

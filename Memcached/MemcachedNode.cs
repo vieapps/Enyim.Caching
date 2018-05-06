@@ -573,7 +573,7 @@ namespace Enyim.Caching.Memcached
 			return result;
 		}
 
-		protected async virtual Task<IPooledSocketResult> ExecuteOperationAsync(IOperation op)
+		protected async virtual Task<IPooledSocketResult> ExecuteOperationAsync(IOperation op, CancellationToken cancellationToken = default(CancellationToken))
 		{
 			var result = this.Acquire();
 			if (result.Success && result.HasValue)
@@ -581,7 +581,7 @@ namespace Enyim.Caching.Memcached
 				{
 					var startTime = DateTime.Now;
 					var socket = result.Value;
-					await socket.SendAsync(op.GetBuffer()).ConfigureAwait(false);
+					await socket.SendAsync(op.GetBuffer(), cancellationToken).ConfigureAwait(false);
 
 					if (this._logger.IsEnabled(LogLevel.Debug))
 					{
@@ -590,13 +590,17 @@ namespace Enyim.Caching.Memcached
 							this._logger.LogWarning($"Cost for writting into socket when execute operation (async): {duration}ms");
 					}
 
-					var readResult = await op.ReadResponseAsync(socket).ConfigureAwait(false);
+					var readResult = await op.ReadResponseAsync(socket, cancellationToken).ConfigureAwait(false);
 					if (readResult.Success)
 						result.Pass();
 					else
 						readResult.Combine(result);
 
 					return result;
+				}
+				catch (OperationCanceledException)
+				{
+					throw;
 				}
 				catch (Exception e)
 				{
@@ -659,7 +663,7 @@ namespace Enyim.Caching.Memcached
 			return this.ExecuteOperation(op);
 		}
 
-		async Task<IOperationResult> IMemcachedNode.ExecuteAsync(IOperation op)
+		async Task<IOperationResult> IMemcachedNode.ExecuteAsync(IOperation op, CancellationToken cancellationToken = default(CancellationToken))
 		{
 			return await this.ExecuteOperationAsync(op).ConfigureAwait(false);
 		}

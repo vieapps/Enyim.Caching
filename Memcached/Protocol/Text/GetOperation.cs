@@ -13,7 +13,7 @@ namespace Enyim.Caching.Memcached.Protocol.Text
 
 		internal GetOperation(string key) : base(key) { }
 
-		protected internal override IList<System.ArraySegment<byte>> GetBuffer()
+		protected internal override IList<ArraySegment<byte>> GetBuffer()
 		{
 			var command = "gets " + this.Key + TextSocketHelper.CommandTerminator;
 
@@ -36,24 +36,23 @@ namespace Enyim.Caching.Memcached.Protocol.Text
 			return result.Pass();
 		}
 
-		protected internal override Task<IOperationResult> ReadResponseAsync(PooledSocket socket)
+		protected internal override async Task<IOperationResult> ReadResponseAsync(PooledSocket socket, CancellationToken cancellationToken = default(CancellationToken))
 		{
-			var tcs = new TaskCompletionSource<IOperationResult>();
-			ThreadPool.QueueUserWorkItem(_ =>
-			{
-				try
-				{
-					tcs.SetResult(this.ReadResponse(socket));
-				}
-				catch (Exception ex)
-				{
-					tcs.SetException(ex);
-				}
-			});
-			return tcs.Task;
+			var response = await GetHelper.ReadItemAsync(socket, cancellationToken).ConfigureAwait(false);
+			var result = new TextOperationResult();
+
+			if (response == null)
+				return result.Fail("Failed to read response");
+
+			this.result = response.Item;
+			this.Cas = response.CasValue;
+
+			await GetHelper.FinishCurrentAsync(socket, cancellationToken).ConfigureAwait(false);
+
+			return result.Pass();
 		}
 
-		protected internal override bool ReadResponseAsync(PooledSocket socket, System.Action<bool> next)
+		protected internal override bool ReadResponseAsync(PooledSocket socket, Action<bool> next)
 		{
 			throw new NotSupportedException();
 		}

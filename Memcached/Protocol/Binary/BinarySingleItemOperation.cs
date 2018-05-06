@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 
 using Enyim.Caching.Memcached.Results;
@@ -44,10 +45,10 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 			return result;
 		}
 
-		protected internal override async Task<IOperationResult> ReadResponseAsync(PooledSocket socket)
+		protected internal override async Task<IOperationResult> ReadResponseAsync(PooledSocket socket, CancellationToken cancellationToken = default(CancellationToken))
 		{
 			var response = new BinaryResponse();
-			var success = await response.ReadAsync(socket).ConfigureAwait(false);
+			var success = await response.ReadAsync(socket, cancellationToken).ConfigureAwait(false);
 
 			this.Cas = response.CAS;
 			this.StatusCode = response.StatusCode;

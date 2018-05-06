@@ -1,5 +1,7 @@
 using System;
 using System.Globalization;
+using System.Threading;
+using System.Threading.Tasks;
 
 using Microsoft.Extensions.Logging;
 
@@ -10,6 +12,14 @@ namespace Enyim.Caching.Memcached.Protocol.Text
 		public static void FinishCurrent(PooledSocket socket)
 		{
 			string response = TextSocketHelper.ReadResponse(socket);
+
+			if (String.Compare(response, "END", StringComparison.Ordinal) != 0)
+				throw new MemcachedClientException("No END was received.");
+		}
+
+		public static async Task FinishCurrentAsync(PooledSocket socket, CancellationToken cancellationToken = default(CancellationToken))
+		{
+			string response = await TextSocketHelper.ReadResponseAsync(socket, cancellationToken).ConfigureAwait(false);
 
 			if (String.Compare(response, "END", StringComparison.Ordinal) != 0)
 				throw new MemcachedClientException("No END was received.");
@@ -49,6 +59,50 @@ namespace Enyim.Caching.Memcached.Protocol.Text
 
 			socket.Receive(allData, 0, length);
 			socket.Receive(eod, 0, 2); // data is terminated by \r\n
+
+			var result = new GetResponse(parts[1], flags, cas, allData);
+
+			GetHelper.Logger = GetHelper.Logger ?? Caching.Logger.CreateLogger(typeof(GetHelper));
+			if (GetHelper.Logger.IsEnabled(LogLevel.Debug))
+				GetHelper.Logger.LogDebug("Received value. Data type: {0}, size: {1}.", result.Item.Flags, result.Item.Data.Count);
+
+			return result;
+		}
+
+		public static async Task<GetResponse> ReadItemAsync(PooledSocket socket, CancellationToken cancellationToken = default(CancellationToken))
+		{
+			var description = await TextSocketHelper.ReadResponseAsync(socket, cancellationToken).ConfigureAwait(false);
+			if (String.Compare(description, "END", StringComparison.Ordinal) == 0)
+				return null;
+
+			else if (description.Length < 6 || String.Compare(description, 0, "VALUE ", 0, 6, StringComparison.Ordinal) != 0)
+				throw new MemcachedClientException("No VALUE response received.\r\n" + description);
+
+			// response is:
+			// VALUE <key> <flags> <bytes> [<cas unique>]
+			// 0     1     2       3       4
+			//
+			// cas only exists in 1.2.4+
+			//
+
+			ulong cas = 0;
+			var parts = description.Split(' ');
+			if (parts.Length == 5)
+			{
+				if (!UInt64.TryParse(parts[4], out cas))
+					throw new MemcachedClientException("Invalid CAS VALUE received.");
+			}
+			else if (parts.Length < 4)
+				throw new MemcachedClientException("Invalid VALUE response received: " + description);
+
+			var flags = UInt16.Parse(parts[2], CultureInfo.InvariantCulture);
+			var length = Int32.Parse(parts[3], CultureInfo.InvariantCulture);
+
+			var allData = new byte[length];
+			var eod = new byte[2];
+
+			await socket.ReceiveAsync(allData, 0, length, cancellationToken).ConfigureAwait(false);
+			await socket.ReceiveAsync(eod, 0, 2, cancellationToken).ConfigureAwait(false); // data is terminated by \r\n
 
 			var result = new GetResponse(parts[1], flags, cas, allData);
 

@@ -1,6 +1,7 @@
 using System;
 using System.Net;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 
 using Enyim.Caching.Memcached.Protocol;
@@ -34,7 +35,7 @@ namespace Enyim.Caching.Memcached
 
 		IOperationResult Execute(IOperation op);
 
-		Task<IOperationResult> ExecuteAsync(IOperation op);
+		Task<IOperationResult> ExecuteAsync(IOperation op, CancellationToken cancellationToken = default(CancellationToken));
 
 		bool ExecuteAsync(IOperation op, Action<bool> next);
 
@@ -68,7 +69,7 @@ namespace Enyim.Caching.Memcached
 
 		IOperationResult ReadResponse(PooledSocket socket);
 
-		Task<IOperationResult> ReadResponseAsync(PooledSocket socket);
+		Task<IOperationResult> ReadResponseAsync(PooledSocket socket, CancellationToken cancellationToken = default(CancellationToken));
 
 		bool ReadResponseAsync(PooledSocket socket, Action<bool> next);
 	}

@@ -15,6 +15,7 @@ using System.Diagnostics;
 using Enyim.Collections;
 
 using Microsoft.Extensions.Logging;
+using CacheUtils;
 #endregion
 
 namespace Enyim.Caching.Memcached
@@ -187,12 +188,16 @@ namespace Enyim.Caching.Memcached
 		/// <param name="offset"></param>
 		/// <param name="size"></param>
 		/// <returns></returns>
-		public async Task SendAsync(byte[] buffer, int offset, int size)
+		public async Task SendAsync(byte[] buffer, int offset, int size, CancellationToken cancellationToken = default(CancellationToken))
 		{
 			this.CheckDisposed();
 			try
 			{
-				await this._socket.SendAsync(new ArraySegment<byte>(buffer, offset, size), SocketFlags.None).ConfigureAwait(false);
+				await this._socket.SendAsync(new ArraySegment<byte>(buffer, offset, size), SocketFlags.None).WithCancellationToken(cancellationToken).ConfigureAwait(false);
+			}
+			catch (OperationCanceledException)
+			{
+				throw;
 			}
 			catch (IOException)
 			{
@@ -227,12 +232,16 @@ namespace Enyim.Caching.Memcached
 		/// </summary>
 		/// <param name="buffers"></param>
 		/// <returns></returns>
-		public async Task SendAsync(IList<ArraySegment<byte>> buffers)
+		public async Task SendAsync(IList<ArraySegment<byte>> buffers, CancellationToken cancellationToken = default(CancellationToken))
 		{
 			this.CheckDisposed();
 			try
 			{
-				await this._socket.SendAsync(buffers, SocketFlags.None).ConfigureAwait(false);
+				await this._socket.SendAsync(buffers, SocketFlags.None).WithCancellationToken(cancellationToken).ConfigureAwait(false);
+			}
+			catch (OperationCanceledException)
+			{
+				throw;
 			}
 			catch (IOException)
 			{
@@ -291,7 +300,7 @@ namespace Enyim.Caching.Memcached
 		/// <param name="offset">The location in buffer to store the received data.</param>
 		/// <param name="count">The number of bytes to read.</param>
 		/// <returns>The number of read bytes</returns>
-		public async Task<int> ReceiveAsync(byte[] buffer, int offset, int count)
+		public async Task<int> ReceiveAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken = default(CancellationToken))
 		{
 			this.CheckDisposed();
 			var total = 0;
@@ -300,12 +309,16 @@ namespace Enyim.Caching.Memcached
 				try
 				{
 					var into = new ArraySegment<byte>(new byte[should], 0, should);
-					var read = await this._socket.ReceiveAsync(into, SocketFlags.None).ConfigureAwait(false);
+					var read = await this._socket.ReceiveAsync(into, SocketFlags.None).WithCancellationToken(cancellationToken).ConfigureAwait(false);
 					if (read > 0)
 						Buffer.BlockCopy(into.Array, 0, buffer, offset, read);
 					total += read;
 					offset += read;
 					should -= read;
+				}
+				catch (OperationCanceledException)
+				{
+					throw;
 				}
 				catch (IOException)
 				{
@@ -335,10 +348,10 @@ namespace Enyim.Caching.Memcached
 		/// Receives the next byte from the server's response
 		/// </summary>
 		/// <remarks>This method blocks and will not return until the value is read.</remarks>
-		public async Task<byte> ReceiveAsync()
+		public async Task<byte> ReceiveAsync(CancellationToken cancellationToken = default(CancellationToken))
 		{
 			var buffer = new byte[1];
-			return await this.ReceiveAsync(buffer, 0, 1).ConfigureAwait(false) > 0 ? buffer[0] : (byte)0;
+			return await this.ReceiveAsync(buffer, 0, 1, cancellationToken).ConfigureAwait(false) > 0 ? buffer[0] : (byte)0;
 		}
 
 		/// <summary>

@@ -16,9 +16,9 @@ namespace Enyim.Caching.Memcached.Protocol.Text
 			get { return this.mode; }
 		}
 
-		protected internal override bool ReadResponseAsync(PooledSocket socket, System.Action<bool> next)
+		protected internal override bool ReadResponseAsync(PooledSocket socket, Action<bool> next)
 		{
-			throw new System.NotSupportedException();
+			throw new NotSupportedException();
 		}
 	}
 }
