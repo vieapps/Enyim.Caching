@@ -8,7 +8,7 @@
 		<AssemblyTitle>Enyim Memcached</AssemblyTitle>
 		<AssemblyVersion>1.5.1.1806</AssemblyVersion>
 		<FileVersion>1.5.1.1806</FileVersion>
-		<InformationalVersion>v1.5.netstandard-2+rev:2018.06.01</InformationalVersion>
+		<InformationalVersion>v1.5.netstandard-2+rev:2018.05.17</InformationalVersion>
 		<Product>Enyim Memcached</Product>
 		<Company>VIEApps.net</Company>
 		<GeneratePackageOnBuild>false</GeneratePackageOnBuild>
