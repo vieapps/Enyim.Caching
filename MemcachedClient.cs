@@ -98,9 +98,7 @@ namespace Enyim.Caching
 		static MemcachedClient _Instance = null;
 
 		internal static MemcachedClient GetInstance(IServiceProvider svcProvider)
-		{
-			return MemcachedClient._Instance ?? (MemcachedClient._Instance = new MemcachedClient(svcProvider.GetService<ILoggerFactory>(), svcProvider.GetService<IMemcachedClientConfiguration>()));
-		}
+			=> MemcachedClient._Instance ?? (MemcachedClient._Instance = new MemcachedClient(svcProvider.GetService<ILoggerFactory>(), svcProvider.GetService<IMemcachedClientConfiguration>()));
 		#endregion
 
 		#region Store

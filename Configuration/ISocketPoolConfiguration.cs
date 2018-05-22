@@ -1,5 +1,4 @@
 using System;
-
 using Enyim.Caching.Memcached;
 
 namespace Enyim.Caching.Configuration
@@ -44,6 +43,11 @@ namespace Enyim.Caching.Configuration
 		/// </summary>
 		/// <returns>The value of the dead timeout.</returns>
 		TimeSpan DeadTimeout { get; set; }
+
+		/// <summary>
+		/// Gets or sets a value that specifies whether the socket is using the Nagle algorithm.
+		/// </summary>
+		bool NoDelay { get; set; }
 
 		INodeFailurePolicyFactory FailurePolicyFactory { get; set; }
 	}

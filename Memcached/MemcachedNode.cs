@@ -46,28 +46,19 @@ namespace Enyim.Caching.Memcached
 			this._internalPoolImpl = new InternalPoolImpl(this, this._config);
 		}
 
-		protected INodeFailurePolicy FailurePolicy
-		{
-			get { return this._failurePolicy ?? (this._failurePolicy = this._config.FailurePolicyFactory.Create(this)); }
-		}
+		protected INodeFailurePolicy FailurePolicy => this._failurePolicy ?? (this._failurePolicy = this._config.FailurePolicyFactory.Create(this));
 
 		/// <summary>
 		/// Gets the <see cref="IPEndPoint"/> of this instance
 		/// </summary>
-		public EndPoint EndPoint
-		{
-			get { return this._endpoint; }
-		}
+		public EndPoint EndPoint => this._endpoint;
 
 		/// <summary>
 		/// <para>Gets a value indicating whether the server is working or not. Returns a <b>cached</b> state.</para>
 		/// <para>To get real-time information and update the cached state, use the <see cref="Ping"/> method.</para>
 		/// </summary>
 		/// <remarks>Used by the <see cref="IServerPool"/> to quickly check if the server's state is valid.</remarks>
-		public bool IsAlive
-		{
-			get { return this._internalPoolImpl.IsAlive; }
-		}
+		public bool IsAlive => this._internalPoolImpl.IsAlive;
 
 		/// <summary>
 		/// Gets a value indicating whether the server is working or not.
@@ -160,7 +151,7 @@ namespace Enyim.Caching.Memcached
 		{
 			try
 			{
-				return new PooledSocket(this._endpoint, this._config.ConnectionTimeout, this._config.ReceiveTimeout);
+				return new PooledSocket(this._endpoint, this._config.ConnectionTimeout, this._config.ReceiveTimeout, this._config.NoDelay);
 			}
 			catch (Exception ex)
 			{

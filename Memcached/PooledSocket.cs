@@ -29,14 +29,15 @@ namespace Enyim.Caching.Memcached
 		internal AsyncSocketHelper _asyncHelper;
 		internal bool _isAlive;
 
-		public PooledSocket(EndPoint endpoint, TimeSpan connectionTimeout, TimeSpan receiveTimeout)
+		public PooledSocket(EndPoint endpoint, TimeSpan connectionTimeout, TimeSpan receiveTimeout, bool noDelay)
 		{
 			this._logger = Logger.CreateLogger<PooledSocket>();
 
 			var socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp)
 			{
 				ReceiveTimeout = receiveTimeout == TimeSpan.MaxValue ? Timeout.Infinite : (int)receiveTimeout.TotalMilliseconds,
-				SendTimeout = receiveTimeout == TimeSpan.MaxValue ? Timeout.Infinite : (int)receiveTimeout.TotalMilliseconds
+				SendTimeout = receiveTimeout == TimeSpan.MaxValue ? Timeout.Infinite : (int)receiveTimeout.TotalMilliseconds,
+				NoDelay = noDelay
 			};
 
 			socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.KeepAlive, true);
@@ -64,12 +65,12 @@ namespace Enyim.Caching.Memcached
 			}
 
 			var completed = new AutoResetEvent(false);
-			var socketArgs = new SocketAsyncEventArgs()
+			var socketArgs = new SocketAsyncEventArgs
 			{
 				RemoteEndPoint = endpoint,
 				UserToken = completed
 			};
-			socketArgs.Completed += (sender, args) => (args.UserToken as EventWaitHandle)?.Set();
+			socketArgs.Completed += (sender, args) => (args.UserToken as AutoResetEvent)?.Set();
 
 			socket.ConnectAsync(socketArgs);
 			if (!completed.WaitOne(timeout) || !socket.Connected)

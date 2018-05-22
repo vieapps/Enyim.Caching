@@ -164,6 +164,8 @@ namespace Enyim.Caching.Configuration
 					this.SocketPool.QueueTimeout = TimeSpan.Parse(socketpool.Attributes["queueTimeout"].Value);
 				if (socketpool.Attributes["receiveTimeout"]?.Value != null)
 					this.SocketPool.ReceiveTimeout = TimeSpan.Parse(socketpool.Attributes["receiveTimeout"].Value);
+				if (socketpool.Attributes["noDelay"]?.Value != null)
+					this.SocketPool.NoDelay = Convert.ToBoolean(socketpool.Attributes["noDelay"].Value);
 
 				if ("throttling" == socketpool.Attributes["failurePolicy"]?.Value)
 					try
@@ -250,20 +252,14 @@ namespace Enyim.Caching.Configuration
 		/// Adds a new server to the pool.
 		/// </summary>
 		/// <param name="address">The address and the port of the server in the format 'host:port'.</param>
-		public void AddServer(string address)
-		{
-			this.Servers.Add(ConfigurationHelper.ResolveToEndPoint(address));
-		}
+		public void AddServer(string address) => this.Servers.Add(ConfigurationHelper.ResolveToEndPoint(address));
 
 		/// <summary>
 		/// Adds a new server to the pool.
 		/// </summary>
 		/// <param name="address">The host name or IP address of the server.</param>
 		/// <param name="port">The port number of the memcached instance.</param>
-		public void AddServer(string address, int port)
-		{
-			this.Servers.Add(ConfigurationHelper.ResolveToEndPoint(address, port));
-		}
+		public void AddServer(string address, int port) => this.Servers.Add(ConfigurationHelper.ResolveToEndPoint(address, port));
 
 		/// <summary>
 		/// Gets a list of <see cref="IPEndPoint"/> each representing a Memcached server in the pool.
@@ -290,14 +286,8 @@ namespace Enyim.Caching.Configuration
 		/// </summary>
 		public IKeyTransformer KeyTransformer
 		{
-			get
-			{
-				return this._keyTransformer ?? (this._keyTransformer = new DefaultKeyTransformer());
-			}
-			set
-			{
-				this._keyTransformer = value;
-			}
+			get => this._keyTransformer ?? (this._keyTransformer = new DefaultKeyTransformer());
+			set => this._keyTransformer = value;
 		}
 
 		/// <summary>
@@ -305,14 +295,8 @@ namespace Enyim.Caching.Configuration
 		/// </summary>
 		public ITranscoder Transcoder
 		{
-			get
-			{
-				return this._transcoder ?? (this._transcoder = new DefaultTranscoder());
-			}
-			set
-			{
-				this._transcoder = value;
-			}
+			get => this._transcoder ?? (this._transcoder = new DefaultTranscoder());
+			set => this._transcoder = value;
 		}
 
 		/// <summary>
@@ -321,10 +305,7 @@ namespace Enyim.Caching.Configuration
 		/// <remarks>If both <see cref="NodeLocator"/> and  <see cref="NodeLocatorFactory"/> are assigned then the latter takes precedence.</remarks>
 		public Type NodeLocator
 		{
-			get
-			{
-				return this._nodeLocator;
-			}
+			get => this._nodeLocator;
 			set
 			{
 				ConfigurationHelper.CheckForInterface(value, typeof(INodeLocator));
@@ -338,30 +319,15 @@ namespace Enyim.Caching.Configuration
 		/// <remarks>If both <see cref="NodeLocator"/> and  <see cref="NodeLocatorFactory"/> are assigned then the latter takes precedence.</remarks>
 		public IProviderFactory<INodeLocator> NodeLocatorFactory { get; set; }
 
-		IList<EndPoint> IMemcachedClientConfiguration.Servers
-		{
-			get { return this.Servers; }
-		}
+		IList<EndPoint> IMemcachedClientConfiguration.Servers => this.Servers;
 
-		ISocketPoolConfiguration IMemcachedClientConfiguration.SocketPool
-		{
-			get { return this.SocketPool; }
-		}
+		ISocketPoolConfiguration IMemcachedClientConfiguration.SocketPool => this.SocketPool;
 
-		IAuthenticationConfiguration IMemcachedClientConfiguration.Authentication
-		{
-			get { return this.Authentication; }
-		}
+		IAuthenticationConfiguration IMemcachedClientConfiguration.Authentication => this.Authentication;
 
-		IKeyTransformer IMemcachedClientConfiguration.CreateKeyTransformer()
-		{
-			return this.KeyTransformer;
-		}
+		IKeyTransformer IMemcachedClientConfiguration.CreateKeyTransformer() => this.KeyTransformer;
 
-		ITranscoder IMemcachedClientConfiguration.CreateTranscoder()
-		{
-			return this.Transcoder;
-		}
+		ITranscoder IMemcachedClientConfiguration.CreateTranscoder() => this.Transcoder;
 
 		INodeLocator IMemcachedClientConfiguration.CreateNodeLocator()
 		{
@@ -375,11 +341,9 @@ namespace Enyim.Caching.Configuration
 		}
 
 		IServerPool IMemcachedClientConfiguration.CreatePool()
-		{
-			return this.Protocol.Equals(MemcachedProtocol.Text)
+			=> this.Protocol.Equals(MemcachedProtocol.Text)
 				? new DefaultServerPool(this, new TextOperationFactory())
 				: new BinaryPool(this);
-		}
 	}
 
 	#region Configuration helpers
@@ -387,13 +351,11 @@ namespace Enyim.Caching.Configuration
 	{
 		public object Create(object parent, object configContext, XmlNode section)
 		{
-			this._section = section;
+			this.Section = section;
 			return this;
 		}
 
-		XmlNode _section = null;
-
-		public XmlNode Section { get { return this._section; } }
+		public XmlNode Section { get; private set; } = null;
 	}
 
 	public class MemcachedClientOptions : IOptions<MemcachedClientOptions>

@@ -1,5 +1,4 @@
 using System;
-
 using Enyim.Caching.Memcached;
 
 namespace Enyim.Caching.Configuration
@@ -94,15 +93,14 @@ namespace Enyim.Caching.Configuration
 			}
 		}
 
+		bool ISocketPoolConfiguration.NoDelay { get; set; } = true;
+
 		INodeFailurePolicyFactory ISocketPoolConfiguration.FailurePolicyFactory
 		{
 			get { return this._policyFactory; }
 			set
 			{
-				if (value == null)
-					throw new ArgumentNullException("value");
-
-				this._policyFactory = value;
+				this._policyFactory = value ?? throw new ArgumentNullException("value");
 			}
 		}
 	}
