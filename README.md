@@ -9,8 +9,7 @@ The .NET Standard 2.0 memcached client library:
 
 ### NuGet
 
-- Package ID: **VIEApps.Enyim.Caching**
-- Details: https://www.nuget.org/packages/VIEApps.Enyim.Caching
+[![NuGet](https://img.shields.io/nuget/v/VIEApps.Enyim.Caching.svg)](https://www.nuget.org/packages/VIEApps.Enyim.Caching)
 
 ### Information
 
