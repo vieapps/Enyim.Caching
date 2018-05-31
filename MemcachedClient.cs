@@ -19,6 +19,8 @@ using Microsoft.Extensions.DependencyInjection;
 using CacheUtils;
 #endregion
 
+[assembly: System.Runtime.CompilerServices.InternalsVisibleTo("VIEApps.Components.XUnitTests")]
+
 namespace Enyim.Caching
 {
 	public partial class MemcachedClient : IMemcachedClient, IMemcachedResultsClient, IDistributedCache
