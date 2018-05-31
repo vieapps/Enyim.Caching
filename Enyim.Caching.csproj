@@ -6,23 +6,22 @@
 		<RootNamespace>Enyim</RootNamespace>
 		<AssemblyName>Enyim.Caching</AssemblyName>
 		<AssemblyTitle>Enyim Memcached</AssemblyTitle>
-		<AssemblyVersion>1.5.1.1806</AssemblyVersion>
-		<FileVersion>1.5.2.1806</FileVersion>
-		<InformationalVersion>v1.5.netstandard-2+rev:2018.05.28</InformationalVersion>
+		<AssemblyVersion>1.5.3.1806</AssemblyVersion>
+		<FileVersion>1.5.3.1806</FileVersion>
+		<InformationalVersion>v1.5.netstandard-2+rev:2018.06.01</InformationalVersion>
 		<Product>Enyim Memcached</Product>
 		<Company>VIEApps.net</Company>
 		<GeneratePackageOnBuild>false</GeneratePackageOnBuild>
 		<PackageId>VIEApps.Enyim.Caching</PackageId>
-		<Version>1.5.2.1806</Version>
+		<Version>1.5.3.1806</Version>
 		<SignAssembly>false</SignAssembly>
-		<DelaySign>false</DelaySign>
 		<AssemblyOriginatorKeyFile>../VIEApps.Components.snk</AssemblyOriginatorKeyFile>
 		<Title>Enyim Memcached</Title>
 		<Description>The memcached client library, fully async with various transcoders (binary formatter, bson, protobuf, msgpack) on .NET Standard 2.0</Description>
 		<Authors>VIEApps.net</Authors>
 		<Copyright>© 2010 Attila Kiskó, © 2016 CNBlogs, © 2018 VIEApps.net</Copyright>
-		<PackageTags>cache;caching;distributed;distributedcache;memcached;enyim;enyimmemcached;enyim.memcached;enyim.caching;vieapps;vieapps.components</PackageTags>
-		<PackageReleaseNotes>Add NoDelay option to disable Nagle's algorithm</PackageReleaseNotes>
+		<PackageTags>cache;caching;distributed;distributed-cache;memcached;enyim;enyim-memcached;enyim-caching;vieapps;vieapps.components</PackageTags>
+		<PackageReleaseNotes>Upgrade to latest components to get better performance</PackageReleaseNotes>
 		<PackageProjectUrl>https://github.com/vieapps/Enyim.Caching</PackageProjectUrl>
 		<PackageIconUrl>https://github.com/vieapps/Components.Utility/raw/master/logo.png</PackageIconUrl>
 		<RepositoryUrl>https://github.com/vieapps/Enyim.Caching</RepositoryUrl>
@@ -49,14 +48,13 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Microsoft.AspNetCore.Http.Abstractions" Version="2.0.3" />
-		<PackageReference Include="Microsoft.Extensions.Caching.Abstractions" Version="2.0.2" />
-		<PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="2.0.2" />
-		<PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="2.0.0" />
-		<PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="2.0.2" />
-		<PackageReference Include="Microsoft.Extensions.Options" Version="2.0.2" />
-		<PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="2.0.2" />
-		<PackageReference Include="System.Configuration.ConfigurationManager" Version="4.4.1" />
+		<PackageReference Include="Microsoft.AspNetCore.Http.Abstractions" Version="2.1.0" />
+		<PackageReference Include="Microsoft.Extensions.Caching.Abstractions" Version="2.1.0" />
+		<PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="2.1.0" />
+		<PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="2.1.0" />
+		<PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="2.1.0" />
+		<PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="2.1.0" />
+		<PackageReference Include="System.Configuration.ConfigurationManager" Version="4.5.0" />
 	</ItemGroup>
 
 </Project>

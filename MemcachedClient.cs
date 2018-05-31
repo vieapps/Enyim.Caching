@@ -91,8 +91,7 @@ namespace Enyim.Caching
 			this.ConcatOperationResultFactory = new DefaultConcatOperationResultFactory();
 			this.RemoveOperationResultFactory = new DefaultRemoveOperationResultFactory();
 
-			if (this._logger.IsEnabled(LogLevel.Debug))
-				this._logger.LogInformation("An instance of Memcached client was created successful");
+			this._logger.Log(LogLevel.Debug, LogLevel.Debug, "An instance of Memcached client was created successful");
 		}
 		#endregion
 
@@ -1812,12 +1811,14 @@ namespace Enyim.Caching
 		{
 			if (string.IsNullOrWhiteSpace(key))
 				throw new ArgumentNullException(nameof(key));
+
 			var expires = options == null
 				? TimeSpan.Zero
 				: options.GetExpiration();
 			var validFor = expires is TimeSpan
 				? (TimeSpan)expires
 				: Helper.UnixEpoch.AddSeconds((long)expires).ToTimeSpan();
+
 			if (this.Store(StoreMode.Set, key, value, validFor) && expires is TimeSpan && validFor != TimeSpan.Zero)
 				this.Store(StoreMode.Set, key.GetIDistributedCacheExpirationKey(), expires, validFor);
 		}
@@ -1826,38 +1827,38 @@ namespace Enyim.Caching
 		{
 			if (string.IsNullOrWhiteSpace(key))
 				throw new ArgumentNullException(nameof(key));
+
 			var expires = options == null
 				? TimeSpan.Zero
 				: options.GetExpiration();
 			var validFor = expires is TimeSpan
 				? (TimeSpan)expires
 				: Helper.UnixEpoch.AddSeconds((long)expires).ToTimeSpan();
+
 			if (await this.StoreAsync(StoreMode.Set, key, value, validFor, cancellationToken).ConfigureAwait(false) && expires is TimeSpan && validFor != TimeSpan.Zero)
 				await this.StoreAsync(StoreMode.Set, key.GetIDistributedCacheExpirationKey(), expires, validFor, cancellationToken).ConfigureAwait(false);
 		}
 
 		byte[] IDistributedCache.Get(string key)
-		{
-			return string.IsNullOrWhiteSpace(key)
+			=> string.IsNullOrWhiteSpace(key)
 				? throw new ArgumentNullException(nameof(key))
 				: this.Get<byte[]>(key);
-		}
 
 		Task<byte[]> IDistributedCache.GetAsync(string key, CancellationToken cancellationToken = default(CancellationToken))
-		{
-			return string.IsNullOrWhiteSpace(key)
+			=> string.IsNullOrWhiteSpace(key)
 				? Task.FromException<byte[]>(new ArgumentNullException(nameof(key)))
 				: this.GetAsync<byte[]>(key, cancellationToken);
-		}
 
 		void IDistributedCache.Refresh(string key)
 		{
 			if (string.IsNullOrWhiteSpace(key))
 				throw new ArgumentNullException(nameof(key));
+
 			var value = this.Get<byte[]>(key);
 			var expires = value != null
 				? this.Get(key.GetIDistributedCacheExpirationKey())
 				: null;
+
 			if (value != null && expires != null && expires is TimeSpan && this.Store(StoreMode.Replace, key, value, (TimeSpan)expires))
 				this.Store(StoreMode.Replace, key.GetIDistributedCacheExpirationKey(), expires, (TimeSpan)expires);
 		}
@@ -1866,10 +1867,12 @@ namespace Enyim.Caching
 		{
 			if (string.IsNullOrWhiteSpace(key))
 				throw new ArgumentNullException(nameof(key));
+
 			var value = await this.GetAsync<byte[]>(key, cancellationToken).ConfigureAwait(false);
 			var expires = value != null
 				? await this.GetAsync(key.GetIDistributedCacheExpirationKey(), cancellationToken).ConfigureAwait(false)
 				: null;
+
 			if (value != null && expires != null && expires is TimeSpan && await this.StoreAsync(StoreMode.Replace, key, value, (TimeSpan)expires, cancellationToken).ConfigureAwait(false))
 				await this.StoreAsync(StoreMode.Replace, key.GetIDistributedCacheExpirationKey(), expires, (TimeSpan)expires, cancellationToken).ConfigureAwait(false);
 		}
@@ -1878,16 +1881,15 @@ namespace Enyim.Caching
 		{
 			if (string.IsNullOrWhiteSpace(key))
 				throw new ArgumentNullException(nameof(key));
+
 			this.Remove(key);
 			this.Remove(key.GetIDistributedCacheExpirationKey());
 		}
 
 		Task IDistributedCache.RemoveAsync(string key, CancellationToken cancellationToken = default(CancellationToken))
-		{
-			return string.IsNullOrWhiteSpace(key)
+			=> string.IsNullOrWhiteSpace(key)
 				? Task.FromException(new ArgumentNullException(nameof(key)))
 				: Task.WhenAll(this.RemoveAsync(key, cancellationToken), this.RemoveAsync(key.GetIDistributedCacheExpirationKey(), cancellationToken));
-		}
 		#endregion
 
 	}

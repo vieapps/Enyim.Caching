@@ -12,8 +12,8 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 	/// </summary>
 	public class BinaryNode : MemcachedNode
 	{
-		ILogger _logger;
-		ISaslAuthenticationProvider _authenticationProvider;
+		readonly ILogger _logger;
+		readonly ISaslAuthenticationProvider _authenticationProvider;
 
 		public BinaryNode(EndPoint endpoint, ISocketPoolConfiguration config, ISaslAuthenticationProvider authenticationProvider) : base(endpoint, config)
 		{

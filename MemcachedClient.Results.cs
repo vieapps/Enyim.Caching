@@ -68,10 +68,7 @@ namespace Enyim.Caching
 		/// <param name="value">The object to be inserted into the cache.</param>
 		/// <remarks>The item does not expire unless it is removed due memory pressure. The text protocol does not support this operation, you need to Store then GetWithCas.</remarks>
 		/// <returns>A CasResult object containing the version of the item and the result of the operation (true if the item was successfully stored in the cache; false otherwise).</returns>
-		public IStoreOperationResult ExecuteCas(StoreMode mode, string key, object value)
-		{
-			return this.PerformStore(mode, key, value, 0, 0);
-		}
+		public IStoreOperationResult ExecuteCas(StoreMode mode, string key, object value) => this.PerformStore(mode, key, value, 0, 0);
 
 		/// <summary>
 		/// Inserts an item into the cache with a cache key to reference its location and returns its version.
@@ -81,10 +78,7 @@ namespace Enyim.Caching
 		/// <param name="value">The object to be inserted into the cache.</param>
 		/// <remarks>The item does not expire unless it is removed due memory pressure.</remarks>
 		/// <returns>A CasResult object containing the version of the item and the result of the operation (true if the item was successfully stored in the cache; false otherwise).</returns>
-		public IStoreOperationResult ExecuteCas(StoreMode mode, string key, object value, ulong cas)
-		{
-			return this.PerformStore(mode, key, value, 0, cas);
-		}
+		public IStoreOperationResult ExecuteCas(StoreMode mode, string key, object value, ulong cas) => this.PerformStore(mode, key, value, 0, cas);
 
 		/// <summary>
 		/// Inserts an item into the cache with a cache key to reference its location and returns its version.
@@ -95,10 +89,7 @@ namespace Enyim.Caching
 		/// <param name="validFor">The interval after the item is invalidated in the cache.</param>
 		/// <param name="cas">The cas value which must match the item's version.</param>
 		/// <returns>A CasResult object containing the version of the item and the result of the operation (true if the item was successfully stored in the cache; false otherwise).</returns>
-		public IStoreOperationResult ExecuteCas(StoreMode mode, string key, object value, TimeSpan validFor, ulong cas)
-		{
-			return this.PerformStore(mode, key, value, validFor.GetExpiration(), cas);
-		}
+		public IStoreOperationResult ExecuteCas(StoreMode mode, string key, object value, TimeSpan validFor, ulong cas) => this.PerformStore(mode, key, value, validFor.GetExpiration(), cas);
 
 		/// <summary>
 		/// Inserts an item into the cache with a cache key to reference its location and returns its version.
@@ -109,10 +100,7 @@ namespace Enyim.Caching
 		/// <param name="expiresAt">The time when the item is invalidated in the cache.</param>
 		/// <param name="cas">The cas value which must match the item's version.</param>
 		/// <returns>A CasResult object containing the version of the item and the result of the operation (true if the item was successfully stored in the cache; false otherwise).</returns>
-		public IStoreOperationResult ExecuteCas(StoreMode mode, string key, object value, DateTime expiresAt, ulong cas)
-		{
-			return this.PerformStore(mode, key, value, expiresAt.GetExpiration(), cas);
-		}
+		public IStoreOperationResult ExecuteCas(StoreMode mode, string key, object value, DateTime expiresAt, ulong cas) => this.PerformStore(mode, key, value, expiresAt.GetExpiration(), cas);
 		#endregion
 
 		#region Get
@@ -121,10 +109,7 @@ namespace Enyim.Caching
 		/// </summary>
 		/// <param name="key">The identifier for the item to retrieve.</param>
 		/// <returns>The retrieved item, or <value>null</value> if the key was not found.</returns>
-		public IGetOperationResult ExecuteGet(string key)
-		{
-			return this.ExecuteTryGet(key, out object tmp);
-		}
+		public IGetOperationResult ExecuteGet(string key) => this.ExecuteTryGet(key, out object tmp);
 
 		/// <summary>
 		/// Tries to get an item from the cache.
@@ -132,10 +117,7 @@ namespace Enyim.Caching
 		/// <param name="key">The identifier for the item to retrieve.</param>
 		/// <param name="value">The retrieved item or null if not found.</param>
 		/// <returns>The <value>true</value> if the item was successfully retrieved.</returns>
-		public IGetOperationResult ExecuteTryGet(string key, out object value)
-		{
-			return this.PerformGet(key, out ulong cas, out value);
-		}
+		public IGetOperationResult ExecuteTryGet(string key, out object value) => this.PerformGet(key, out ulong cas, out value);
 
 		/// <summary>
 		/// Retrieves the specified item from the cache.
@@ -195,10 +177,7 @@ namespace Enyim.Caching
 		/// <param name="delta">The amount by which the client wants to increase the item.</param>
 		/// <returns>The new value of the item or defaultValue if the key was not found.</returns>
 		/// <remarks>If the client uses the Text protocol, the item must be inserted into the cache before it can be changed. It must be inserted as a <see cref="System.String"/>. Moreover the Text protocol only works with <see cref="System.UInt32"/> values, so return value -1 always indicates that the item was not found.</remarks>
-		public IMutateOperationResult ExecuteIncrement(string key, ulong defaultValue, ulong delta)
-		{
-			return this.PerformMutate(MutationMode.Increment, key, defaultValue, delta, 0);
-		}
+		public IMutateOperationResult ExecuteIncrement(string key, ulong defaultValue, ulong delta) => this.PerformMutate(MutationMode.Increment, key, defaultValue, delta, 0);
 
 		/// <summary>
 		/// Increments the value of the specified key by the given amount. The operation is atomic and happens on the server.
@@ -209,10 +188,7 @@ namespace Enyim.Caching
 		/// <param name="validFor">The interval after the item is invalidated in the cache.</param>
 		/// <returns>The new value of the item or defaultValue if the key was not found.</returns>
 		/// <remarks>If the client uses the Text protocol, the item must be inserted into the cache before it can be changed. It must be inserted as a <see cref="System.String"/>. Moreover the Text protocol only works with <see cref="System.UInt32"/> values, so return value -1 always indicates that the item was not found.</remarks>
-		public IMutateOperationResult ExecuteIncrement(string key, ulong defaultValue, ulong delta, TimeSpan validFor)
-		{
-			return this.PerformMutate(MutationMode.Increment, key, defaultValue, delta, validFor.GetExpiration());
-		}
+		public IMutateOperationResult ExecuteIncrement(string key, ulong defaultValue, ulong delta, TimeSpan validFor) => this.PerformMutate(MutationMode.Increment, key, defaultValue, delta, validFor.GetExpiration());
 
 		/// <summary>
 		/// Increments the value of the specified key by the given amount. The operation is atomic and happens on the server.
@@ -223,10 +199,7 @@ namespace Enyim.Caching
 		/// <param name="expiresAt">The time when the item is invalidated in the cache.</param>
 		/// <returns>The new value of the item or defaultValue if the key was not found.</returns>
 		/// <remarks>If the client uses the Text protocol, the item must be inserted into the cache before it can be changed. It must be inserted as a <see cref="System.String"/>. Moreover the Text protocol only works with <see cref="System.UInt32"/> values, so return value -1 always indicates that the item was not found.</remarks>
-		public IMutateOperationResult ExecuteIncrement(string key, ulong defaultValue, ulong delta, DateTime expiresAt)
-		{
-			return this.PerformMutate(MutationMode.Increment, key, defaultValue, delta, expiresAt.GetExpiration());
-		}
+		public IMutateOperationResult ExecuteIncrement(string key, ulong defaultValue, ulong delta, DateTime expiresAt) => this.PerformMutate(MutationMode.Increment, key, defaultValue, delta, expiresAt.GetExpiration());
 
 		/// <summary>
 		/// Increments the value of the specified key by the given amount, but only if the item's version matches the CAS value provided. The operation is atomic and happens on the server.
@@ -237,10 +210,7 @@ namespace Enyim.Caching
 		/// <param name="cas">The cas value which must match the item's version.</param>
 		/// <returns>The new value of the item or defaultValue if the key was not found.</returns>
 		/// <remarks>If the client uses the Text protocol, the item must be inserted into the cache before it can be changed. It must be inserted as a <see cref="System.String"/>. Moreover the Text protocol only works with <see cref="System.UInt32"/> values, so return value -1 always indicates that the item was not found.</remarks>
-		public IMutateOperationResult ExecuteIncrement(string key, ulong defaultValue, ulong delta, ulong cas)
-		{
-			return this.CasMutate(MutationMode.Increment, key, defaultValue, delta, 0, cas);
-		}
+		public IMutateOperationResult ExecuteIncrement(string key, ulong defaultValue, ulong delta, ulong cas) => this.CasMutate(MutationMode.Increment, key, defaultValue, delta, 0, cas);
 
 		/// <summary>
 		/// Increments the value of the specified key by the given amount, but only if the item's version matches the CAS value provided. The operation is atomic and happens on the server.
@@ -252,10 +222,7 @@ namespace Enyim.Caching
 		/// <param name="cas">The cas value which must match the item's version.</param>
 		/// <returns>The new value of the item or defaultValue if the key was not found.</returns>
 		/// <remarks>If the client uses the Text protocol, the item must be inserted into the cache before it can be changed. It must be inserted as a <see cref="System.String"/>. Moreover the Text protocol only works with <see cref="System.UInt32"/> values, so return value -1 always indicates that the item was not found.</remarks>
-		public IMutateOperationResult ExecuteIncrement(string key, ulong defaultValue, ulong delta, TimeSpan validFor, ulong cas)
-		{
-			return this.CasMutate(MutationMode.Increment, key, defaultValue, delta, validFor.GetExpiration(), cas);
-		}
+		public IMutateOperationResult ExecuteIncrement(string key, ulong defaultValue, ulong delta, TimeSpan validFor, ulong cas) => this.CasMutate(MutationMode.Increment, key, defaultValue, delta, validFor.GetExpiration(), cas);
 
 		/// <summary>
 		/// Increments the value of the specified key by the given amount, but only if the item's version matches the CAS value provided. The operation is atomic and happens on the server.
@@ -267,10 +234,7 @@ namespace Enyim.Caching
 		/// <param name="cas">The cas value which must match the item's version.</param>
 		/// <returns>The new value of the item or defaultValue if the key was not found.</returns>
 		/// <remarks>If the client uses the Text protocol, the item must be inserted into the cache before it can be changed. It must be inserted as a <see cref="System.String"/>. Moreover the Text protocol only works with <see cref="System.UInt32"/> values, so return value -1 always indicates that the item was not found.</remarks>
-		public IMutateOperationResult ExecuteIncrement(string key, ulong defaultValue, ulong delta, DateTime expiresAt, ulong cas)
-		{
-			return this.CasMutate(MutationMode.Increment, key, defaultValue, delta, expiresAt.GetExpiration(), cas);
-		}
+		public IMutateOperationResult ExecuteIncrement(string key, ulong defaultValue, ulong delta, DateTime expiresAt, ulong cas) => this.CasMutate(MutationMode.Increment, key, defaultValue, delta, expiresAt.GetExpiration(), cas);
 
 		/// <summary>
 		/// Decrements the value of the specified key by the given amount. The operation is atomic and happens on the server.
@@ -280,10 +244,7 @@ namespace Enyim.Caching
 		/// <param name="delta">The amount by which the client wants to decrease the item.</param>
 		/// <returns>The new value of the item or defaultValue if the key was not found.</returns>
 		/// <remarks>If the client uses the Text protocol, the item must be inserted into the cache before it can be changed. It must be inserted as a <see cref="System.String"/>. Moreover the Text protocol only works with <see cref="System.UInt32"/> values, so return value -1 always indicates that the item was not found.</remarks>
-		public IMutateOperationResult ExecuteDecrement(string key, ulong defaultValue, ulong delta)
-		{
-			return this.PerformMutate(MutationMode.Decrement, key, defaultValue, delta, 0);
-		}
+		public IMutateOperationResult ExecuteDecrement(string key, ulong defaultValue, ulong delta) => this.PerformMutate(MutationMode.Decrement, key, defaultValue, delta, 0);
 
 		/// <summary>
 		/// Decrements the value of the specified key by the given amount. The operation is atomic and happens on the server.
@@ -294,10 +255,7 @@ namespace Enyim.Caching
 		/// <param name="validFor">The interval after the item is invalidated in the cache.</param>
 		/// <returns>The new value of the item or defaultValue if the key was not found.</returns>
 		/// <remarks>If the client uses the Text protocol, the item must be inserted into the cache before it can be changed. It must be inserted as a <see cref="System.String"/>. Moreover the Text protocol only works with <see cref="System.UInt32"/> values, so return value -1 always indicates that the item was not found.</remarks>
-		public IMutateOperationResult ExecuteDecrement(string key, ulong defaultValue, ulong delta, TimeSpan validFor)
-		{
-			return this.PerformMutate(MutationMode.Decrement, key, defaultValue, delta, validFor.GetExpiration());
-		}
+		public IMutateOperationResult ExecuteDecrement(string key, ulong defaultValue, ulong delta, TimeSpan validFor) => this.PerformMutate(MutationMode.Decrement, key, defaultValue, delta, validFor.GetExpiration());
 
 		/// <summary>
 		/// Decrements the value of the specified key by the given amount. The operation is atomic and happens on the server.
@@ -308,10 +266,7 @@ namespace Enyim.Caching
 		/// <param name="expiresAt">The time when the item is invalidated in the cache.</param>
 		/// <returns>The new value of the item or defaultValue if the key was not found.</returns>
 		/// <remarks>If the client uses the Text protocol, the item must be inserted into the cache before it can be changed. It must be inserted as a <see cref="System.String"/>. Moreover the Text protocol only works with <see cref="System.UInt32"/> values, so return value -1 always indicates that the item was not found.</remarks>
-		public IMutateOperationResult ExecuteDecrement(string key, ulong defaultValue, ulong delta, DateTime expiresAt)
-		{
-			return this.PerformMutate(MutationMode.Decrement, key, defaultValue, delta, expiresAt.GetExpiration());
-		}
+		public IMutateOperationResult ExecuteDecrement(string key, ulong defaultValue, ulong delta, DateTime expiresAt) => this.PerformMutate(MutationMode.Decrement, key, defaultValue, delta, expiresAt.GetExpiration());
 
 		/// <summary>
 		/// Decrements the value of the specified key by the given amount, but only if the item's version matches the CAS value provided. The operation is atomic and happens on the server.
@@ -322,10 +277,7 @@ namespace Enyim.Caching
 		/// <param name="cas">The cas value which must match the item's version.</param>
 		/// <returns>The new value of the item or defaultValue if the key was not found.</returns>
 		/// <remarks>If the client uses the Text protocol, the item must be inserted into the cache before it can be changed. It must be inserted as a <see cref="System.String"/>. Moreover the Text protocol only works with <see cref="System.UInt32"/> values, so return value -1 always indicates that the item was not found.</remarks>
-		public IMutateOperationResult ExecuteDecrement(string key, ulong defaultValue, ulong delta, ulong cas)
-		{
-			return this.CasMutate(MutationMode.Decrement, key, defaultValue, delta, 0, cas);
-		}
+		public IMutateOperationResult ExecuteDecrement(string key, ulong defaultValue, ulong delta, ulong cas) => this.CasMutate(MutationMode.Decrement, key, defaultValue, delta, 0, cas);
 
 		/// <summary>
 		/// Decrements the value of the specified key by the given amount, but only if the item's version matches the CAS value provided. The operation is atomic and happens on the server.
@@ -337,10 +289,7 @@ namespace Enyim.Caching
 		/// <param name="cas">The cas value which must match the item's version.</param>
 		/// <returns>The new value of the item or defaultValue if the key was not found.</returns>
 		/// <remarks>If the client uses the Text protocol, the item must be inserted into the cache before it can be changed. It must be inserted as a <see cref="System.String"/>. Moreover the Text protocol only works with <see cref="System.UInt32"/> values, so return value -1 always indicates that the item was not found.</remarks>
-		public IMutateOperationResult ExecuteDecrement(string key, ulong defaultValue, ulong delta, TimeSpan validFor, ulong cas)
-		{
-			return this.CasMutate(MutationMode.Decrement, key, defaultValue, delta, validFor.GetExpiration(), cas);
-		}
+		public IMutateOperationResult ExecuteDecrement(string key, ulong defaultValue, ulong delta, TimeSpan validFor, ulong cas) => this.CasMutate(MutationMode.Decrement, key, defaultValue, delta, validFor.GetExpiration(), cas);
 
 		/// <summary>
 		/// Decrements the value of the specified key by the given amount, but only if the item's version matches the CAS value provided. The operation is atomic and happens on the server.
@@ -352,10 +301,7 @@ namespace Enyim.Caching
 		/// <param name="cas">The cas value which must match the item's version.</param>
 		/// <returns>The new value of the item or defaultValue if the key was not found.</returns>
 		/// <remarks>If the client uses the Text protocol, the item must be inserted into the cache before it can be changed. It must be inserted as a <see cref="System.String"/>. Moreover the Text protocol only works with <see cref="System.UInt32"/> values, so return value -1 always indicates that the item was not found.</remarks>
-		public IMutateOperationResult ExecuteDecrement(string key, ulong defaultValue, ulong delta, DateTime expiresAt, ulong cas)
-		{
-			return this.CasMutate(MutationMode.Decrement, key, defaultValue, delta, expiresAt.GetExpiration(), cas);
-		}
+		public IMutateOperationResult ExecuteDecrement(string key, ulong defaultValue, ulong delta, DateTime expiresAt, ulong cas) => this.CasMutate(MutationMode.Decrement, key, defaultValue, delta, expiresAt.GetExpiration(), cas);
 		#endregion
 
 		#region Concatenate
@@ -420,10 +366,7 @@ namespace Enyim.Caching
 		/// </summary>
 		/// <param name="key">The identifier for the item to delete.</param>
 		/// <returns>true if the item was successfully removed from the cache; false otherwise.</returns>
-		public IRemoveOperationResult ExecuteRemove(string key)
-		{
-			return this.PerformRemove(key);
-		}
+		public IRemoveOperationResult ExecuteRemove(string key) => this.PerformRemove(key);
 		#endregion
 
 	}

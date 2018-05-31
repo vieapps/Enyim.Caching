@@ -57,11 +57,10 @@ namespace Enyim.Caching.Memcached
 				var addresses = Dns.GetHostAddresses(dnsEndPoint.Host);
 				var address = addresses.FirstOrDefault(ip => ip.AddressFamily == AddressFamily.InterNetwork);
 				if (address == null)
-					throw new ArgumentException($"Could not resolve host '{host}'.");
+					throw new ArgumentException($"Could not resolve host \"{host}\".");
 
 				endpoint = new IPEndPoint(address, dnsEndPoint.Port);
-				if (this._logger.IsEnabled(LogLevel.Debug))
-					this._logger.LogDebug($"Resolved '{host}' to '{address}'");
+				this._logger.Log(LogLevel.Debug, LogLevel.Debug, $"Resolved \"{host}\" to \"{address}\"");
 			}
 
 			var completed = new AutoResetEvent(false);
@@ -76,16 +75,13 @@ namespace Enyim.Caching.Memcached
 			if (!completed.WaitOne(timeout) || !socket.Connected)
 				using (socket)
 				{
-					throw new TimeoutException($"Could not connect to '{endpoint}'");
+					throw new TimeoutException($"Could not connect to \"{endpoint}\"");
 				}
 		}
 
 		public Action<PooledSocket> CleanupCallback { get; set; }
 
-		public int Available
-		{
-			get { return this._socket.Available; }
-		}
+		public int Available => this._socket.Available;
 
 		public void Reset()
 		{
@@ -93,7 +89,7 @@ namespace Enyim.Caching.Memcached
 			var available = this._socket.Available;
 			if (available > 0)
 			{
-				this._logger.LogWarning($"Socket bound to {this._endpoint} has {available} unread data! This is probably a bug in the code. Instance ID was {this.InstanceID}.");
+				this._logger.LogWarning($"Socket bound to {this._endpoint} has {available} unread data! This is probably a bug in the code (ID: {this.InstanceID}).");
 				var data = new byte[available];
 				this.Receive(data, 0, available);
 				this._logger.Log(LogLevel.Debug, LogLevel.Warning, Encoding.UTF8.GetString(data.Length > 255 ? data.Take(255).ToArray() : data));
@@ -106,19 +102,13 @@ namespace Enyim.Caching.Memcached
 		/// </summary>
 		public readonly Guid InstanceID = Guid.NewGuid();
 
-		public bool IsAlive
-		{
-			get { return this._isAlive; }
-		}
+		public bool IsAlive => this._isAlive;
 
 		/// <summary>
 		/// Releases all resources used by this instance and shuts down the inner <see cref="Socket"/>. This instance will not be usable anymore.
 		/// </summary>
 		/// <remarks>Use the IDisposable.Dispose method if you want to release this instance back into the pool.</remarks>
-		public void Destroy()
-		{
-			this.Dispose(true);
-		}
+		public void Destroy() => this.Dispose(true);
 
 		~PooledSocket()
 		{
@@ -149,10 +139,7 @@ namespace Enyim.Caching.Memcached
 				this.CleanupCallback?.Invoke(this);
 		}
 
-		void IDisposable.Dispose()
-		{
-			this.Dispose(false);
-		}
+		void IDisposable.Dispose() => this.Dispose(false);
 
 		void CheckDisposed()
 		{
@@ -173,7 +160,7 @@ namespace Enyim.Caching.Memcached
 			if (errorCode != SocketError.Success)
 			{
 				this._isAlive = false;
-				throw new IOException($"Failed to write to the socket '{this._endpoint}'");
+				throw new IOException($"Failed to write to the socket \"{this._endpoint}\"");
 			}
 		}
 
@@ -203,8 +190,8 @@ namespace Enyim.Caching.Memcached
 			catch (Exception ex)
 			{
 				this._isAlive = false;
-				this._logger.LogError(ex, $"Failed to write to the socket '{this._endpoint}'");
-				throw new IOException($"Failed to write to the socket '{this._endpoint}'", ex);
+				this._logger.LogError(ex, $"Failed to write to the socket \"{this._endpoint}\"");
+				throw new IOException($"Failed to write to the socket \"{this._endpoint}\"", ex);
 			}
 		}
 
@@ -219,7 +206,7 @@ namespace Enyim.Caching.Memcached
 			if (errorCode != SocketError.Success)
 			{
 				this._isAlive = false;
-				throw new IOException($"Failed to write to the socket '{this._endpoint}'");
+				throw new IOException($"Failed to write to the socket \"{this._endpoint}\"");
 			}
 		}
 
@@ -247,8 +234,8 @@ namespace Enyim.Caching.Memcached
 			catch (Exception ex)
 			{
 				this._isAlive = false;
-				this._logger.LogError(ex, $"Failed to write to the socket '{this._endpoint}'");
-				throw new IOException($"Failed to write to the socket '{this._endpoint}'", ex);
+				this._logger.LogError(ex, $"Failed to write to the socket \"{this._endpoint}\"");
+				throw new IOException($"Failed to write to the socket \"{this._endpoint}\"", ex);
 			}
 		}
 
@@ -270,7 +257,7 @@ namespace Enyim.Caching.Memcached
 				{
 					var read = this._socket.Receive(buffer, offset, should, SocketFlags.None, out SocketError errorCode);
 					if (errorCode != SocketError.Success || read == 0)
-						throw new IOException($"Failed to read from the socket '{this._endpoint}'");
+						throw new IOException($"Failed to read from the socket \"{this._endpoint}\"");
 					total += read;
 					offset += read;
 					should -= read;
@@ -280,11 +267,11 @@ namespace Enyim.Caching.Memcached
 					this._isAlive = false;
 					throw;
 				}
-				catch (Exception e)
+				catch (Exception ex)
 				{
 					this._isAlive = false;
-					this._logger.LogError(e, $"Failed to read from the socket '{this._endpoint}'");
-					throw new IOException($"Failed to read from the socket '{this._endpoint}'");
+					this._logger.LogError(ex, $"Failed to read from the socket \"{this._endpoint}\"");
+					throw new IOException($"Failed to read from the socket \"{this._endpoint}\"");
 				}
 			return total;
 		}
@@ -324,8 +311,8 @@ namespace Enyim.Caching.Memcached
 				catch (Exception ex)
 				{
 					this._isAlive = false;
-					this._logger.LogError(ex, $"Failed to read from the socket '{this._endpoint}'");
-					throw new IOException($"Failed to read from the socket '{this._endpoint}'", ex);
+					this._logger.LogError(ex, $"Failed to read from the socket \"{this._endpoint}\"");
+					throw new IOException($"Failed to read from the socket \"{this._endpoint}\"", ex);
 				}
 			return total;
 		}

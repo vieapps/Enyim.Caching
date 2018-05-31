@@ -231,7 +231,7 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 			fixed (byte* buffer = header)
 			{
 				if (buffer[0] != MAGIC_VALUE)
-					throw new InvalidOperationException($"Expected magic value '{MAGIC_VALUE}' but received '{buffer[0]}'");
+					throw new InvalidOperationException($"Expected magic value \"{MAGIC_VALUE}\" but received \"{buffer[0]}\"");
 
 				this.DataType = buffer[HEADER_DATATYPE];
 				this.Opcode = buffer[HEADER_OPCODE];

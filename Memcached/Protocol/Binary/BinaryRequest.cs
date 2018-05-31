@@ -26,12 +26,7 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 			this.CorrelationID = Interlocked.Increment(ref InstanceCounter); // session ID
 		}
 
-		public unsafe IList<ArraySegment<byte>> CreateBuffer()
-		{
-			return this.CreateBuffer(null);
-		}
-
-		public unsafe IList<ArraySegment<byte>> CreateBuffer(IList<ArraySegment<byte>> appendTo)
+		public unsafe IList<ArraySegment<byte>> CreateBuffer(IList<ArraySegment<byte>> appendTo = null)
 		{
 			// key size 
 			var keyData = BinaryConverter.EncodeKey(this.Key);

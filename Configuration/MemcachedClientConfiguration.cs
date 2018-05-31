@@ -135,7 +135,7 @@ namespace Enyim.Caching.Configuration
 
 			this.PrepareLogger(loggerFactory);
 
-			if (Enum.TryParse<MemcachedProtocol>(configuration.Section.Attributes["protocol"]?.Value ?? "Binary", out MemcachedProtocol protocol))
+			if (Enum.TryParse(configuration.Section.Attributes["protocol"]?.Value ?? "Binary", out MemcachedProtocol protocol))
 				this.Protocol = protocol;
 
 			this.Servers = new List<EndPoint>();
@@ -184,7 +184,7 @@ namespace Enyim.Caching.Configuration
 				if (authentication.Attributes["type"]?.Value != null)
 					try
 					{
-						this.Authentication = new AuthenticationConfiguration()
+						this.Authentication = new AuthenticationConfiguration
 						{
 							Type = authentication.Attributes["type"].Value
 						};
@@ -330,15 +330,13 @@ namespace Enyim.Caching.Configuration
 		ITranscoder IMemcachedClientConfiguration.CreateTranscoder() => this.Transcoder;
 
 		INodeLocator IMemcachedClientConfiguration.CreateNodeLocator()
-		{
-			return this.NodeLocatorFactory != null
+			=> this.NodeLocatorFactory != null
 				? this.NodeLocatorFactory.Create()
 				: this.NodeLocator != null
 					? FastActivator.Create(this.NodeLocator) as INodeLocator ?? new DefaultNodeLocator() as INodeLocator
 					: this.Servers.Count > 1
 						? new KetamaNodeLocator() as INodeLocator
 						: new SingleNodeLocator() as INodeLocator;
-		}
 
 		IServerPool IMemcachedClientConfiguration.CreatePool()
 			=> this.Protocol.Equals(MemcachedProtocol.Text)

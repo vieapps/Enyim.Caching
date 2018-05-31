@@ -86,8 +86,7 @@ namespace Enyim.Caching.Memcached
 					// try to connect to the server
 					using (var socket = this.CreateSocket())
 					{
-						if (this._logger.IsEnabled(LogLevel.Debug))
-							this._logger.LogInformation($"Try to connect to the memcached server: {this._endpoint}");
+						this._logger.Log(LogLevel.Debug, LogLevel.Debug, $"Try to connect to the memcached server: {this._endpoint}");
 					}
 
 					if (this._internalPoolImpl.IsAlive)
@@ -127,9 +126,7 @@ namespace Enyim.Caching.Memcached
 						var startTime = DateTime.Now;
 						this._internalPoolImpl.InitPool();
 						this._isInitialized = true;
-
-						if (this._logger.IsEnabled(LogLevel.Debug))
-							this._logger.LogDebug($"Cost for initiaizing pool: {(DateTime.Now - startTime).TotalMilliseconds}ms");
+						this._logger.Log(LogLevel.Debug, LogLevel.Debug, $"Cost for initiaizing pool: {(DateTime.Now - startTime).TotalMilliseconds}ms");
 					}
 
 			try
@@ -257,9 +254,7 @@ namespace Enyim.Caching.Memcached
 							if (!this._isAlive)
 								break;
 						}
-
-					if (this._logger.IsEnabled(LogLevel.Debug))
-						this._logger.LogInformation($"Pool has been initialized for '{this._endpoint}' with {this._minItems} sockets");
+					this._logger.Log(LogLevel.Debug, LogLevel.Debug, $"Pool has been initialized for \"{this._endpoint}\" with {this._minItems} sockets");
 				}
 				catch (Exception e)
 				{
@@ -293,9 +288,7 @@ namespace Enyim.Caching.Memcached
 			{
 				var result = new PooledSocketResult();
 				var message = string.Empty;
-
-				if (this._isDebugEnabled)
-					this._logger.LogDebug($"Acquiring stream from pool ({this._endpoint})");
+				this._logger.Log(LogLevel.Debug, LogLevel.Debug, $"Acquiring stream from pool ({this._endpoint})");
 
 				if (!this._isAlive || this._isDisposed)
 				{
@@ -360,8 +353,7 @@ namespace Enyim.Caching.Memcached
 
 				// free item pool is empty
 				message = $"Could not get a socket from the pool, creating a new item ({this._endpoint})";
-				if (this._isDebugEnabled)
-					this._logger.LogDebug(message);
+				this._logger.Log(LogLevel.Debug, LogLevel.Debug, message);
 
 				try
 				{
@@ -370,9 +362,7 @@ namespace Enyim.Caching.Memcached
 					socket = this.CreateSocket();
 					result.Value = socket;
 					result.Pass();
-
-					if (this._isDebugEnabled)
-						this._logger.LogInformation($"Cost for creating socket when acquire: {(DateTime.Now - startTime).TotalMilliseconds}ms");
+					this._logger.Log(LogLevel.Debug, LogLevel.Debug, $"Cost for creating socket when acquire: {(DateTime.Now - startTime).TotalMilliseconds}ms");
 				}
 				catch (Exception e)
 				{
@@ -390,26 +380,19 @@ namespace Enyim.Caching.Memcached
 					return result;
 				}
 
-				if (this._isDebugEnabled)
-					this._logger.LogDebug("Done.");
-
+				this._logger.Log(LogLevel.Debug, LogLevel.Debug, "Done.");
 				return result;
 			}
 
 			void MarkAsDead()
 			{
-				if (this._isDebugEnabled)
-					this._logger.LogDebug($"Mark as dead was requested ({this._endpoint})");
-
+				this._logger.Log(LogLevel.Debug, LogLevel.Debug, $"Mark as dead was requested ({this._endpoint})");
 				var shouldFail = this._ownerNode.FailurePolicy.ShouldFail();
-
-				if (this._isDebugEnabled)
-					this._logger.LogDebug("FailurePolicy.ShouldFail(): " + shouldFail);
+				this._logger.Log(LogLevel.Debug, LogLevel.Debug, "FailurePolicy.ShouldFail(): " + shouldFail);
 
 				if (shouldFail)
 				{
-					if (this._logger.IsEnabled(LogLevel.Debug))
-						this._logger.LogWarning($"Marking node {this._endpoint} is dead");
+					this._logger.Log(LogLevel.Debug, LogLevel.Warning, $"Marking node {this._endpoint} is dead");
 
 					this._isAlive = false;
 					this._markedAsDeadUtc = DateTime.UtcNow;
@@ -424,9 +407,7 @@ namespace Enyim.Caching.Memcached
 			/// <param name="socket"></param>
 			void ReleaseSocket(PooledSocket socket)
 			{
-				if (this._isDebugEnabled)
-					this._logger.LogDebug($"Releasing socket ({socket.InstanceID}) - Alive: {this._isAlive}");
-
+				this._logger.Log(LogLevel.Debug, LogLevel.Debug, $"Releasing socket ({socket.InstanceID}) - Alive: {this._isAlive}");
 				if (this._isAlive)
 				{
 					// is it still working (i.e. the server is still connected)
@@ -508,15 +489,9 @@ namespace Enyim.Caching.Memcached
 		{
 			public static readonly Comparer Instance = new Comparer();
 
-			bool IEqualityComparer<IMemcachedNode>.Equals(IMemcachedNode x, IMemcachedNode y)
-			{
-				return x.EndPoint.Equals(y.EndPoint);
-			}
+			bool IEqualityComparer<IMemcachedNode>.Equals(IMemcachedNode x, IMemcachedNode y) => x.EndPoint.Equals(y.EndPoint);
 
-			int IEqualityComparer<IMemcachedNode>.GetHashCode(IMemcachedNode obj)
-			{
-				return obj.EndPoint.GetHashCode();
-			}
+			int IEqualityComparer<IMemcachedNode>.GetHashCode(IMemcachedNode obj) => obj.EndPoint.GetHashCode();
 		}
 		#endregion
 
@@ -546,11 +521,10 @@ namespace Enyim.Caching.Memcached
 
 					return result;
 				}
-				catch (Exception e)
+				catch (Exception ex)
 				{
-					this._logger.LogError(e, "Failed to execute an operation");
-
-					result.Fail("Failed to execute an operation", e);
+					this._logger.LogError(ex, "Failed to execute an operation");
+					result.Fail("Failed to execute an operation", ex);
 					return result;
 				}
 				finally
@@ -559,7 +533,6 @@ namespace Enyim.Caching.Memcached
 				}
 
 			this._logger.LogError("Failed to obtain socket from pool");
-
 			result.Fail("Failed to obtain socket from pool");
 			return result;
 		}
@@ -593,11 +566,10 @@ namespace Enyim.Caching.Memcached
 				{
 					throw;
 				}
-				catch (Exception e)
+				catch (Exception ex)
 				{
-					this._logger.LogError(e, "Failed to execute an operation (async)");
-
-					result.Fail("Failed to execute an operation (async)", e);
+					this._logger.LogError(ex, "Failed to execute an operation (async)");
+					result.Fail("Failed to execute an operation (async)", ex);
 					return result;
 				}
 				finally
@@ -606,7 +578,6 @@ namespace Enyim.Caching.Memcached
 				}
 
 			this._logger.LogError("Failed to obtain socket from pool");
-
 			result.Fail("Failed to obtain socket from pool");
 			return result;
 		}
@@ -634,35 +605,17 @@ namespace Enyim.Caching.Memcached
 		#endregion
 
 		#region [ IMemcachedNode               ]
-		EndPoint IMemcachedNode.EndPoint
-		{
-			get { return this.EndPoint; }
-		}
+		EndPoint IMemcachedNode.EndPoint => this.EndPoint;
 
-		bool IMemcachedNode.IsAlive
-		{
-			get { return this.IsAlive; }
-		}
+		bool IMemcachedNode.IsAlive => this.IsAlive;
 
-		bool IMemcachedNode.Ping()
-		{
-			return this.Ping();
-		}
+		bool IMemcachedNode.Ping() => this.Ping();
 
-		IOperationResult IMemcachedNode.Execute(IOperation op)
-		{
-			return this.ExecuteOperation(op);
-		}
+		IOperationResult IMemcachedNode.Execute(IOperation op) => this.ExecuteOperation(op);
 
-		async Task<IOperationResult> IMemcachedNode.ExecuteAsync(IOperation op, CancellationToken cancellationToken = default(CancellationToken))
-		{
-			return await this.ExecuteOperationAsync(op).ConfigureAwait(false);
-		}
+		async Task<IOperationResult> IMemcachedNode.ExecuteAsync(IOperation op, CancellationToken cancellationToken = default(CancellationToken)) => await this.ExecuteOperationAsync(op).ConfigureAwait(false);
 
-		bool IMemcachedNode.ExecuteAsync(IOperation op, Action<bool> next)
-		{
-			return this.ExecuteOperationAsync(op, next);
-		}
+		bool IMemcachedNode.ExecuteAsync(IOperation op, Action<bool> next) => this.ExecuteOperationAsync(op, next);
 
 		event Action<IMemcachedNode> IMemcachedNode.Failed
 		{
