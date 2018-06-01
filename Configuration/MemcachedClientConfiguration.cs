@@ -76,7 +76,7 @@ namespace Enyim.Caching.Configuration
 							this._logger.LogDebug($"Authentication {parameter.Key} is '{parameter.Value}'.");
 					}
 					if (this._logger.IsEnabled(LogLevel.Debug))
-						this._logger.LogDebug($"User '{configuration.Authentication.Type}' authentication");
+						this._logger.LogDebug($"Use '{configuration.Authentication.Type}' authentication");
 				}
 				catch (Exception ex)
 				{
