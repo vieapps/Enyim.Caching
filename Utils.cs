@@ -34,11 +34,9 @@ namespace CacheUtils
 		/// <param name="datetime"></param>
 		/// <returns></returns>
 		public static TimeSpan ToUnixTimeSpan(this DateTime datetime)
-		{
-			return datetime < Helper.UnixEpoch
+			=> datetime < Helper.UnixEpoch
 				? throw new ArgumentOutOfRangeException(nameof(datetime), $"{nameof(datetime)} must be >= 1970/1/1")
 				: datetime.ToUniversalTime() - Helper.UnixEpoch;
-		}
 
 		/// <summary>
 		/// Converts this date-time to time-span
@@ -47,15 +45,13 @@ namespace CacheUtils
 		/// <param name="useUTC"></param>
 		/// <returns></returns>
 		public static TimeSpan ToTimeSpan(this DateTime datetime, bool useUTC = false)
-		{
-			return datetime == DateTime.MaxValue
+			=> datetime == DateTime.MaxValue
 				? TimeSpan.Zero
 				: datetime < DateTime.Now
 					? TimeSpan.FromMilliseconds(1)
 					: useUTC
 						? datetime.ToUniversalTime() - DateTime.Now.ToUniversalTime()
 						: datetime.ToLocalTime() - DateTime.Now;
-		}
 
 		/// <summary>
 		/// Gets the expiration of the date-time value
@@ -63,14 +59,11 @@ namespace CacheUtils
 		/// <param name="expiresAt"></param>
 		/// <returns></returns>
 		public static uint GetExpiration(this DateTime expiresAt)
-		{
-			if (expiresAt < Helper.UnixEpoch)
-				throw new ArgumentOutOfRangeException(nameof(expiresAt), $"{nameof(expiresAt)} must be >= 1970/1/1");
-
-			return expiresAt == DateTime.MaxValue
-				? 0
-				: (uint)expiresAt.ToUnixTimeSpan().TotalSeconds;
-		}
+			=> expiresAt < Helper.UnixEpoch
+				? throw new ArgumentOutOfRangeException(nameof(expiresAt), $"{nameof(expiresAt)} must be >= 1970/1/1")
+				: expiresAt == DateTime.MaxValue
+					? 0
+					: (uint)expiresAt.ToUnixTimeSpan().TotalSeconds;
 
 		/// <summary>
 		/// Gets the expiration of the time-span value
@@ -78,11 +71,9 @@ namespace CacheUtils
 		/// <param name="validFor"></param>
 		/// <returns></returns>
 		public static uint GetExpiration(this TimeSpan validFor)
-		{
-			return validFor == TimeSpan.Zero || validFor == TimeSpan.MaxValue
+			=> validFor == TimeSpan.Zero || validFor == TimeSpan.MaxValue
 				? 0
 				: DateTime.Now.Add(validFor).GetExpiration();
-		}
 
 		/// <summary>
 		/// Gets the expiration of the distributed cache entry options
@@ -90,8 +81,7 @@ namespace CacheUtils
 		/// <param name="options"></param>
 		/// <returns></returns>
 		public static object GetExpiration(this DistributedCacheEntryOptions options)
-		{
-			return options.SlidingExpiration != null && options.AbsoluteExpiration != null
+			=> options.SlidingExpiration != null && options.AbsoluteExpiration != null
 				? throw new ArgumentException("You cannot specify both sliding expiration and absolute expiration")
 				: options.AbsoluteExpiration != null
 					? options.AbsoluteExpiration.Value.ToUnixTimeSeconds()
@@ -100,17 +90,13 @@ namespace CacheUtils
 						: options.SlidingExpiration == null || options.SlidingExpiration.Value == TimeSpan.Zero || options.SlidingExpiration.Value == TimeSpan.MaxValue
 							? (object)TimeSpan.Zero
 							: (object)DateTime.Now.Add(options.SlidingExpiration.Value).ToTimeSpan();
-		}
 
 		/// <summary>
 		/// Gets the key for storing related information of an IDistributedCache item
 		/// </summary>
 		/// <param name="key"></param>
 		/// <returns></returns>
-		public static string GetIDistributedCacheExpirationKey(this string key)
-		{
-			return $"i-distributed-cache#{key}";
-		}
+		public static string GetIDistributedCacheExpirationKey(this string key) => $"i-distributed-cache#{key}";
 
 		/// <summary>
 		/// Combines arrays of bytes
@@ -136,6 +122,27 @@ namespace CacheUtils
 		#endregion
 
 		#region Serialize & Deserialize
+		/// <summary>
+		/// Creates a recycled memory stream
+		/// </summary>
+		/// <param name="buffer"></param>
+		/// <param name="index"></param>
+		/// <param name="count"></param>
+		/// <returns></returns>
+		public static MemoryStream CreateMemoryStream(byte[] buffer = null, int index = 0, int count = 0)
+		{
+			var stream = new Microsoft.IO.RecyclableMemoryStreamManager().GetStream();
+			if (buffer == null || buffer.Length < 1)
+				return stream;
+
+			index = index > -1 && index < buffer.Length ? index : 0;
+			count = count > 0 && count < buffer.Length - index ? count : buffer.Length - index;
+
+			stream.Write(buffer, index, count);
+			stream.Seek(0, SeekOrigin.Begin);
+			return stream;
+		}
+
 		/// <summary>
 		/// Serialize an object to array of bytes
 		/// </summary>
@@ -227,7 +234,7 @@ namespace CacheUtils
 					else
 					{
 						if (value.GetType().IsSerializable)
-							using (var stream = new MemoryStream())
+							using (var stream = Helper.CreateMemoryStream())
 							{
 								new BinaryFormatter().Serialize(stream, value);
 								if (stream.TryGetBuffer(out ArraySegment<byte> buffer))
@@ -338,7 +345,7 @@ namespace CacheUtils
 					return new Decimal(bits);
 
 				default:
-					using (var stream = new MemoryStream(data, start, count))
+					using (var stream = Helper.CreateMemoryStream(data, start, count))
 					{
 						return new BinaryFormatter().Deserialize(stream);
 					}
@@ -347,7 +354,13 @@ namespace CacheUtils
 		#endregion
 
 		#region Support cancellation token
-		internal static async Task WithCancellationToken(this Task task, CancellationToken cancellationToken)
+		/// <summary>
+		/// Executes a task with cancellation token
+		/// </summary>
+		/// <param name="task"></param>
+		/// <param name="cancellationToken"></param>
+		/// <returns></returns>
+		public static async Task WithCancellationToken(this Task task, CancellationToken cancellationToken)
 		{
 			var tcs = new TaskCompletionSource<bool>();
 			using (cancellationToken.Register(state => ((TaskCompletionSource<bool>)state).TrySetResult(true), tcs, false))
@@ -358,7 +371,14 @@ namespace CacheUtils
 			await task.ConfigureAwait(false);
 		}
 
-		internal static async Task<T> WithCancellationToken<T>(this Task<T> task, CancellationToken cancellationToken)
+		/// <summary>
+		/// Executes a task with cancellation token
+		/// </summary>
+		/// <typeparam name="T"></typeparam>
+		/// <param name="task"></param>
+		/// <param name="cancellationToken"></param>
+		/// <returns></returns>
+		public static async Task<T> WithCancellationToken<T>(this Task<T> task, CancellationToken cancellationToken)
 		{
 			var tcs = new TaskCompletionSource<bool>();
 			using (cancellationToken.Register(state => ((TaskCompletionSource<bool>)state).TrySetResult(true), tcs, false))

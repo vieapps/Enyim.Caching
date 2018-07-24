@@ -1,4 +1,5 @@
-﻿using System;
+﻿#region Related components
+using System;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Collections.Generic;
@@ -6,6 +7,7 @@ using System.Threading;
 
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
+#endregion
 
 namespace Enyim.Collections
 {
