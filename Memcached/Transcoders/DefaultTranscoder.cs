@@ -8,11 +8,7 @@ namespace Enyim.Caching.Memcached
 	/// </summary>
 	public class DefaultTranscoder : ITranscoder
 	{
-
-		protected virtual ArraySegment<byte> SerializeObject(object value)
-		{
-			return new ArraySegment<byte>(CacheUtils.Helper.Serialize(value).Item2);
-		}
+		protected virtual ArraySegment<byte> SerializeObject(object value) => new ArraySegment<byte>(CacheUtils.Helper.Serialize(value).Item2);
 
 		protected virtual CacheItem Serialize(object value)
 		{
@@ -43,15 +39,9 @@ namespace Enyim.Caching.Memcached
 			}
 		}
 
-		CacheItem ITranscoder.Serialize(object value)
-		{
-			return this.Serialize(value);
-		}
+		CacheItem ITranscoder.Serialize(object value) => this.Serialize(value);
 
-		protected virtual object DeserializeObject(ArraySegment<byte> value)
-		{
-			return CacheUtils.Helper.Deserialize(value.Array, (int)TypeCode.Object | 0x0100, value.Offset, value.Count);
-		}
+		protected virtual object DeserializeObject(ArraySegment<byte> value) => CacheUtils.Helper.Deserialize(value.Array, (int)TypeCode.Object | 0x0100, value.Offset, value.Count);
 
 		protected virtual object Deserialize(CacheItem item)
 		{
@@ -96,10 +86,7 @@ namespace Enyim.Caching.Memcached
 				return CacheUtils.Helper.Deserialize(item.Data.Array, (int)item.Flags, item.Data.Offset, item.Data.Count);
 		}
 
-		object ITranscoder.Deserialize(CacheItem item)
-		{
-			return this.Deserialize(item);
-		}
+		object ITranscoder.Deserialize(CacheItem item) => this.Deserialize(item);
 
 		T ITranscoder.Deserialize<T>(CacheItem item)
 		{

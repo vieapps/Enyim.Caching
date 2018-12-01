@@ -19,7 +19,7 @@ using Microsoft.Extensions.DependencyInjection;
 using CacheUtils;
 #endregion
 
-[assembly: System.Runtime.CompilerServices.InternalsVisibleTo("VIEApps.Components.XUnitTests")]
+//[assembly: System.Runtime.CompilerServices.InternalsVisibleTo("VIEApps.Components.XUnitTests")]
 
 namespace Enyim.Caching
 {
@@ -1683,17 +1683,7 @@ namespace Enyim.Caching
 		#endregion
 
 		#region Dispose
-		~MemcachedClient()
-		{
-			try
-			{
-				((IDisposable)this).Dispose();
-			}
-			catch { }
-		}
-
-		void IDisposable.Dispose()
-			=> this.Dispose();
+		~MemcachedClient() => this.Dispose();
 
 		/// <summary>
 		/// Releases all resources allocated by this instance
@@ -1751,15 +1741,9 @@ namespace Enyim.Caching
 				await this.StoreAsync(StoreMode.Set, key.GetIDistributedCacheExpirationKey(), expires, validFor, cancellationToken).ConfigureAwait(false);
 		}
 
-		byte[] IDistributedCache.Get(string key)
-			=> string.IsNullOrWhiteSpace(key)
-				? throw new ArgumentNullException(nameof(key))
-				: this.Get<byte[]>(key);
+		byte[] IDistributedCache.Get(string key) => string.IsNullOrWhiteSpace(key) ? throw new ArgumentNullException(nameof(key)) : this.Get<byte[]>(key);
 
-		Task<byte[]> IDistributedCache.GetAsync(string key, CancellationToken cancellationToken = default(CancellationToken))
-			=> string.IsNullOrWhiteSpace(key)
-				? Task.FromException<byte[]>(new ArgumentNullException(nameof(key)))
-				: this.GetAsync<byte[]>(key, cancellationToken);
+		Task<byte[]> IDistributedCache.GetAsync(string key, CancellationToken cancellationToken = default(CancellationToken)) => string.IsNullOrWhiteSpace(key) ? Task.FromException<byte[]>(new ArgumentNullException(nameof(key))) : this.GetAsync<byte[]>(key, cancellationToken);
 
 		void IDistributedCache.Refresh(string key)
 		{
@@ -1798,10 +1782,7 @@ namespace Enyim.Caching
 			this.Remove(key.GetIDistributedCacheExpirationKey());
 		}
 
-		Task IDistributedCache.RemoveAsync(string key, CancellationToken cancellationToken = default(CancellationToken))
-			=> string.IsNullOrWhiteSpace(key)
-				? Task.FromException(new ArgumentNullException(nameof(key)))
-				: Task.WhenAll(this.RemoveAsync(key, cancellationToken), this.RemoveAsync(key.GetIDistributedCacheExpirationKey(), cancellationToken));
+		Task IDistributedCache.RemoveAsync(string key, CancellationToken cancellationToken = default(CancellationToken)) => string.IsNullOrWhiteSpace(key) ? Task.FromException(new ArgumentNullException(nameof(key))) : Task.WhenAll(this.RemoveAsync(key, cancellationToken), this.RemoveAsync(key.GetIDistributedCacheExpirationKey(), cancellationToken));
 		#endregion
 
 	}

@@ -88,7 +88,7 @@ namespace CacheUtils
 					: options.AbsoluteExpirationRelativeToNow != null
 						? (DateTimeOffset.UtcNow + options.AbsoluteExpirationRelativeToNow.Value).ToUnixTimeSeconds()
 						: options.SlidingExpiration == null || options.SlidingExpiration.Value == TimeSpan.Zero || options.SlidingExpiration.Value == TimeSpan.MaxValue
-							? (object)TimeSpan.Zero
+							? TimeSpan.Zero
 							: (object)DateTime.Now.Add(options.SlidingExpiration.Value).ToTimeSpan();
 
 		/// <summary>
@@ -365,10 +365,10 @@ namespace CacheUtils
 			var tcs = new TaskCompletionSource<bool>();
 			using (cancellationToken.Register(state => ((TaskCompletionSource<bool>)state).TrySetResult(true), tcs, false))
 			{
-				if (task != await Task.WhenAny(task, tcs.Task).ConfigureAwait(false))
+				var result = await Task.WhenAny(task, tcs.Task).ConfigureAwait(false);
+				if (result != task)
 					throw new OperationCanceledException(cancellationToken);
 			}
-			await task.ConfigureAwait(false);
 		}
 
 		/// <summary>
@@ -383,10 +383,11 @@ namespace CacheUtils
 			var tcs = new TaskCompletionSource<bool>();
 			using (cancellationToken.Register(state => ((TaskCompletionSource<bool>)state).TrySetResult(true), tcs, false))
 			{
-				if (task != await Task.WhenAny(task, tcs.Task).ConfigureAwait(false))
-					throw new OperationCanceledException(cancellationToken);
+				var result = await Task.WhenAny(task, tcs.Task).ConfigureAwait(false);
+				return result != task
+					? throw new OperationCanceledException(cancellationToken)
+					: task.Result;
 			}
-			return await task.ConfigureAwait(false);
 		}
 		#endregion
 

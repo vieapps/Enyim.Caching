@@ -22,7 +22,7 @@ namespace Enyim.Caching.Memcached
 	[DebuggerDisplay("Address: {EndPoint}, Alive = {IsAlive}")]
 	public class MemcachedNode : IMemcachedNode
 	{
-		static object Locker = new Object();
+		static object Locker = new object();
 
 		#region Attributes
 		ILogger _logger;
@@ -121,6 +121,7 @@ namespace Enyim.Caching.Memcached
 		{
 			if (!this._isInitialized)
 				lock (this._internalPoolImpl)
+				{
 					if (!this._isInitialized)
 					{
 						var startTime = DateTime.Now;
@@ -128,6 +129,7 @@ namespace Enyim.Caching.Memcached
 						this._isInitialized = true;
 						this._logger.Log(LogLevel.Debug, LogLevel.Debug, $"Cost for initiaizing pool: {(DateTime.Now - startTime).TotalMilliseconds}ms");
 					}
+				}
 
 			try
 			{
@@ -189,10 +191,7 @@ namespace Enyim.Caching.Memcached
 			}
 		}
 
-		void IDisposable.Dispose()
-		{
-			this.Dispose();
-		}
+		void IDisposable.Dispose() => this.Dispose();
 		#endregion
 
 		#region [ InternalPoolImpl                  ]
@@ -215,7 +214,7 @@ namespace Enyim.Caching.Memcached
 
 			ILogger _logger;
 			bool _isDebugEnabled;
-			object _locker = new Object();
+			object _locker = new object();
 
 			internal InternalPoolImpl(MemcachedNode ownerNode, ISocketPoolConfiguration config)
 			{
@@ -270,15 +269,9 @@ namespace Enyim.Caching.Memcached
 				return socket;
 			}
 
-			public bool IsAlive
-			{
-				get { return this._isAlive; }
-			}
+			public bool IsAlive => this._isAlive;
 
-			public DateTime MarkedAsDeadUtc
-			{
-				get { return this._markedAsDeadUtc; }
-			}
+			public DateTime MarkedAsDeadUtc => this._markedAsDeadUtc;
 
 			/// <summary>
 			/// Acquires a new item from the pool
@@ -477,10 +470,7 @@ namespace Enyim.Caching.Memcached
 				}
 			}
 
-			void IDisposable.Dispose()
-			{
-				this.Dispose();
-			}
+			void IDisposable.Dispose() => this.Dispose();
 		}
 		#endregion
 

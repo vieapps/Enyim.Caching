@@ -12,8 +12,8 @@ namespace Enyim.Caching.Memcached
 	/// </summary>
 	public sealed class KetamaNodeLocator : INodeLocator
 	{
-		static int ServerAddressMutations = 160;
-		static Dictionary<string, Func<HashAlgorithm>> Factories = new Dictionary<string, Func<HashAlgorithm>>(StringComparer.OrdinalIgnoreCase)
+		static int ServerAddressMutations { get; } = 160;
+		static Dictionary<string, Func<HashAlgorithm>> Factories { get; } = new Dictionary<string, Func<HashAlgorithm>>(StringComparer.OrdinalIgnoreCase)
 		{
 			{ "md5", () => MD5.Create() },
 			{ "sha1", () => SHA1.Create() },
@@ -29,8 +29,8 @@ namespace Enyim.Caching.Memcached
 
 
 		LookupData _lookupData;
-		string _hashName;
-		Func<HashAlgorithm> _hashFactory;
+		readonly string _hashName;
+		readonly Func<HashAlgorithm> _hashFactory;
 
 		/// <summary>
 		/// Initialized a new instance of the <see cref="KetamaNodeLocator"/> using a custom hash algorithm.
@@ -115,11 +115,10 @@ namespace Enyim.Caching.Memcached
 		{
 			using (var hashAlgorithm = this._hashFactory())
 			{
-				var uintHash = hashAlgorithm as IUIntHashAlgorithm;
 				var keyData = Encoding.UTF8.GetBytes(key);
 
 				// shortcut for internal hash algorithms
-				if (uintHash == null)
+				if (!(hashAlgorithm is IUIntHashAlgorithm uintHash))
 				{
 					var data = hashAlgorithm.ComputeHash(keyData);
 					return ((uint)data[3] << 24) | ((uint)data[2] << 16) | ((uint)data[1] << 8) | ((uint)data[0]);
