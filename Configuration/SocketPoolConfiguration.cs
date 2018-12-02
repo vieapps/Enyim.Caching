@@ -15,17 +15,8 @@ namespace Enyim.Caching.Configuration
 
 		int ISocketPoolConfiguration.MinPoolSize
 		{
-			get { return this._minPoolSize; }
-			set
-			{
-				if (value < 0)
-					throw new ArgumentOutOfRangeException("value", "MinPoolSize must be >= 0!");
-
-				if (value > this._maxPoolSize)
-					throw new ArgumentOutOfRangeException("value", "MinPoolSize must be <= MaxPoolSize!");
-
-				this._minPoolSize = value;
-			}
+			get => this._minPoolSize;
+			set => this._minPoolSize = value < 0 ? throw new ArgumentOutOfRangeException("value", "MinPoolSize must be >= 0!") : value > this._maxPoolSize ? throw new ArgumentOutOfRangeException("value", "MinPoolSize must be <= MaxPoolSize!") : value;
 		}
 
 		/// <summary>
@@ -35,73 +26,40 @@ namespace Enyim.Caching.Configuration
 		/// <remarks>It should be 0.75 * (number of threads) for optimal performance.</remarks>
 		int ISocketPoolConfiguration.MaxPoolSize
 		{
-			get { return this._maxPoolSize; }
-			set
-			{
-				if (value < this._minPoolSize)
-					throw new ArgumentOutOfRangeException("value", "MaxPoolSize must be >= MinPoolSize!");
-
-				this._maxPoolSize = value;
-			}
+			get => this._maxPoolSize;
+			set => this._maxPoolSize = value < this._minPoolSize ? throw new ArgumentOutOfRangeException("value", "MaxPoolSize must be >= MinPoolSize!") : value;
 		}
 
 		TimeSpan ISocketPoolConfiguration.ConnectionTimeout
 		{
-			get { return this._connectionTimeout; }
-			set
-			{
-				if (value < TimeSpan.Zero)
-					throw new ArgumentOutOfRangeException("value", "value must be positive");
-
-				this._connectionTimeout = value;
-			}
+			get => this._connectionTimeout;
+			set => this._connectionTimeout = value < TimeSpan.Zero ? throw new ArgumentOutOfRangeException("value", "value must be positive") : value;
 		}
 
 		TimeSpan ISocketPoolConfiguration.ReceiveTimeout
 		{
-			get { return this._receiveTimeout; }
-			set
-			{
-				if (value < TimeSpan.Zero)
-					throw new ArgumentOutOfRangeException("value", "value must be positive");
-
-				this._receiveTimeout = value;
-			}
+			get => this._receiveTimeout;
+			set => this._receiveTimeout = value < TimeSpan.Zero ? throw new ArgumentOutOfRangeException("value", "value must be positive") : value;
 		}
 
 		TimeSpan ISocketPoolConfiguration.QueueTimeout
 		{
-			get { return this._queueTimeout; }
-			set
-			{
-				if (value < TimeSpan.Zero)
-					throw new ArgumentOutOfRangeException("value", "value must be positive");
-
-				this._queueTimeout = value;
-			}
+			get => this._queueTimeout;
+			set => this._queueTimeout = value < TimeSpan.Zero ? throw new ArgumentOutOfRangeException("value", "value must be positive") :  value;
 		}
 
 		TimeSpan ISocketPoolConfiguration.DeadTimeout
 		{
-			get { return this._deadTimeout; }
-			set
-			{
-				if (value < TimeSpan.Zero)
-					throw new ArgumentOutOfRangeException("value", "value must be positive");
-
-				this._deadTimeout = value;
-			}
+			get => this._deadTimeout;
+			set => this._deadTimeout = value < TimeSpan.Zero ? throw new ArgumentOutOfRangeException("value", "value must be positive") : value;
 		}
 
 		bool ISocketPoolConfiguration.NoDelay { get; set; } = true;
 
 		INodeFailurePolicyFactory ISocketPoolConfiguration.FailurePolicyFactory
 		{
-			get { return this._policyFactory; }
-			set
-			{
-				this._policyFactory = value ?? throw new ArgumentNullException("value");
-			}
+			get => this._policyFactory;
+			set => this._policyFactory = value ?? throw new ArgumentNullException("value");
 		}
 	}
 }

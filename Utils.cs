@@ -412,12 +412,11 @@ namespace Microsoft.Extensions.DependencyInjection
 			if (setupAction == null)
 				throw new ArgumentNullException(nameof(setupAction));
 
-			services.AddOptions();
-			services.Configure(setupAction);
+			services.AddOptions().Configure(setupAction);
 			services.Add(ServiceDescriptor.Singleton<IMemcachedClientConfiguration, MemcachedClientConfiguration>());
-			services.Add(ServiceDescriptor.Singleton<IMemcachedClient, MemcachedClient>(s => MemcachedClient.GetInstance(s)));
+			services.Add(ServiceDescriptor.Singleton<IMemcachedClient, MemcachedClient>(svcProvider => MemcachedClient.GetInstance(svcProvider)));
 			if (addInstanceOfIDistributedCache)
-				services.Add(ServiceDescriptor.Singleton<IDistributedCache, MemcachedClient>(s => MemcachedClient.GetInstance(s)));
+				services.Add(ServiceDescriptor.Singleton<IDistributedCache, MemcachedClient>(svcProvider => MemcachedClient.GetInstance(svcProvider)));
 
 			return services;
 		}
@@ -441,11 +440,11 @@ namespace Microsoft.AspNetCore.Builder
 		{
 			try
 			{
-				appBuilder.ApplicationServices.GetService<ILogger<IMemcachedClient>>().LogInformation($"Memcached service is {(appBuilder.ApplicationServices.GetService<IMemcachedClient>() != null ? "" : "not-")}started");
+				appBuilder.ApplicationServices.GetService<ILogger<IMemcachedClient>>().LogInformation($"The service of memcached client was{(appBuilder.ApplicationServices.GetService<IMemcachedClient>() != null ? " " : " not ")}registered with application service providers");
 			}
 			catch (Exception ex)
 			{
-				appBuilder.ApplicationServices.GetService<ILogger<IMemcachedClient>>().LogError(ex, "Memcached service is failed to start");
+				appBuilder.ApplicationServices.GetService<ILogger<IMemcachedClient>>().LogError(ex, $"Error occurred while collecting information of the service of memcached client => {ex.Message}");
 			}
 			return appBuilder;
 		}

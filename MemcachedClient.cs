@@ -19,7 +19,7 @@ using Microsoft.Extensions.DependencyInjection;
 using CacheUtils;
 #endregion
 
-//[assembly: System.Runtime.CompilerServices.InternalsVisibleTo("VIEApps.Components.XUnitTests")]
+[assembly: System.Runtime.CompilerServices.InternalsVisibleTo("VIEApps.Components.XUnitTests")]
 
 namespace Enyim.Caching
 {
@@ -49,6 +49,13 @@ namespace Enyim.Caching
 		#endregion
 
 		/// <summary>
+		/// Initializes a new instance of Memcached client (using configuration section of app.config/web.config file)
+		/// </summary>
+		/// <param name="configuration"></param>
+		/// <param name="loggerFactory"></param>
+		public MemcachedClient(MemcachedClientConfigurationSectionHandler configuration, ILoggerFactory loggerFactory = null) : this(loggerFactory, configuration == null ? null : new MemcachedClientConfiguration(loggerFactory, configuration)) { }
+
+		/// <summary>
 		/// Initializes a new instance of Memcached client (using configuration section of appsettings.json file)
 		/// </summary>
 		/// <param name="loggerFactory"></param>
@@ -57,24 +64,7 @@ namespace Enyim.Caching
 		{
 			if (configuration == null)
 				throw new ArgumentNullException(nameof(configuration));
-			this.Prepare(loggerFactory, configuration);
-		}
 
-		/// <summary>
-		/// Initializes a new instance of Memcached client (using configuration section of app.config/web.config file)
-		/// </summary>
-		/// <param name="configuration"></param>
-		/// <param name="loggerFactory"></param>
-		public MemcachedClient(MemcachedClientConfigurationSectionHandler configuration, ILoggerFactory loggerFactory = null)
-		{
-			if (configuration == null)
-				throw new ArgumentNullException(nameof(configuration));
-			this.Prepare(loggerFactory, new MemcachedClientConfiguration(loggerFactory, configuration));
-		}
-
-		#region Prepare
-		void Prepare(ILoggerFactory loggerFactory, IMemcachedClientConfiguration configuration)
-		{
 			Logger.AssignLoggerFactory(loggerFactory);
 			this._logger = Logger.CreateLogger<MemcachedClient>();
 
@@ -91,15 +81,13 @@ namespace Enyim.Caching
 			this.ConcatOperationResultFactory = new DefaultConcatOperationResultFactory();
 			this.RemoveOperationResultFactory = new DefaultRemoveOperationResultFactory();
 
-			this._logger.Log(LogLevel.Debug, LogLevel.Debug, "An instance of Memcached client was created successful");
+			this._logger.Log(LogLevel.Debug, LogLevel.Debug, "The memcached client's instance was created");
 		}
-		#endregion
 
 		#region Get instance (singleton)
 		static MemcachedClient _Instance = null;
 
-		internal static MemcachedClient GetInstance(IServiceProvider svcProvider)
-			=> MemcachedClient._Instance ?? (MemcachedClient._Instance = new MemcachedClient(svcProvider.GetService<ILoggerFactory>(), svcProvider.GetService<IMemcachedClientConfiguration>()));
+		internal static MemcachedClient GetInstance(IServiceProvider svcProvider) => MemcachedClient._Instance ?? (MemcachedClient._Instance = new MemcachedClient(svcProvider.GetService<ILoggerFactory>(), svcProvider.GetService<IMemcachedClientConfiguration>()));
 		#endregion
 
 		#region Store
@@ -301,12 +289,12 @@ namespace Enyim.Caching
 		/// <param name="key">The key used to reference the item.</param>
 		/// <param name="value">The object to be inserted into the cache.</param>
 		/// <param name="cas">The cas value which must match the item's version.</param>
-		/// <remarks>The item does not expire unless it is removed due memory pressure.</remarks>
 		/// <returns>A CasResult object containing the version of the item and the result of the operation (true if the item was successfully stored in the cache; false otherwise).</returns>
+		/// <remarks>The item does not expire unless it is removed due memory pressure.</remarks>
 		public CasResult<bool> Cas(StoreMode mode, string key, object value, ulong cas)
 		{
 			var result = this.PerformStore(mode, key, value, 0, cas);
-			return new CasResult<bool>()
+			return new CasResult<bool>
 			{
 				Cas = result.Cas,
 				Result = result.Success,
@@ -320,8 +308,8 @@ namespace Enyim.Caching
 		/// <param name="mode">Defines how the item is stored in the cache.</param>
 		/// <param name="key">The key used to reference the item.</param>
 		/// <param name="value">The object to be inserted into the cache.</param>
-		/// <remarks>The item does not expire unless it is removed due memory pressure. The text protocol does not support this operation, you need to Store then GetWithCas.</remarks>
 		/// <returns>A CasResult object containing the version of the item and the result of the operation (true if the item was successfully stored in the cache; false otherwise).</returns>
+		/// <remarks>The item does not expire unless it is removed due memory pressure. The text protocol does not support this operation, you need to Store then GetWithCas.</remarks>
 		public CasResult<bool> Cas(StoreMode mode, string key, object value)
 			=> this.Cas(mode, key, value, 0);
 
@@ -337,7 +325,7 @@ namespace Enyim.Caching
 		public CasResult<bool> Cas(StoreMode mode, string key, object value, TimeSpan validFor, ulong cas)
 		{
 			var result = this.PerformStore(mode, key, value, validFor.GetExpiration(), cas);
-			return new CasResult<bool>()
+			return new CasResult<bool>
 			{
 				Cas = result.Cas,
 				Result = result.Success,
@@ -357,7 +345,7 @@ namespace Enyim.Caching
 		public CasResult<bool> Cas(StoreMode mode, string key, object value, DateTime expiresAt, ulong cas)
 		{
 			var result = this.PerformStore(mode, key, value, expiresAt.GetExpiration(), cas);
-			return new CasResult<bool>()
+			return new CasResult<bool>
 			{
 				Cas = result.Cas,
 				Result = result.Success,
@@ -377,7 +365,7 @@ namespace Enyim.Caching
 		public async Task<CasResult<bool>> CasAsync(StoreMode mode, string key, object value, ulong cas, CancellationToken cancellationToken = default(CancellationToken))
 		{
 			var result = await this.PerformStoreAsync(mode, key, value, 0, cas, cancellationToken).ConfigureAwait(false);
-			return new CasResult<bool>()
+			return new CasResult<bool>
 			{
 				Cas = result.Cas,
 				Result = result.Success,
@@ -408,7 +396,7 @@ namespace Enyim.Caching
 		public async Task<CasResult<bool>> CasAsync(StoreMode mode, string key, object value, TimeSpan validFor, ulong cas, CancellationToken cancellationToken = default(CancellationToken))
 		{
 			var result = await this.PerformStoreAsync(mode, key, value, validFor.GetExpiration(), cas, cancellationToken).ConfigureAwait(false);
-			return new CasResult<bool>()
+			return new CasResult<bool>
 			{
 				Cas = result.Cas,
 				Result = result.Success,
@@ -428,7 +416,7 @@ namespace Enyim.Caching
 		public async Task<CasResult<bool>> CasAsync(StoreMode mode, string key, object value, DateTime expiresAt, ulong cas, CancellationToken cancellationToken = default(CancellationToken))
 		{
 			var result = await this.PerformStoreAsync(mode, key, value, expiresAt.GetExpiration(), cas, cancellationToken).ConfigureAwait(false);
-			return new CasResult<bool>()
+			return new CasResult<bool>
 			{
 				Cas = result.Cas,
 				Result = result.Success,
@@ -587,7 +575,7 @@ namespace Enyim.Caching
 		public CasResult<ulong> Increment(string key, ulong defaultValue, ulong delta, ulong cas)
 		{
 			var result = this.CasMutate(MutationMode.Increment, key, defaultValue, delta, 0, cas);
-			return new CasResult<ulong>()
+			return new CasResult<ulong>
 			{
 				Cas = result.Cas,
 				Result = result.Value,
@@ -608,7 +596,7 @@ namespace Enyim.Caching
 		public CasResult<ulong> Increment(string key, ulong defaultValue, ulong delta, TimeSpan validFor, ulong cas)
 		{
 			var result = this.CasMutate(MutationMode.Increment, key, defaultValue, delta, validFor.GetExpiration(), cas);
-			return new CasResult<ulong>()
+			return new CasResult<ulong>
 			{
 				Cas = result.Cas,
 				Result = result.Value,
@@ -629,7 +617,7 @@ namespace Enyim.Caching
 		public CasResult<ulong> Increment(string key, ulong defaultValue, ulong delta, DateTime expiresAt, ulong cas)
 		{
 			var result = this.CasMutate(MutationMode.Increment, key, defaultValue, delta, expiresAt.GetExpiration(), cas);
-			return new CasResult<ulong>()
+			return new CasResult<ulong>
 			{
 				Cas = result.Cas,
 				Result = result.Value,
@@ -684,7 +672,7 @@ namespace Enyim.Caching
 		public CasResult<ulong> Decrement(string key, ulong defaultValue, ulong delta, ulong cas)
 		{
 			var result = this.CasMutate(MutationMode.Decrement, key, defaultValue, delta, 0, cas);
-			return new CasResult<ulong>()
+			return new CasResult<ulong>
 			{
 				Cas = result.Cas,
 				Result = result.Value,
@@ -705,7 +693,7 @@ namespace Enyim.Caching
 		public CasResult<ulong> Decrement(string key, ulong defaultValue, ulong delta, TimeSpan validFor, ulong cas)
 		{
 			var result = this.CasMutate(MutationMode.Decrement, key, defaultValue, delta, validFor.GetExpiration(), cas);
-			return new CasResult<ulong>()
+			return new CasResult<ulong>
 			{
 				Cas = result.Cas,
 				Result = result.Value,
@@ -817,7 +805,7 @@ namespace Enyim.Caching
 		public async Task<CasResult<ulong>> IncrementAsync(string key, ulong defaultValue, ulong delta, ulong cas, CancellationToken cancellationToken = default(CancellationToken))
 		{
 			var result = await this.CasMutateAsync(MutationMode.Increment, key, defaultValue, delta, 0, cas, cancellationToken).ConfigureAwait(false);
-			return new CasResult<ulong>()
+			return new CasResult<ulong>
 			{
 				Cas = result.Cas,
 				Result = result.Value,
@@ -838,7 +826,7 @@ namespace Enyim.Caching
 		public async Task<CasResult<ulong>> IncrementAsync(string key, ulong defaultValue, ulong delta, TimeSpan validFor, ulong cas, CancellationToken cancellationToken = default(CancellationToken))
 		{
 			var result = await this.CasMutateAsync(MutationMode.Increment, key, defaultValue, delta, validFor.GetExpiration(), cas, cancellationToken).ConfigureAwait(false);
-			return new CasResult<ulong>()
+			return new CasResult<ulong>
 			{
 				Cas = result.Cas,
 				Result = result.Value,
@@ -859,7 +847,7 @@ namespace Enyim.Caching
 		public async Task<CasResult<ulong>> IncrementAsync(string key, ulong defaultValue, ulong delta, DateTime expiresAt, ulong cas, CancellationToken cancellationToken = default(CancellationToken))
 		{
 			var result = await this.CasMutateAsync(MutationMode.Increment, key, defaultValue, delta, expiresAt.GetExpiration(), cas, cancellationToken).ConfigureAwait(false);
-			return new CasResult<ulong>()
+			return new CasResult<ulong>
 			{
 				Cas = result.Cas,
 				Result = result.Value,
@@ -914,7 +902,7 @@ namespace Enyim.Caching
 		public async Task<CasResult<ulong>> DecrementAsync(string key, ulong defaultValue, ulong delta, ulong cas, CancellationToken cancellationToken = default(CancellationToken))
 		{
 			var result = await this.CasMutateAsync(MutationMode.Decrement, key, defaultValue, delta, 0, cas, cancellationToken).ConfigureAwait(false);
-			return new CasResult<ulong>()
+			return new CasResult<ulong>
 			{
 				Cas = result.Cas,
 				Result = result.Value,
@@ -935,7 +923,7 @@ namespace Enyim.Caching
 		public async Task<CasResult<ulong>> DecrementAsync(string key, ulong defaultValue, ulong delta, TimeSpan validFor, ulong cas, CancellationToken cancellationToken = default(CancellationToken))
 		{
 			var result = await this.CasMutateAsync(MutationMode.Decrement, key, defaultValue, delta, validFor.GetExpiration(), cas, cancellationToken).ConfigureAwait(false);
-			return new CasResult<ulong>()
+			return new CasResult<ulong>
 			{
 				Cas = result.Cas,
 				Result = result.Value,
@@ -956,7 +944,7 @@ namespace Enyim.Caching
 		public async Task<CasResult<ulong>> DecrementAsync(string key, ulong defaultValue, ulong delta, DateTime expiresAt, ulong cas, CancellationToken cancellationToken = default(CancellationToken))
 		{
 			var result = await this.CasMutateAsync(MutationMode.Decrement, key, defaultValue, delta, expiresAt.GetExpiration(), cas, cancellationToken).ConfigureAwait(false);
-			return new CasResult<ulong>()
+			return new CasResult<ulong>
 			{
 				Cas = result.Cas,
 				Result = result.Value,
@@ -1032,7 +1020,7 @@ namespace Enyim.Caching
 		{
 			ulong tmp = cas;
 			var result = this.PerformConcatenate(ConcatenationMode.Append, key, ref tmp, data);
-			return new CasResult<bool>()
+			return new CasResult<bool>
 			{
 				Cas = tmp,
 				Result = result.Success
@@ -1050,7 +1038,7 @@ namespace Enyim.Caching
 		{
 			ulong tmp = cas;
 			var result = this.PerformConcatenate(ConcatenationMode.Prepend, key, ref tmp, data);
-			return new CasResult<bool>()
+			return new CasResult<bool>
 			{
 				Cas = tmp,
 				Result = result.Success
@@ -1107,7 +1095,7 @@ namespace Enyim.Caching
 		public async Task<CasResult<bool>> AppendAsync(string key, ulong cas, ArraySegment<byte> data, CancellationToken cancellationToken = default(CancellationToken))
 		{
 			var result = await this.PerformConcatenateAsync(ConcatenationMode.Append, key, data, cas, cancellationToken).ConfigureAwait(false);
-			return new CasResult<bool>()
+			return new CasResult<bool>
 			{
 				Cas = result.Cas,
 				Result = result.Success
@@ -1131,7 +1119,7 @@ namespace Enyim.Caching
 		public async Task<CasResult<bool>> PrependAsync(string key, ulong cas, ArraySegment<byte> data, CancellationToken cancellationToken = default(CancellationToken))
 		{
 			var result = await this.PerformConcatenateAsync(ConcatenationMode.Prepend, key, data, cas, cancellationToken).ConfigureAwait(false);
-			return new CasResult<bool>()
+			return new CasResult<bool>
 			{
 				Cas = result.Cas,
 				Result = result.Success
@@ -1215,7 +1203,7 @@ namespace Enyim.Caching
 		public bool TryGetWithCas(string key, out CasResult<object> value)
 		{
 			var result = this.PerformGet(key, out ulong cas, out object tmp);
-			value = new CasResult<object>()
+			value = new CasResult<object>
 			{
 				Cas = cas,
 				Result = tmp
@@ -1232,7 +1220,7 @@ namespace Enyim.Caching
 		public CasResult<T> GetWithCas<T>(string key)
 		{
 			var success = this.TryGetWithCas(key, out CasResult<object> tmp);
-			return new CasResult<T>()
+			return new CasResult<T>
 			{
 				Cas = tmp.Cas,
 				Result = success ? (T)tmp.Result : default(T)
@@ -1314,7 +1302,7 @@ namespace Enyim.Caching
 		public async Task<CasResult<T>> GetWithCasAsync<T>(string key, CancellationToken cancellationToken = default(CancellationToken))
 		{
 			var result = await this.PerformGetAsync(key, cancellationToken).ConfigureAwait(false);
-			return new CasResult<T>()
+			return new CasResult<T>
 			{
 				Cas = result.Cas,
 				Result = result.Success ? (T)result.Value : default(T)
@@ -1331,19 +1319,15 @@ namespace Enyim.Caching
 		#endregion
 
 		#region Multi Get
-		protected Dictionary<IMemcachedNode, IList<string>> GroupByServer(IEnumerable<string> keys)
+		Dictionary<IMemcachedNode, IList<string>> GroupByServer(List<string> keys)
 		{
 			var results = new Dictionary<IMemcachedNode, IList<string>>();
-			foreach (var key in keys)
+			keys.Select(key => new { Key = key, Node = this.Pool.Locate(key) }).Where(info => info.Node != null).ToList().ForEach(info =>
 			{
-				var node = this.Pool.Locate(key);
-				if (node != null)
-				{
-					if (!results.TryGetValue(node, out IList<string> list))
-						results[node] = list = new List<string>(4);
-					list.Add(key);
-				}
-			}
+				if (!results.TryGetValue(info.Node, out IList<string> list))
+					results[info.Node] = list = new List<string>(4);
+				list.Add(info.Key);
+			});
 			return results;
 		}
 
@@ -1380,14 +1364,7 @@ namespace Enyim.Caching
 			}
 
 			// execute each list of keys on their respective node (in parallel)
-			var tasks = this.GroupByServer(hashed.Keys)
-				.Select(slice => executeCmdAsync(slice.Key, slice.Value))
-				.ToArray();
-
-			// wait for all nodes to finish
-			if (tasks.Length > 0)
-				Task.WaitAll(tasks, TimeSpan.FromSeconds(13));
-
+			Task.WaitAll(this.GroupByServer(hashed.Keys.ToList()).Select(kvp => executeCmdAsync(kvp.Key, kvp.Value)).ToArray(), TimeSpan.FromSeconds(13));
 			return results;
 		}
 
@@ -1397,7 +1374,7 @@ namespace Enyim.Caching
 		/// <param name="keys">The list of identifiers for the items to retrieve.</param>
 		/// <returns>a Dictionary holding all items indexed by their key.</returns>
 		public IDictionary<string, object> Get(IEnumerable<string> keys)
-			=> this.PerformMultiGet<object>(keys, (op, kvp) => this.Transcoder.Deserialize(kvp.Value));
+			=> this.PerformMultiGet(keys, (op, kvp) => this.Transcoder.Deserialize(kvp.Value));
 
 		/// <summary>
 		/// Retrieves multiple items from the cache.
@@ -1406,7 +1383,7 @@ namespace Enyim.Caching
 		/// <param name="keys">The list of identifiers for the items to retrieve.</param>
 		/// <returns>a Dictionary holding all items indexed by their key.</returns>
 		public IDictionary<string, T> Get<T>(IEnumerable<string> keys)
-			=> this.PerformMultiGet<T>(keys, (op, kvp) => this.Transcoder.Deserialize<T>(kvp.Value));
+			=> this.PerformMultiGet(keys, (op, kvp) => this.Transcoder.Deserialize<T>(kvp.Value));
 
 		/// <summary>
 		/// Retrieves multiple items from the cache with CAS.
@@ -1414,7 +1391,7 @@ namespace Enyim.Caching
 		/// <param name="keys"></param>
 		/// <returns></returns>
 		public IDictionary<string, CasResult<object>> GetWithCas(IEnumerable<string> keys)
-			=> this.PerformMultiGet<CasResult<object>>(keys, (op, kvp) => new CasResult<object>
+			=> this.PerformMultiGet(keys, (op, kvp) => new CasResult<object>
 			{
 				Result = this.Transcoder.Deserialize(kvp.Value),
 				Cas = op.Cas[kvp.Key]
@@ -1454,14 +1431,7 @@ namespace Enyim.Caching
 			}
 
 			// execute each list of keys on their respective node (in parallel)
-			var tasks = this.GroupByServer(hashedKeys.Keys)
-				.Select(slice => executeCmdAsync(slice.Key, slice.Value))
-				.ToList();
-
-			// wait for all nodes to finish
-			if (tasks.Count > 0)
-				await Task.WhenAll(tasks).ConfigureAwait(false);
-
+			await Task.WhenAll(this.GroupByServer(hashedKeys.Keys.ToList()).Select(kvp => executeCmdAsync(kvp.Key, kvp.Value))).ConfigureAwait(false);
 			return results;
 		}
 
@@ -1471,7 +1441,7 @@ namespace Enyim.Caching
 		/// <param name="keys">The list of identifiers for the items to retrieve.</param>
 		/// <returns>a Dictionary holding all items indexed by their key.</returns>
 		public Task<IDictionary<string, object>> GetAsync(IEnumerable<string> keys, CancellationToken cancellationToken = default(CancellationToken))
-			=> this.PerformMultiGetAsync<object>(keys, (op, kvp) => this.Transcoder.Deserialize(kvp.Value), cancellationToken);
+			=> this.PerformMultiGetAsync(keys, (op, kvp) => this.Transcoder.Deserialize(kvp.Value), cancellationToken);
 
 		/// <summary>
 		/// Retrieves multiple items from the cache.
@@ -1480,7 +1450,7 @@ namespace Enyim.Caching
 		/// <param name="keys">The list of identifiers for the items to retrieve.</param>
 		/// <returns>a Dictionary holding all items indexed by their key.</returns>
 		public Task<IDictionary<string, T>> GetAsync<T>(IEnumerable<string> keys, CancellationToken cancellationToken = default(CancellationToken))
-			=> this.PerformMultiGetAsync<T>(keys, (op, kvp) => this.Transcoder.Deserialize<T>(kvp.Value), cancellationToken);
+			=> this.PerformMultiGetAsync(keys, (op, kvp) => this.Transcoder.Deserialize<T>(kvp.Value), cancellationToken);
 
 		/// <summary>
 		/// Retrieves multiple items from the cache with CAS.
@@ -1488,7 +1458,7 @@ namespace Enyim.Caching
 		/// <param name="keys"></param>
 		/// <returns></returns>
 		public Task<IDictionary<string, CasResult<object>>> GetWithCasAsync(IEnumerable<string> keys, CancellationToken cancellationToken = default(CancellationToken))
-			=> this.PerformMultiGetAsync<CasResult<object>>(keys, (op, kvp) => new CasResult<object>
+			=> this.PerformMultiGetAsync(keys, (op, kvp) => new CasResult<object>
 			{
 				Result = this.Transcoder.Deserialize(kvp.Value),
 				Cas = op.Cas[kvp.Key]
@@ -1632,13 +1602,7 @@ namespace Enyim.Caching
 				});
 			}
 
-			var tasks = this.Pool.GetWorkingNodes()
-				.Select(node => executeCmdAsync(node, this.Pool.OperationFactory.Stats(type), node.EndPoint))
-				.ToArray();
-
-			if (tasks.Length > 0)
-				Task.WaitAll(tasks, TimeSpan.FromSeconds(13));
-
+			Task.WaitAll(this.Pool.GetWorkingNodes().Select(node => executeCmdAsync(node, this.Pool.OperationFactory.Stats(type), node.EndPoint)).ToArray(), TimeSpan.FromSeconds(13));
 			return new ServerStats(results);
 		}
 
@@ -1664,13 +1628,7 @@ namespace Enyim.Caching
 				results.TryAdd(endpoint, command.Result);
 			}
 
-			var tasks = this.Pool.GetWorkingNodes()
-				.Select(node => executeCmdAsync(node, this.Pool.OperationFactory.Stats(type), node.EndPoint))
-				.ToList();
-
-			if (tasks.Count > 0)
-				await Task.WhenAll(tasks).ConfigureAwait(false);
-
+			await Task.WhenAll(this.Pool.GetWorkingNodes().Select(node => executeCmdAsync(node, this.Pool.OperationFactory.Stats(type), node.EndPoint))).ConfigureAwait(false);
 			return new ServerStats(results);
 		}
 
