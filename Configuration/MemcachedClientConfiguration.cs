@@ -30,8 +30,6 @@ namespace Enyim.Caching.Configuration
 		public MemcachedClientConfiguration(ILoggerFactory loggerFactory = null)
 		{
 			this.PrepareLogger(loggerFactory);
-
-			this.Servers = new List<EndPoint>();
 			this.SocketPool = new SocketPoolConfiguration();
 			this.Authentication = new AuthenticationConfiguration();
 		}
@@ -52,7 +50,6 @@ namespace Enyim.Caching.Configuration
 
 			this.Protocol = configuration.Protocol;
 
-			this.Servers = new List<EndPoint>();
 			foreach (var server in configuration.Servers)
 				if (server.Address.IndexOf(":") > 0)
 					this.AddServer(server.Address);
@@ -65,7 +62,7 @@ namespace Enyim.Caching.Configuration
 			{
 				try
 				{
-					this.Authentication = new AuthenticationConfiguration()
+					this.Authentication = new AuthenticationConfiguration
 					{
 						Type = configuration.Authentication.Type
 					};
@@ -138,7 +135,6 @@ namespace Enyim.Caching.Configuration
 			if (Enum.TryParse(configuration.Section.Attributes["protocol"]?.Value ?? "Binary", out MemcachedProtocol protocol))
 				this.Protocol = protocol;
 
-			this.Servers = new List<EndPoint>();
 			if (configuration.Section.SelectNodes("servers/add") is XmlNodeList servers)
 				foreach (XmlNode server in servers)
 				{
@@ -146,38 +142,29 @@ namespace Enyim.Caching.Configuration
 					if (address.IndexOf(":") > 0)
 						this.AddServer(address);
 					else
-						this.AddServer(address, Convert.ToInt32(server.Attributes["port"]?.Value ?? "11211"));
+						this.AddServer(address, Int32.TryParse(server.Attributes["port"]?.Value ?? "11211", out int port) ? port : 11211);
 				}
 
 			this.SocketPool = new SocketPoolConfiguration();
 			if (configuration.Section.SelectSingleNode("socketPool") is XmlNode socketpool)
 			{
-				if (socketpool.Attributes["maxPoolSize"]?.Value != null)
-					this.SocketPool.MaxPoolSize = Convert.ToInt32(socketpool.Attributes["maxPoolSize"].Value);
-				if (socketpool.Attributes["minPoolSize"]?.Value != null)
-					this.SocketPool.MinPoolSize = Convert.ToInt32(socketpool.Attributes["minPoolSize"].Value);
-				if (socketpool.Attributes["connectionTimeout"]?.Value != null)
-					this.SocketPool.ConnectionTimeout = TimeSpan.Parse(socketpool.Attributes["connectionTimeout"].Value);
-				if (socketpool.Attributes["deadTimeout"]?.Value != null)
-					this.SocketPool.DeadTimeout = TimeSpan.Parse(socketpool.Attributes["deadTimeout"].Value);
-				if (socketpool.Attributes["queueTimeout"]?.Value != null)
-					this.SocketPool.QueueTimeout = TimeSpan.Parse(socketpool.Attributes["queueTimeout"].Value);
-				if (socketpool.Attributes["receiveTimeout"]?.Value != null)
-					this.SocketPool.ReceiveTimeout = TimeSpan.Parse(socketpool.Attributes["receiveTimeout"].Value);
-				if (socketpool.Attributes["noDelay"]?.Value != null)
-					this.SocketPool.NoDelay = Convert.ToBoolean(socketpool.Attributes["noDelay"].Value);
+				if (Int32.TryParse(socketpool.Attributes["maxPoolSize"]?.Value, out int intValue))
+					this.SocketPool.MaxPoolSize = intValue;
+				if (Int32.TryParse(socketpool.Attributes["minPoolSize"]?.Value, out intValue))
+					this.SocketPool.MinPoolSize = intValue;
+				if (TimeSpan.TryParse(socketpool.Attributes["connectionTimeout"]?.Value, out TimeSpan timespanValue))
+					this.SocketPool.ConnectionTimeout = timespanValue;
+				if (TimeSpan.TryParse(socketpool.Attributes["deadTimeout"]?.Value, out timespanValue))
+					this.SocketPool.DeadTimeout = timespanValue;
+				if (TimeSpan.TryParse(socketpool.Attributes["queueTimeout"]?.Value, out timespanValue))
+					this.SocketPool.QueueTimeout = timespanValue;
+				if (TimeSpan.TryParse(socketpool.Attributes["receiveTimeout"]?.Value, out timespanValue))
+					this.SocketPool.ReceiveTimeout = timespanValue;
+				if (Boolean.TryParse(socketpool.Attributes["noDelay"]?.Value, out bool boolValue))
+					this.SocketPool.NoDelay = boolValue;
 
 				if ("throttling" == socketpool.Attributes["failurePolicy"]?.Value)
-					try
-					{
-						var failureThreshold = Convert.ToInt32(socketpool.Attributes["failureThreshold"]?.Value ?? "4");
-						var resetAfter = TimeSpan.Parse(socketpool.Attributes["resetAfter"]?.Value ?? "00:05:00");
-						this.SocketPool.FailurePolicyFactory = new ThrottlingFailurePolicyFactory(failureThreshold, resetAfter);
-					}
-					catch (Exception ex)
-					{
-						this._logger.LogError(ex, $"Unable to set '{socketpool.Attributes["failurePolicy"].Value}' failure policy");
-					}
+					this.SocketPool.FailurePolicyFactory = new ThrottlingFailurePolicyFactory(Int32.TryParse(socketpool.Attributes["failureThreshold"]?.Value, out intValue) ? intValue : 4, TimeSpan.TryParse(socketpool.Attributes["resetAfter"]?.Value, out timespanValue) ? timespanValue : TimeSpan.FromSeconds(5));
 			}
 
 			if (configuration.Section.SelectSingleNode("authentication") is XmlNode authentication)
@@ -264,7 +251,7 @@ namespace Enyim.Caching.Configuration
 		/// <summary>
 		/// Gets a list of <see cref="IPEndPoint"/> each representing a Memcached server in the pool.
 		/// </summary>
-		public IList<EndPoint> Servers { get; internal set; }
+		public IList<EndPoint> Servers { get; } = new List<EndPoint>();
 
 		/// <summary>
 		/// Gets or sets the type of the communication between client and server.
@@ -334,14 +321,9 @@ namespace Enyim.Caching.Configuration
 				? this.NodeLocatorFactory.Create()
 				: this.NodeLocator != null
 					? FastActivator.Create(this.NodeLocator) as INodeLocator ?? new DefaultNodeLocator() as INodeLocator
-					: this.Servers.Count > 1
-						? new KetamaNodeLocator() as INodeLocator
-						: new SingleNodeLocator() as INodeLocator;
+					: this.Servers.Count > 1 ? new KetamaNodeLocator() as INodeLocator : new SingleNodeLocator() as INodeLocator;
 
-		IServerPool IMemcachedClientConfiguration.CreatePool()
-			=> this.Protocol.Equals(MemcachedProtocol.Text)
-				? new DefaultServerPool(this, new TextOperationFactory())
-				: new BinaryPool(this);
+		IServerPool IMemcachedClientConfiguration.CreatePool() => this.Protocol.Equals(MemcachedProtocol.Text) ? new DefaultServerPool(this, new TextOperationFactory()) : new BinaryPool(this);
 	}
 
 	#region Configuration helpers

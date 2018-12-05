@@ -58,7 +58,7 @@ namespace Enyim.Caching.Configuration
 			if (type == null || interfaceType == null)
 				return;
 
-			if (Array.IndexOf<Type>(type.GetInterfaces(), interfaceType) == -1)
+			if (Array.IndexOf(type.GetInterfaces(), interfaceType) == -1)
 				throw new ConfigurationErrorsException($"The type {type.AssemblyQualifiedName} must implement {interfaceType.AssemblyQualifiedName}");
 		}
 
@@ -74,7 +74,7 @@ namespace Enyim.Caching.Configuration
 			if (!Int32.TryParse(parts[1], out int port))
 				throw new ArgumentException($"Cannot parse port: {parts[1]}", nameof(value));
 
-			return ResolveToEndPoint(parts[0], port);
+			return ConfigurationHelper.ResolveToEndPoint(parts[0], port);
 		}
 
 		public static EndPoint ResolveToEndPoint(string host, int port)

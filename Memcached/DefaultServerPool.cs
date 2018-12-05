@@ -12,15 +12,14 @@ namespace Enyim.Caching.Memcached
 {
 	public class DefaultServerPool : IServerPool, IDisposable
 	{
-		ILogger _logger;
+		readonly ILogger _logger;
 
 		IMemcachedNode[] _allNodes;
-
-		IMemcachedClientConfiguration _configuration;
-		IOperationFactory _factory;
+		readonly IMemcachedClientConfiguration _configuration;
+		readonly IOperationFactory _factory;
 		INodeLocator _nodeLocator;
 
-		readonly object _locker = new Object();
+		readonly object _locker = new object();
 		readonly int _deadTimeoutMsec;
 		bool _isTimerActive, _isDisposed;
 		event Action<IMemcachedNode> _onNodeFailed;

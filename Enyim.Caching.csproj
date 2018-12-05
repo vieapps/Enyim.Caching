@@ -6,24 +6,24 @@
 		<RootNamespace>Enyim</RootNamespace>
 		<AssemblyName>Enyim.Caching</AssemblyName>
 		<AssemblyTitle>Enyim Memcached</AssemblyTitle>
-		<AssemblyVersion>1.5.1812.1</AssemblyVersion>
-		<FileVersion>1.5.1812.1</FileVersion>
-		<InformationalVersion>v1.5.netstandard-2+rev:2018.12.03-extmths</InformationalVersion>
+		<SignAssembly>false</SignAssembly>
+		<AssemblyOriginatorKeyFile>../VIEApps.Components.snk</AssemblyOriginatorKeyFile>
+		<AssemblyVersion>1.5.1812.2</AssemblyVersion>
+		<FileVersion>1.5.1812.2</FileVersion>
+		<InformationalVersion>v1.5.netstandard-2+rev:2018.12.04-lstcmp</InformationalVersion>
 		<Product>Enyim Memcached</Product>
 		<Company>VIEApps.net</Company>
 		<GeneratePackageOnBuild>false</GeneratePackageOnBuild>
 		<PackageId>VIEApps.Enyim.Caching</PackageId>
-		<Version>1.5.1812.1</Version>
-		<SignAssembly>false</SignAssembly>
-		<AssemblyOriginatorKeyFile>../VIEApps.Components.snk</AssemblyOriginatorKeyFile>
+		<Version>1.5.1812.2</Version>
 		<Title>Enyim Memcached</Title>
 		<Description>The memcached client library, fully async with various transcoders (binary formatter, bson, protobuf, msgpack) on .NET Standard 2.0</Description>
 		<Authors>VIEApps.net</Authors>
 		<Copyright>© 2010 Attila Kiskó, © 2016 CNBlogs, © 2018 VIEApps.net</Copyright>
 		<PackageTags>cache;caching;distributed;distributed-cache;memcached;enyim;enyim-memcached;enyim-caching;vieapps;vieapps.components</PackageTags>
-		<PackageReleaseNotes>Update some extension methods for working well with dependency injection</PackageReleaseNotes>
-		<PackageProjectUrl>https://github.com/vieapps/Enyim.Caching</PackageProjectUrl>
+		<PackageReleaseNotes>Upgrade to latest components and do some improvements</PackageReleaseNotes>
 		<PackageIconUrl>https://github.com/vieapps/Components.Utility/raw/master/logo.png</PackageIconUrl>
+		<PackageProjectUrl>https://github.com/vieapps/Enyim.Caching</PackageProjectUrl>
 		<RepositoryUrl>https://github.com/vieapps/Enyim.Caching</RepositoryUrl>
 	</PropertyGroup>
 
@@ -48,12 +48,12 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Microsoft.AspNetCore.Http.Abstractions" Version="2.1.1" />
-		<PackageReference Include="Microsoft.Extensions.Caching.Abstractions" Version="2.1.2" />
-		<PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="2.1.1" />
-		<PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="2.1.1" />
-		<PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="2.1.1" />
-		<PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="2.1.1" />
+		<PackageReference Include="Microsoft.AspNetCore.Http.Abstractions" Version="2.2.0" />
+		<PackageReference Include="Microsoft.Extensions.Caching.Abstractions" Version="2.2.0" />
+		<PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="2.2.0" />
+		<PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="2.2.0" />
+		<PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="2.2.0" />
+		<PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="2.2.0" />
 		<PackageReference Include="Microsoft.IO.RecyclableMemoryStream" Version="1.2.2" />
 		<PackageReference Include="System.Configuration.ConfigurationManager" Version="4.5.0" />
 	</ItemGroup>
