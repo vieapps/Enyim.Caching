@@ -396,8 +396,6 @@ namespace CacheUtils
 
 namespace Microsoft.Extensions.DependencyInjection
 {
-
-	#region Extensions for working with .NET Core dependency injection
 	public static partial class ServiceCollectionExtensions
 	{
 		/// <summary>
@@ -421,14 +419,10 @@ namespace Microsoft.Extensions.DependencyInjection
 			return services;
 		}
 	}
-	#endregion
-
 }
 
 namespace Microsoft.AspNetCore.Builder
 {
-
-	#region Extensions for working with ASP.NET Core
 	public static partial class ApplicationBuilderExtensions
 	{
 		/// <summary>
@@ -449,8 +443,6 @@ namespace Microsoft.AspNetCore.Builder
 			return appBuilder;
 		}
 	}
-	#endregion
-
 }
 
 #region [ License information          ]

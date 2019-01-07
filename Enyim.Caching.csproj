@@ -3,40 +3,33 @@
 	<PropertyGroup>
 		<TargetFramework>netstandard2.0</TargetFramework>
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+		<WarningLevel>3</WarningLevel>
+		<NoWarn>1701;1702;1705;1066;0067</NoWarn>
+		<DocumentationFile>bin\$(Configuration)\netstandard2.0\Enyim.Caching.xml</DocumentationFile>
 		<RootNamespace>Enyim</RootNamespace>
 		<AssemblyName>Enyim.Caching</AssemblyName>
 		<AssemblyTitle>Enyim Memcached</AssemblyTitle>
 		<SignAssembly>false</SignAssembly>
 		<AssemblyOriginatorKeyFile>../VIEApps.Components.snk</AssemblyOriginatorKeyFile>
-		<AssemblyVersion>1.5.1812.2</AssemblyVersion>
-		<FileVersion>1.5.1812.2</FileVersion>
-		<InformationalVersion>v1.5.netstandard-2+rev:2018.12.04-lstcmp</InformationalVersion>
+		<AssemblyVersion>1.5.1901.1</AssemblyVersion>
+		<FileVersion>1.5.1901.1</FileVersion>
+		<InformationalVersion>v1.5.netstandard-2+rev:2019.01.04-latest.components</InformationalVersion>
 		<Product>Enyim Memcached</Product>
 		<Company>VIEApps.net</Company>
 		<GeneratePackageOnBuild>false</GeneratePackageOnBuild>
 		<PackageId>VIEApps.Enyim.Caching</PackageId>
-		<Version>1.5.1812.2</Version>
+		<Version>1.5.1901.1</Version>
 		<Title>Enyim Memcached</Title>
 		<Description>The memcached client library, fully async with various transcoders (binary formatter, bson, protobuf, msgpack) on .NET Standard 2.0</Description>
 		<Authors>VIEApps.net</Authors>
 		<Copyright>© 2010 Attila Kiskó, © 2016 CNBlogs, © 2018 VIEApps.net</Copyright>
+		<PackageLicense>LICENSE.md</PackageLicense>
+		<PackageOutputPath>..\</PackageOutputPath>
 		<PackageTags>cache;caching;distributed;distributed-cache;memcached;enyim;enyim-memcached;enyim-caching;vieapps;vieapps.components</PackageTags>
 		<PackageReleaseNotes>Upgrade to latest components and do some improvements</PackageReleaseNotes>
 		<PackageIconUrl>https://github.com/vieapps/Components.Utility/raw/master/logo.png</PackageIconUrl>
 		<PackageProjectUrl>https://github.com/vieapps/Enyim.Caching</PackageProjectUrl>
 		<RepositoryUrl>https://github.com/vieapps/Enyim.Caching</RepositoryUrl>
-	</PropertyGroup>
-
-	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-		<WarningLevel>3</WarningLevel>
-		<NoWarn>1701;1702;1705;1066;0067</NoWarn>
-		<DocumentationFile>bin\Debug\netstandard2.0\Enyim.Caching.xml</DocumentationFile>
-	</PropertyGroup>
-
-	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-		<WarningLevel>3</WarningLevel>
-		<NoWarn>1701;1702;1705;1066;0067</NoWarn>
-		<DocumentationFile>bin\Release\netstandard2.0\Enyim.Caching.xml</DocumentationFile>
 	</PropertyGroup>
 
 	<ItemGroup>

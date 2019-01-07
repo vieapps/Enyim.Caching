@@ -1699,9 +1699,15 @@ namespace Enyim.Caching
 				await this.StoreAsync(StoreMode.Set, key.GetIDistributedCacheExpirationKey(), expires, validFor, cancellationToken).ConfigureAwait(false);
 		}
 
-		byte[] IDistributedCache.Get(string key) => string.IsNullOrWhiteSpace(key) ? throw new ArgumentNullException(nameof(key)) : this.Get<byte[]>(key);
+		byte[] IDistributedCache.Get(string key)
+			=> string.IsNullOrWhiteSpace(key)
+				? throw new ArgumentNullException(nameof(key))
+				: this.Get<byte[]>(key);
 
-		Task<byte[]> IDistributedCache.GetAsync(string key, CancellationToken cancellationToken = default(CancellationToken)) => string.IsNullOrWhiteSpace(key) ? Task.FromException<byte[]>(new ArgumentNullException(nameof(key))) : this.GetAsync<byte[]>(key, cancellationToken);
+		Task<byte[]> IDistributedCache.GetAsync(string key, CancellationToken cancellationToken = default(CancellationToken))
+			=> string.IsNullOrWhiteSpace(key)
+				? Task.FromException<byte[]>(new ArgumentNullException(nameof(key)))
+				: this.GetAsync<byte[]>(key, cancellationToken);
 
 		void IDistributedCache.Refresh(string key)
 		{
@@ -1740,7 +1746,10 @@ namespace Enyim.Caching
 			this.Remove(key.GetIDistributedCacheExpirationKey());
 		}
 
-		Task IDistributedCache.RemoveAsync(string key, CancellationToken cancellationToken = default(CancellationToken)) => string.IsNullOrWhiteSpace(key) ? Task.FromException(new ArgumentNullException(nameof(key))) : Task.WhenAll(this.RemoveAsync(key, cancellationToken), this.RemoveAsync(key.GetIDistributedCacheExpirationKey(), cancellationToken));
+		Task IDistributedCache.RemoveAsync(string key, CancellationToken cancellationToken = default(CancellationToken))
+			=> string.IsNullOrWhiteSpace(key)
+				? Task.FromException(new ArgumentNullException(nameof(key)))
+				: Task.WhenAll(this.RemoveAsync(key, cancellationToken), this.RemoveAsync(key.GetIDistributedCacheExpirationKey(), cancellationToken));
 		#endregion
 
 	}
@@ -1749,7 +1758,7 @@ namespace Enyim.Caching
 #region [ License information          ]
 /* ************************************************************
  * 
- *    © 2010 Attila Kiskó (aka Enyim), © 2016 CNBlogs, © 2018 VIEApps.net
+ *    Â© 2010 Attila KiskÃ³ (aka Enyim), Â© 2016 CNBlogs, Â© 2018 VIEApps.net
  *    
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.

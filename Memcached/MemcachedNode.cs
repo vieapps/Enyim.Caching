@@ -25,9 +25,8 @@ namespace Enyim.Caching.Memcached
 		static object Locker = new object();
 
 		#region Attributes
-		ILogger _logger;
-		EndPoint _endpoint;
-		ISocketPoolConfiguration _config;
+		readonly ILogger _logger;
+		readonly ISocketPoolConfiguration _config;
 		InternalPoolImpl _internalPoolImpl;
 		INodeFailurePolicy _failurePolicy;
 		bool _isDisposed, _isInitialized;
@@ -41,7 +40,7 @@ namespace Enyim.Caching.Memcached
 				throw new InvalidOperationException($"ConnectionTimeout must be < {Int32.MaxValue}");
 
 			this._logger = Logger.CreateLogger<IMemcachedNode>();
-			this._endpoint = endpoint;
+			this.EndPoint = endpoint;
 			this._config = socketPoolConfig;
 			this._internalPoolImpl = new InternalPoolImpl(this, this._config);
 		}
@@ -51,7 +50,7 @@ namespace Enyim.Caching.Memcached
 		/// <summary>
 		/// Gets the <see cref="IPEndPoint"/> of this instance
 		/// </summary>
-		public EndPoint EndPoint => this._endpoint;
+		public EndPoint EndPoint { get; }
 
 		/// <summary>
 		/// <para>Gets a value indicating whether the server is working or not. Returns a <b>cached</b> state.</para>
@@ -86,7 +85,7 @@ namespace Enyim.Caching.Memcached
 					// try to connect to the server
 					using (var socket = this.CreateSocket())
 					{
-						this._logger.Log(LogLevel.Debug, LogLevel.Debug, $"Try to connect to the memcached server: {this._endpoint}");
+						this._logger.Log(LogLevel.Debug, LogLevel.Debug, $"Try to connect to the memcached server: {this.EndPoint}");
 					}
 
 					if (this._internalPoolImpl.IsAlive)
@@ -150,11 +149,11 @@ namespace Enyim.Caching.Memcached
 		{
 			try
 			{
-				return new PooledSocket(this._endpoint, this._config.ConnectionTimeout, this._config.ReceiveTimeout, this._config.NoDelay);
+				return new PooledSocket(this.EndPoint, this._config.ConnectionTimeout, this._config.ReceiveTimeout, this._config.NoDelay);
 			}
 			catch (Exception ex)
 			{
-				this._logger.LogError(ex, $"Cannot create socket ({this._endpoint})");
+				this._logger.LogError(ex, $"Cannot create socket ({this.EndPoint})");
 				throw ex;
 			}
 		}

@@ -42,7 +42,7 @@ namespace Enyim.Caching.Configuration
 		public MemcachedClientConfiguration(ILoggerFactory loggerFactory, IOptions<MemcachedClientOptions> options)
 		{
 			if (options == null)
-				throw new ArgumentNullException(nameof(options));
+				throw new ArgumentNullException(nameof(options), "No configuration is found");
 
 			this.PrepareLogger(loggerFactory);
 
@@ -128,7 +128,7 @@ namespace Enyim.Caching.Configuration
 		public MemcachedClientConfiguration(ILoggerFactory loggerFactory, MemcachedClientConfigurationSectionHandler configuration)
 		{
 			if (configuration == null)
-				throw new ArgumentNullException(nameof(configuration));
+				throw new ArgumentNullException(nameof(configuration), "No configuration is found");
 
 			this.PrepareLogger(loggerFactory);
 

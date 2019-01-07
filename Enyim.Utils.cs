@@ -247,20 +247,14 @@ namespace Enyim.Reflection
 		/// </summary>
 		/// <typeparam name="T">The type to be created.</typeparam>
 		/// <returns>The newly created instance.</returns>
-		public static T Create<T>()
-		{
-			return (T)FastActivator.Create(typeof(T));
-		}
+		public static T Create<T>() => (T)FastActivator.Create(typeof(T));
 
 		/// <summary>
 		/// Creates an instance of the specified type using a generated factory to avoid using Reflection.
 		/// </summary>
 		/// <param name="type">The type to be created.</param>
 		/// <returns>The newly created instance.</returns>
-		public static object Create(string type)
-		{
-			return FastActivator.Create(Type.GetType(type));
-		}
+		public static object Create(string type) => FastActivator.Create(Type.GetType(type));
 	}
 	#endregion
 

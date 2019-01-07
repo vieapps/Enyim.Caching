@@ -29,7 +29,7 @@ namespace Enyim.Caching.Configuration
 				return true;
 
 			if (required)
-				throw new Exception("Missing or invalid parameter: " + (String.IsNullOrEmpty(name) ? "element content" : name));
+				throw new Exception("Missing or invalid parameter: " + (string.IsNullOrEmpty(name) ? "element content" : name));
 
 			value = 0;
 			return false;
@@ -82,15 +82,14 @@ namespace Enyim.Caching.Configuration
 			if (string.IsNullOrWhiteSpace(host))
 				throw new ArgumentNullException(nameof(host));
 
-			if (!IPAddress.TryParse(host, out IPAddress address))
+			if (!IPAddress.TryParse(host, out IPAddress ipAddress))
 			{
-				var addresses = Dns.GetHostAddresses(host);
-				address = addresses.FirstOrDefault(ip => ip.AddressFamily == AddressFamily.InterNetwork);
-				if (address == null)
-					throw new ArgumentException($"Could not resolve host '{host}'");
+				ipAddress = Dns.GetHostAddresses(host).FirstOrDefault(ip => ip.AddressFamily == AddressFamily.InterNetwork || ip.AddressFamily == AddressFamily.InterNetworkV6);
+				if (ipAddress == null)
+					throw new ArgumentException($"Could not resolve host \"{host}\"");
 			}
 
-			return new IPEndPoint(address, port);
+			return new IPEndPoint(ipAddress, port);
 		}
 	}
 }
