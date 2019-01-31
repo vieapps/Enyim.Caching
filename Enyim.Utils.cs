@@ -1,10 +1,15 @@
 ﻿#region Related components
 using System;
+using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Collections.Generic;
 using System.Threading;
+using System.Reflection;
+using System.Runtime.Loader;
+using System.Collections.Generic;
 
+using Microsoft.Extensions.DependencyModel;
+using Microsoft.Extensions.DependencyModel.Resolution;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 #endregion
@@ -247,14 +252,29 @@ namespace Enyim.Reflection
 		/// </summary>
 		/// <typeparam name="T">The type to be created.</typeparam>
 		/// <returns>The newly created instance.</returns>
-		public static T Create<T>() => (T)FastActivator.Create(typeof(T));
+		public static T Create<T>()
+			=> (T)FastActivator.Create(typeof(T));
 
 		/// <summary>
 		/// Creates an instance of the specified type using a generated factory to avoid using Reflection.
 		/// </summary>
 		/// <param name="type">The type to be created.</param>
 		/// <returns>The newly created instance.</returns>
-		public static object Create(string type) => FastActivator.Create(Type.GetType(type));
+		public static object Create(string type)
+		{
+			var theType = Type.GetType(type);
+			if (theType == null)
+				try
+				{
+					var typeInfo = type.Split(',').Select(info => info.Trim()).ToList();
+					theType = new Caching.AssemblyLoader(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, $"{typeInfo[1]}.dll")).Assembly.GetExportedTypes().FirstOrDefault(serviceType => typeInfo[0].Equals(serviceType.ToString()));
+				}
+				catch (Exception ex)
+				{
+					Caching.Logger.Log<Caching.AssemblyLoader>(LogLevel.Information, LogLevel.Error, $"Error occurred while loading an assembly => {ex.Message}", ex);
+				}
+			return theType != null ? FastActivator.Create(theType) : null;
+		}
 	}
 	#endregion
 
@@ -391,12 +411,76 @@ namespace Enyim.Caching
 	}
 	#endregion
 
+	#region Assembly loader
+	public class AssemblyLoader
+	{
+		/// <summary>
+		/// Gets the loaded assembly
+		/// </summary>
+		public Assembly Assembly { get; }
+
+		AssemblyLoadContext LoadContext { get; }
+
+		DependencyContext DependencyContext { get; }
+
+		ICompilationAssemblyResolver AssemblyResolver { get; }
+
+		/// <summary>
+		/// Creates new instance to dynamic load an assembly
+		/// </summary>
+		/// <param name="assemblyPath">The full path to assembly</param>
+		public AssemblyLoader(string assemblyPath)
+		{
+			// load assembly
+			var path = Path.GetDirectoryName(assemblyPath);
+			this.Assembly = AssemblyLoadContext.Default.LoadFromAssemblyPath(assemblyPath);
+			this.LoadContext = AssemblyLoadContext.GetLoadContext(this.Assembly);
+
+			// not dependencies => load referenced assembies
+			if (!File.Exists(Path.Combine(path, $"{Path.GetFileNameWithoutExtension(assemblyPath)}.deps.json")))
+			{
+				this.Assembly.GetReferencedAssemblies().ToList().ForEach(assemblyName => this.LoadContext.LoadFromAssemblyPath(Path.Combine(path, $"{assemblyName.Name}.dll")));
+				return;
+			}
+
+			this.DependencyContext = DependencyContext.Load(this.Assembly);
+			this.AssemblyResolver = new CompositeCompilationAssemblyResolver(new ICompilationAssemblyResolver[]
+			{
+				new AppBaseCompilationAssemblyResolver(path),
+				new ReferenceAssemblyPathResolver(),
+				new PackageCompilationAssemblyResolver()
+			});
+			this.LoadContext.Resolving += (loadContext, assemblyName) =>
+			{
+				var runtimeLib = this.DependencyContext.RuntimeLibraries.FirstOrDefault(runtime => string.Equals(runtime.Name, assemblyName.Name, StringComparison.OrdinalIgnoreCase));
+				if (runtimeLib != null)
+				{
+					var compilationLib = new CompilationLibrary(
+						runtimeLib.Type,
+						runtimeLib.Name,
+						runtimeLib.Version,
+						runtimeLib.Hash,
+						runtimeLib.RuntimeAssemblyGroups.SelectMany(g => g.AssetPaths),
+						runtimeLib.Dependencies,
+						runtimeLib.Serviceable
+					);
+					var assemblyPaths = new List<string>();
+					this.AssemblyResolver.TryResolveAssemblyPaths(compilationLib, assemblyPaths);
+					if (assemblyPaths.Count > 0)
+						return this.LoadContext.LoadFromAssemblyPath(assemblyPaths[0]);
+				}
+				return null;
+			};
+		}
+	}
+	#endregion
+
 }
 
 #region [ License information          ]
 /* ************************************************************
  * 
- *    © 2010 Attila Kiskó (aka Enyim), © 2016 CNBlogs, © 2018 VIEApps.net
+ *    © 2010 Attila Kiskó (aka Enyim), © 2016 CNBlogs, © 2019 VIEApps.net
  *    
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.

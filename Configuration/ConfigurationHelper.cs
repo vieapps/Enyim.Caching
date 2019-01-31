@@ -2,8 +2,8 @@ using System;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
-using System.Collections.Generic;
 using System.Configuration;
+using System.Collections.Generic;
 
 namespace Enyim.Caching.Configuration
 {
@@ -62,32 +62,35 @@ namespace Enyim.Caching.Configuration
 				throw new ConfigurationErrorsException($"The type {type.AssemblyQualifiedName} must implement {interfaceType.AssemblyQualifiedName}");
 		}
 
-		public static EndPoint ResolveToEndPoint(string value)
+		public static EndPoint ResolveToEndPoint(string location)
 		{
-			if (String.IsNullOrEmpty(value))
-				throw new ArgumentNullException(nameof(value));
+			if (string.IsNullOrWhiteSpace(location))
+				throw new ArgumentNullException(nameof(location), "The location is required");
 
-			var parts = value.Split(':');
-			if (parts.Length != 2)
-				throw new ArgumentException("host:port is expected", nameof(value));
-
-			if (!Int32.TryParse(parts[1], out int port))
-				throw new ArgumentException($"Cannot parse port: {parts[1]}", nameof(value));
-
-			return ConfigurationHelper.ResolveToEndPoint(parts[0], port);
+			var uri = new Uri(location);
+			return ConfigurationHelper.ResolveToEndPoint(uri.Host, uri.Port);
 		}
 
 		public static EndPoint ResolveToEndPoint(string host, int port)
 		{
 			if (string.IsNullOrWhiteSpace(host))
-				throw new ArgumentNullException(nameof(host));
+				throw new ArgumentNullException(nameof(host), "The host name/IP is required");
 
 			if (!IPAddress.TryParse(host, out IPAddress ipAddress))
-			{
-				ipAddress = Dns.GetHostAddresses(host).FirstOrDefault(ip => ip.AddressFamily == AddressFamily.InterNetwork || ip.AddressFamily == AddressFamily.InterNetworkV6);
-				if (ipAddress == null)
-					throw new ArgumentException($"Could not resolve host \"{host}\"");
-			}
+				try
+				{
+					ipAddress = Dns.GetHostAddresses(host).FirstOrDefault(ip => ip.AddressFamily == AddressFamily.InterNetwork || ip.AddressFamily == AddressFamily.InterNetworkV6);
+					if (ipAddress == null)
+						throw new ArgumentException($"Could not resolve host \"{host}\"");
+				}
+				catch (ArgumentException)
+				{
+					throw;
+				}
+				catch (Exception ex)
+				{
+					throw new ArgumentException($"Could not resolve host \"{host}\"", ex);
+				}
 
 			return new IPEndPoint(ipAddress, port);
 		}
@@ -97,7 +100,7 @@ namespace Enyim.Caching.Configuration
 #region [ License information          ]
 /* ************************************************************
  * 
- *    © 2010 Attila Kiskó (aka Enyim), © 2016 CNBlogs, © 2018 VIEApps.net
+ *    © 2010 Attila Kiskó (aka Enyim), © 2016 CNBlogs, © 2019 VIEApps.net
  *    
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.

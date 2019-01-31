@@ -20,7 +20,7 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 		{
 			this._configuration = configuration;
 			this._authenticationProvider = configuration.Authentication != null && !string.IsNullOrWhiteSpace(configuration.Authentication.Type)
-				? FastActivator.Create(Type.GetType(configuration.Authentication.Type)) as ISaslAuthenticationProvider
+				? FastActivator.Create(configuration.Authentication.Type) as ISaslAuthenticationProvider
 				: null;
 			this._authenticationProvider?.Initialize(configuration.Authentication.Parameters);
 		}
@@ -35,7 +35,7 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 #region [ License information          ]
 /* ************************************************************
  * 
- *    © 2010 Attila Kiskó (aka Enyim), © 2016 CNBlogs, © 2018 VIEApps.net
+ *    © 2010 Attila Kiskó (aka Enyim), © 2016 CNBlogs, © 2019 VIEApps.net
  *    
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.

@@ -11,22 +11,22 @@
 		<AssemblyTitle>Enyim Memcached</AssemblyTitle>
 		<SignAssembly>false</SignAssembly>
 		<AssemblyOriginatorKeyFile>../VIEApps.Components.snk</AssemblyOriginatorKeyFile>
-		<AssemblyVersion>1.5.1901.1</AssemblyVersion>
-		<FileVersion>1.5.1901.1</FileVersion>
-		<InformationalVersion>v1.5.netstandard-2+rev:2019.01.04-latest.components</InformationalVersion>
+		<AssemblyVersion>1.6.1902.1</AssemblyVersion>
+		<FileVersion>1.6.1902.1</FileVersion>
+		<InformationalVersion>v1.6.netstandard-2+rev:2019.01.31-assembly.loader.net.core</InformationalVersion>
 		<Product>Enyim Memcached</Product>
 		<Company>VIEApps.net</Company>
 		<GeneratePackageOnBuild>false</GeneratePackageOnBuild>
 		<PackageId>VIEApps.Enyim.Caching</PackageId>
-		<Version>1.5.1901.1</Version>
+		<Version>1.6.1902.1</Version>
 		<Title>Enyim Memcached</Title>
 		<Description>The memcached client library, fully async with various transcoders (binary formatter, bson, protobuf, msgpack) on .NET Standard 2.0</Description>
 		<Authors>VIEApps.net</Authors>
-		<Copyright>© 2010 Attila Kiskó, © 2016 CNBlogs, © 2018 VIEApps.net</Copyright>
+		<Copyright>© 2010 Attila Kiskó, © 2016 CNBlogs, © 2019 VIEApps.net</Copyright>
 		<PackageLicense>LICENSE.md</PackageLicense>
 		<PackageOutputPath>..\</PackageOutputPath>
 		<PackageTags>cache;caching;distributed;distributed-cache;memcached;enyim;enyim-memcached;enyim-caching;vieapps;vieapps.components</PackageTags>
-		<PackageReleaseNotes>Upgrade to latest components and do some improvements</PackageReleaseNotes>
+		<PackageReleaseNotes>Dynamic load a type from an external assembly in .NET Core</PackageReleaseNotes>
 		<PackageIconUrl>https://github.com/vieapps/Components.Utility/raw/master/logo.png</PackageIconUrl>
 		<PackageProjectUrl>https://github.com/vieapps/Enyim.Caching</PackageProjectUrl>
 		<RepositoryUrl>https://github.com/vieapps/Enyim.Caching</RepositoryUrl>
@@ -45,10 +45,12 @@
 		<PackageReference Include="Microsoft.Extensions.Caching.Abstractions" Version="2.2.0" />
 		<PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="2.2.0" />
 		<PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="2.2.0" />
+		<PackageReference Include="Microsoft.Extensions.DependencyModel" Version="2.1.0" />
 		<PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="2.2.0" />
 		<PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="2.2.0" />
 		<PackageReference Include="Microsoft.IO.RecyclableMemoryStream" Version="1.2.2" />
 		<PackageReference Include="System.Configuration.ConfigurationManager" Version="4.5.0" />
+		<PackageReference Include="System.Runtime.Loader" Version="4.3.0" />
 	</ItemGroup>
 
 </Project>

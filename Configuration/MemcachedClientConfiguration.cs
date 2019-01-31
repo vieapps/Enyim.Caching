@@ -1,9 +1,10 @@
 #region Related components
 using System;
+using System.Linq;
 using System.Net;
-using System.Collections.Generic;
-using System.Configuration;
 using System.Xml;
+using System.Configuration;
+using System.Collections.Generic;
 
 using Enyim.Reflection;
 using Enyim.Caching.Memcached;
@@ -50,11 +51,14 @@ namespace Enyim.Caching.Configuration
 
 			this.Protocol = configuration.Protocol;
 
-			foreach (var server in configuration.Servers)
-				if (server.Address.IndexOf(":") > 0)
-					this.AddServer(server.Address);
+			configuration.Servers.ForEach(server =>
+			{
+				var address = server.Address;
+				if ((address.IndexOf(".") > 0 && address.IndexOf(":") > 0) || (address.IndexOf(":") > 0 && address.IndexOf("]:") > 0))
+					this.AddServer(address);
 				else
-					this.AddServer(server.Address, server.Port);
+					this.AddServer(address, server.Port);
+			});
 
 			this.SocketPool = configuration.SocketPool;
 
@@ -139,7 +143,7 @@ namespace Enyim.Caching.Configuration
 				foreach (XmlNode server in servers)
 				{
 					var address = server.Attributes["address"]?.Value ?? "localhost";
-					if (address.IndexOf(":") > 0)
+					if ((address.IndexOf(".") > 0 && address.IndexOf(":") > 0) || (address.IndexOf(":") > 0 && address.IndexOf("]:") > 0))
 						this.AddServer(address);
 					else
 						this.AddServer(address, Int32.TryParse(server.Attributes["port"]?.Value ?? "11211", out int port) ? port : 11211);
@@ -278,7 +282,7 @@ namespace Enyim.Caching.Configuration
 		}
 
 		/// <summary>
-		/// Gets or sets the <see cref="Enyim.Caching.Memcached.ITranscoder"/> which will be used serialize or deserialize items.
+		/// Gets or sets the <see cref="ITranscoder"/> which will be used serialize or deserialize items.
 		/// </summary>
 		public ITranscoder Transcoder
 		{
@@ -287,7 +291,7 @@ namespace Enyim.Caching.Configuration
 		}
 
 		/// <summary>
-		/// Gets or sets the Type of the <see cref="Enyim.Caching.Memcached.INodeLocator"/> which will be used to assign items to Memcached nodes.
+		/// Gets or sets the Type of the <see cref="INodeLocator"/> which will be used to assign items to Memcached nodes.
 		/// </summary>
 		/// <remarks>If both <see cref="NodeLocator"/> and  <see cref="NodeLocatorFactory"/> are assigned then the latter takes precedence.</remarks>
 		public Type NodeLocator
@@ -306,15 +310,20 @@ namespace Enyim.Caching.Configuration
 		/// <remarks>If both <see cref="NodeLocator"/> and  <see cref="NodeLocatorFactory"/> are assigned then the latter takes precedence.</remarks>
 		public IProviderFactory<INodeLocator> NodeLocatorFactory { get; set; }
 
-		IList<EndPoint> IMemcachedClientConfiguration.Servers => this.Servers;
+		IList<EndPoint> IMemcachedClientConfiguration.Servers
+			=> this.Servers;
 
-		ISocketPoolConfiguration IMemcachedClientConfiguration.SocketPool => this.SocketPool;
+		ISocketPoolConfiguration IMemcachedClientConfiguration.SocketPool
+			=> this.SocketPool;
 
-		IAuthenticationConfiguration IMemcachedClientConfiguration.Authentication => this.Authentication;
+		IAuthenticationConfiguration IMemcachedClientConfiguration.Authentication
+			=> this.Authentication;
 
-		IKeyTransformer IMemcachedClientConfiguration.CreateKeyTransformer() => this.KeyTransformer;
+		IKeyTransformer IMemcachedClientConfiguration.CreateKeyTransformer()
+			=> this.KeyTransformer;
 
-		ITranscoder IMemcachedClientConfiguration.CreateTranscoder() => this.Transcoder;
+		ITranscoder IMemcachedClientConfiguration.CreateTranscoder()
+			=> this.Transcoder;
 
 		INodeLocator IMemcachedClientConfiguration.CreateNodeLocator()
 			=> this.NodeLocatorFactory != null
@@ -323,10 +332,12 @@ namespace Enyim.Caching.Configuration
 					? FastActivator.Create(this.NodeLocator) as INodeLocator ?? new DefaultNodeLocator() as INodeLocator
 					: this.Servers.Count > 1 ? new KetamaNodeLocator() as INodeLocator : new SingleNodeLocator() as INodeLocator;
 
-		IServerPool IMemcachedClientConfiguration.CreatePool() => this.Protocol.Equals(MemcachedProtocol.Text) ? new DefaultServerPool(this, new TextOperationFactory()) : new BinaryPool(this);
+		IServerPool IMemcachedClientConfiguration.CreatePool()
+			=> this.Protocol.Equals(MemcachedProtocol.Text)
+				? new DefaultServerPool(this, new TextOperationFactory())
+				: new BinaryPool(this);
 	}
 
-	#region Configuration helpers
 	public class MemcachedClientConfigurationSectionHandler : IConfigurationSectionHandler
 	{
 		public object Create(object parent, object configContext, XmlNode section)
@@ -363,14 +374,13 @@ namespace Enyim.Caching.Configuration
 
 		public int Port { get; set; }
 	}
-	#endregion
 
 }
 
 #region [ License information          ]
 /* ************************************************************
  * 
- *    © 2010 Attila Kiskó (aka Enyim), © 2016 CNBlogs, © 2018 VIEApps.net
+ *    © 2010 Attila Kiskó (aka Enyim), © 2016 CNBlogs, © 2019 VIEApps.net
  *    
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
