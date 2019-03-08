@@ -177,14 +177,13 @@ namespace Enyim.Caching.Memcached
 
 			var nodes = new IMemcachedNode[id.Servers.Length];
 			Array.Copy(id.Servers, nodes, nodes.Length);
-
 			return nodes;
 		}
 
 		static IMemcachedNode LocateNode(LookupData id, uint itemKeyHash)
 		{
 			// get the index of the server assigned to this hash
-			var index = Array.BinarySearch<uint>(id.keys, itemKeyHash);
+			var index = Array.BinarySearch(id.keys, itemKeyHash);
 
 			// no exact match
 			if (index < 0)

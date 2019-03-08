@@ -55,12 +55,12 @@ namespace Enyim.Caching.Memcached
 				var dnsEndPoint = endpoint as DnsEndPoint;
 				var host = dnsEndPoint.Host;
 				var addresses = Dns.GetHostAddresses(dnsEndPoint.Host);
-				var address = addresses.FirstOrDefault(ip => ip.AddressFamily == AddressFamily.InterNetwork);
+				var address = addresses.FirstOrDefault(ip => ip.AddressFamily == AddressFamily.InterNetwork || ip.AddressFamily == AddressFamily.InterNetworkV6);
 				if (address == null)
 					throw new ArgumentException($"Could not resolve host \"{host}\".");
 
 				endpoint = new IPEndPoint(address, dnsEndPoint.Port);
-				this._logger.Log(LogLevel.Debug, LogLevel.Debug, $"Resolved \"{host}\" to \"{address}\"");
+				this._logger.Log(LogLevel.Trace, LogLevel.Debug, $"Resolved \"{host}\" to \"{address}\"");
 			}
 
 			var completed = new AutoResetEvent(false);
@@ -94,7 +94,7 @@ namespace Enyim.Caching.Memcached
 				this.Receive(data, 0, available);
 				this._logger.Log(LogLevel.Debug, LogLevel.Warning, Encoding.UTF8.GetString(data.Length > 255 ? data.Take(255).ToArray() : data));
 			}
-			this._logger.Log(LogLevel.Debug, LogLevel.Debug, $"Socket was reset ({this.InstanceID})");
+			this._logger.Log(LogLevel.Trace, LogLevel.Debug, $"Socket was reset ({this.InstanceID})");
 		}
 
 		/// <summary>

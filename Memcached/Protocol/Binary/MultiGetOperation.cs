@@ -11,7 +11,7 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 {
 	public class MultiGetOperation : BinaryMultiItemOperation, IMultiGetOperation
 	{
-		ILogger _logger;
+		readonly ILogger _logger;
 
 		Dictionary<string, CacheItem> _result;
 		Dictionary<int, string> _idToKey;
@@ -23,9 +23,7 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 		Action<bool> _next;
 
 		public MultiGetOperation(IList<string> keys) : base(keys)
-		{
-			this._logger = Logger.CreateLogger<MultiGetOperation>();
-		}
+			=> this._logger = Logger.CreateLogger<MultiGetOperation>();
 
 		protected override BinaryRequest Build(string key)
 		{
@@ -40,9 +38,7 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 			var keys = this.Keys;
 			if (keys == null || keys.Count == 0)
 			{
-				if (this._logger.IsEnabled(LogLevel.Debug))
-					this._logger.LogWarning("Multi-Get: Empty multi-get (no key)");
-
+				this._logger.Log(LogLevel.Debug, LogLevel.Warning, "Multi-Get: Empty multi-get (no key)");
 				return new ArraySegment<byte>[0];
 			}
 
@@ -66,9 +62,7 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 			this._noopId = noop.CorrelationID;
 			noop.CreateBuffer(buffer);
 
-			if (this._logger.IsEnabled(LogLevel.Debug))
-				this._logger.LogInformation($"Multi-Get: Building {keys.Count} keys - Correlation ID: {noop.CorrelationID}");
-
+			this._logger.Log(LogLevel.Trace, LogLevel.Information, $"Multi-Get: Building {keys.Count} keys - Correlation ID: {noop.CorrelationID}");
 			return buffer;
 		}
 
@@ -85,7 +79,10 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 
 				// found the noop, quit
 				if (response.CorrelationID == this._noopId)
+				{
+					this._logger.Log(LogLevel.Trace, LogLevel.Debug, $"Multi-Get: Reading data is done - Correlation ID: {response.CorrelationID} - Key: {(this._idToKey.TryGetValue(response.CorrelationID, out string rkey) ? rkey : "N/A")}");
 					return result.Pass();
+				}
 
 				// find the key to the response
 				if (!this._idToKey.TryGetValue(response.CorrelationID, out string key))
@@ -99,9 +96,6 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 				var flags = BinaryConverter.DecodeInt32(response.Extra, 0);
 				this._result[key] = new CacheItem((ushort)flags, response.Data);
 				this.Cas[key] = response.CAS;
-
-				if (this._logger.IsEnabled(LogLevel.Debug))
-					this._logger.LogDebug($"Multi-Get: Reading data of '{key}' (ReadResponse) - CAS: {response.CAS} - Flags: {flags}");
 			}
 
 			// finished reading but we did not find the NOOP
@@ -121,7 +115,10 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 
 				// found the noop, quit
 				if (response.CorrelationID == this._noopId)
+				{
+					this._logger.Log(LogLevel.Trace, LogLevel.Debug, $"Multi-Get: Reading data is done (async) - Correlation ID: {response.CorrelationID} - Key: {(this._idToKey.TryGetValue(response.CorrelationID, out string rkey) ? rkey : "N/A")}");
 					return result.Pass();
+				}
 
 				// find the key to the response
 				if (!this._idToKey.TryGetValue(response.CorrelationID, out string key))
@@ -135,9 +132,6 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 				var flags = BinaryConverter.DecodeInt32(response.Extra, 0);
 				this._result[key] = new CacheItem((ushort)flags, response.Data);
 				this.Cas[key] = response.CAS;
-
-				if (this._logger.IsEnabled(LogLevel.Debug))
-					this._logger.LogDebug($"Multi-Get: Reading data of '{key}' (ReadResponseAsync) - CAS: {response.CAS} - Flags: {flags}");
 			}
 
 			// finished reading but we did not find the NOOP
@@ -206,21 +200,13 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 				var flags = (ushort)BinaryConverter.DecodeInt32(reader.Extra, 0);
 				this._result[key] = new CacheItem(flags, reader.Data);
 				this.Cas[key] = reader.CAS;
-
-				if (this._logger.IsEnabled(LogLevel.Debug))
-					this._logger.LogDebug($"Multi-Get: Reading data of '{key}' (ReadResponseAsync+StoreResult) - CAS: {reader.CAS} - Flags: {flags}");
+				this._logger.Log(LogLevel.Trace, LogLevel.Debug, $"Multi-Get: Reading data of '{key}' (ReadResponseAsync+StoreResult) - CAS: {reader.CAS} - Flags: {flags}");
 			}
 		}
 
-		public Dictionary<string, CacheItem> Result
-		{
-			get { return this._result; }
-		}
+		public Dictionary<string, CacheItem> Result => this._result;
 
-		Dictionary<string, CacheItem> IMultiGetOperation.Result
-		{
-			get { return this._result; }
-		}
+		Dictionary<string, CacheItem> IMultiGetOperation.Result => this._result;
 	}
 }
 

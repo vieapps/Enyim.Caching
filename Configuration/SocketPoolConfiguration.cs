@@ -9,7 +9,7 @@ namespace Enyim.Caching.Configuration
 		int _maxPoolSize = 20;
 		TimeSpan _connectionTimeout = new TimeSpan(0, 0, 10);
 		TimeSpan _receiveTimeout = new TimeSpan(0, 0, 10);
-		TimeSpan _deadTimeout = new TimeSpan(0, 0, 10);
+		TimeSpan _deadTimeout = new TimeSpan(0, 2, 0);
 		TimeSpan _queueTimeout = new TimeSpan(0, 0, 0, 0, 100);
 		INodeFailurePolicyFactory _policyFactory = new FailImmediatelyPolicyFactory();
 

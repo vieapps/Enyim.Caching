@@ -42,7 +42,8 @@ namespace Enyim.Caching.Memcached
 			catch { }
 		}
 
-		protected virtual IMemcachedNode CreateNode(EndPoint endpoint) => new MemcachedNode(endpoint, this._configuration.SocketPool);
+		protected virtual IMemcachedNode CreateNode(EndPoint endpoint)
+			=> new MemcachedNode(endpoint, this._configuration.SocketPool);
 
 		void OnResurrectCallback(object state)
 		{
@@ -148,14 +149,13 @@ namespace Enyim.Caching.Memcached
 				// when we have one, we trigger it and it will run after DeadTimeout has elapsed
 				if (!this._isTimerActive)
 				{
-					this._logger.Log(LogLevel.Debug, LogLevel.Debug, "Starting the recovery timer");
 					if (this._resurrectTimer == null)
 						this._resurrectTimer = new Timer(this.OnResurrectCallback, null, this._deadTimeoutMsec, Timeout.Infinite);
 					else
 						this._resurrectTimer.Change(this._deadTimeoutMsec, Timeout.Infinite);
 
 					this._isTimerActive = true;
-					this._logger.Log(LogLevel.Debug, LogLevel.Debug, "Recovery timer is started");
+					this._logger.Log(LogLevel.Debug, LogLevel.Information, " =====> Recovery timer is started");
 				}
 			}
 		}
@@ -178,11 +178,8 @@ namespace Enyim.Caching.Memcached
 				})
 				.ToArray();
 
-			// initialize the locator
-			var locator = this._configuration.CreateNodeLocator();
-			locator.Initialize(this._allNodes);
-
-			this._nodeLocator = locator;
+			this._nodeLocator = this._configuration.CreateNodeLocator();
+			this._nodeLocator.Initialize(this._allNodes);
 		}
 
 		event Action<IMemcachedNode> IServerPool.NodeFailed

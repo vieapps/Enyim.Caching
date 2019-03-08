@@ -81,7 +81,11 @@ namespace Enyim.Caching
 			this.ConcatOperationResultFactory = new DefaultConcatOperationResultFactory();
 			this.RemoveOperationResultFactory = new DefaultRemoveOperationResultFactory();
 
-			this._logger.Log(LogLevel.Debug, LogLevel.Debug, "The memcached client's instance was created");
+			if (this._logger.IsEnabled(LogLevel.Debug))
+			{
+				var nodes = this.Pool.GetWorkingNodes().ToList();
+				this._logger.LogDebug($"The memcached client's instance was created - {nodes.Count} server(s) => {string.Join(" - ", nodes.Select(node => node.EndPoint))}");
+			}
 		}
 
 		#region Get instance (singleton)

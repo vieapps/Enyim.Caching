@@ -47,34 +47,30 @@ namespace Enyim.Collections
 				tail = this.tailNode;
 				next = head.Next;
 
-				// Are head, tail, and next consistent?
+				// are head, tail, and next consistent?
 				if (object.ReferenceEquals(this.headNode, head))
 				{
 					// is tail falling behind
 					if (object.ReferenceEquals(head, tail))
 					{
 						// is the queue empty?
-						if (object.ReferenceEquals(next, null))
+						if (next == null)
 						{
-							value = default(T);
-							// queue is empty and cannot dequeue
-							return false;
+							value = default(T);							
+							return false; // queue is empty and cannot dequeue
 						}
-
 						Interlocked.CompareExchange<Node>(ref this.tailNode, next, tail);
 					}
 
-					// No need to deal with tail
+					// no need to deal with tail
 					else
 					{
 						// read value before CAS otherwise another deque might try to free the next node
 						value = next.Value;
 
 						// try to swing the head to the next node
-						if (Interlocked.CompareExchange<Node>(ref this.headNode, next, head) == head)
-						{
+						if (Interlocked.CompareExchange(ref this.headNode, next, head) == head)
 							return true;
-						}
 					}
 				}
 			}
@@ -354,9 +350,9 @@ namespace Enyim.Caching
 
 				case LogLevel.Warning:
 					if (exception != null)
-						logger.LogError(exception, message);
+						logger.LogWarning(exception, message);
 					else
-						logger.LogError(message);
+						logger.LogWarning(message);
 					break;
 
 				case LogLevel.Error:
