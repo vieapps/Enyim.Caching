@@ -53,7 +53,8 @@ namespace Enyim.Caching
 		/// </summary>
 		/// <param name="configuration"></param>
 		/// <param name="loggerFactory"></param>
-		public MemcachedClient(MemcachedClientConfigurationSectionHandler configuration, ILoggerFactory loggerFactory = null) : this(loggerFactory, configuration == null ? null : new MemcachedClientConfiguration(loggerFactory, configuration)) { }
+		public MemcachedClient(MemcachedClientConfigurationSectionHandler configuration, ILoggerFactory loggerFactory = null)
+			: this(loggerFactory, configuration == null ? null : new MemcachedClientConfiguration(loggerFactory, configuration)) { }
 
 		/// <summary>
 		/// Initializes a new instance of Memcached client (using configuration section of appsettings.json file)
@@ -84,7 +85,7 @@ namespace Enyim.Caching
 			if (this._logger.IsEnabled(LogLevel.Debug))
 			{
 				var nodes = this.Pool.GetWorkingNodes().ToList();
-				this._logger.LogDebug($"The memcached client's instance was created - {nodes.Count} server(s) => {string.Join(" - ", nodes.Select(node => node.EndPoint))}");
+				this._logger.LogDebug($"The memcached client's instance was created - {nodes.Count} node(s) => {string.Join(" - ", nodes.Select(node => node.EndPoint))}");
 			}
 		}
 

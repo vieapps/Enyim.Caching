@@ -2,9 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-
 using Enyim.Caching.Memcached.Results;
-
 using Microsoft.Extensions.Logging;
 
 namespace Enyim.Caching.Memcached.Protocol.Binary
@@ -13,7 +11,6 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 	{
 		readonly ILogger _logger;
 
-		Dictionary<string, CacheItem> _result;
 		Dictionary<int, string> _idToKey;
 		int _noopId;
 
@@ -68,10 +65,11 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 
 		protected internal override IOperationResult ReadResponse(PooledSocket socket)
 		{
-			this._result = new Dictionary<string, CacheItem>();
+			this.Result = new Dictionary<string, CacheItem>();
 			this.Cas = new Dictionary<string, ulong>();
 			var result = new TextOperationResult();
 
+			string key = null;
 			var response = new BinaryResponse();
 			while (response.Read(socket))
 			{
@@ -80,12 +78,12 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 				// found the noop, quit
 				if (response.CorrelationID == this._noopId)
 				{
-					this._logger.Log(LogLevel.Trace, LogLevel.Debug, $"Multi-Get: Reading data is done - Correlation ID: {response.CorrelationID} - Key: {(this._idToKey.TryGetValue(response.CorrelationID, out string rkey) ? rkey : "N/A")}");
+					this._logger.Log(LogLevel.Trace, LogLevel.Debug, $"Multi-Get: Reading data is done - Correlation ID: {response.CorrelationID} - Key: {key ?? "N/A"}");
 					return result.Pass();
 				}
 
 				// find the key to the response
-				if (!this._idToKey.TryGetValue(response.CorrelationID, out string key))
+				if (!this._idToKey.TryGetValue(response.CorrelationID, out key))
 				{
 					// we're not supposed to get here
 					this._logger.LogWarning($"Multi-Get: Found response with correlation ID ({response.CorrelationID}), but no key is matching it");
@@ -94,7 +92,7 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 
 				// deserialize the response
 				var flags = BinaryConverter.DecodeInt32(response.Extra, 0);
-				this._result[key] = new CacheItem((ushort)flags, response.Data);
+				this.Result[key] = new CacheItem((ushort)flags, response.Data);
 				this.Cas[key] = response.CAS;
 			}
 
@@ -104,10 +102,11 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 
 		protected internal override async Task<IOperationResult> ReadResponseAsync(PooledSocket socket, CancellationToken cancellationToken = default(CancellationToken))
 		{
-			this._result = new Dictionary<string, CacheItem>();
+			this.Result = new Dictionary<string, CacheItem>();
 			this.Cas = new Dictionary<string, ulong>();
 			var result = new TextOperationResult();
 
+			string key = null;
 			var response = new BinaryResponse();
 			while (await response.ReadAsync(socket, cancellationToken).ConfigureAwait(false))
 			{
@@ -116,12 +115,12 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 				// found the noop, quit
 				if (response.CorrelationID == this._noopId)
 				{
-					this._logger.Log(LogLevel.Trace, LogLevel.Debug, $"Multi-Get: Reading data is done (async) - Correlation ID: {response.CorrelationID} - Key: {(this._idToKey.TryGetValue(response.CorrelationID, out string rkey) ? rkey : "N/A")}");
+					this._logger.Log(LogLevel.Trace, LogLevel.Debug, $"Multi-Get: Reading data is done (async) - Correlation ID: {response.CorrelationID} - Key: {key ?? "N/A"}");
 					return result.Pass();
 				}
 
 				// find the key to the response
-				if (!this._idToKey.TryGetValue(response.CorrelationID, out string key))
+				if (!this._idToKey.TryGetValue(response.CorrelationID, out key))
 				{
 					// we're not supposed to get here
 					this._logger.LogWarning($"Multi-Get: Found response with correlation ID ({response.CorrelationID}), but no key is matching it");
@@ -130,7 +129,7 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 
 				// deserialize the response
 				var flags = BinaryConverter.DecodeInt32(response.Extra, 0);
-				this._result[key] = new CacheItem((ushort)flags, response.Data);
+				this.Result[key] = new CacheItem((ushort)flags, response.Data);
 				this.Cas[key] = response.CAS;
 			}
 
@@ -141,7 +140,7 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 		protected internal override bool ReadResponseAsync(PooledSocket socket, Action<bool> next)
 		{
 			this.Cas = new Dictionary<string, ulong>();
-			this._result = new Dictionary<string, CacheItem>();
+			this.Result = new Dictionary<string, CacheItem>();
 
 			this._socket = socket;
 			this._response = new BinaryResponse();
@@ -198,15 +197,15 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 			{
 				// deserialize the response
 				var flags = (ushort)BinaryConverter.DecodeInt32(reader.Extra, 0);
-				this._result[key] = new CacheItem(flags, reader.Data);
+				this.Result[key] = new CacheItem(flags, reader.Data);
 				this.Cas[key] = reader.CAS;
 				this._logger.Log(LogLevel.Trace, LogLevel.Debug, $"Multi-Get: Reading data of '{key}' (ReadResponseAsync+StoreResult) - CAS: {reader.CAS} - Flags: {flags}");
 			}
 		}
 
-		public Dictionary<string, CacheItem> Result => this._result;
+		public Dictionary<string, CacheItem> Result { get; private set; }
 
-		Dictionary<string, CacheItem> IMultiGetOperation.Result => this._result;
+		Dictionary<string, CacheItem> IMultiGetOperation.Result => this.Result;
 	}
 }
 

@@ -141,13 +141,14 @@ namespace Enyim.Caching.Configuration
 
 			if (configuration.Section.SelectNodes("servers/add") is XmlNodeList servers)
 				foreach (XmlNode server in servers)
-				{
-					var address = server.Attributes["address"]?.Value ?? "localhost";
-					if ((address.IndexOf(".") > 0 && address.IndexOf(":") > 0) || (address.IndexOf(":") > 0 && address.IndexOf("]:") > 0))
-						this.AddServer(address);
-					else
-						this.AddServer(address, Int32.TryParse(server.Attributes["port"]?.Value ?? "11211", out int port) ? port : 11211);
-				}
+					if ("memcached".Equals((server.Attributes["type"]?.Value ?? "Memcached").Trim().ToLower()))
+					{
+						var address = server.Attributes["address"]?.Value ?? "localhost";
+						if ((address.IndexOf(".") > 0 && address.IndexOf(":") > 0) || (address.IndexOf(":") > 0 && address.IndexOf("]:") > 0))
+							this.AddServer(address);
+						else
+							this.AddServer(address, Int32.TryParse(server.Attributes["port"]?.Value ?? "11211", out int port) ? port : 11211);
+					}
 
 			this.SocketPool = new SocketPoolConfiguration();
 			if (configuration.Section.SelectSingleNode("socketPool") is XmlNode socketpool)
