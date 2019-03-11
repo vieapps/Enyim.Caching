@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-
 using Enyim.Caching.Memcached;
 using Enyim.Caching.Memcached.Results;
 

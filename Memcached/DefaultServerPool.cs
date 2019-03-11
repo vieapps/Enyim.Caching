@@ -3,10 +3,8 @@ using System.Linq;
 using System.Net;
 using System.Collections.Generic;
 using System.Threading;
-
-using Enyim.Caching.Configuration;
-
 using Microsoft.Extensions.Logging;
+using Enyim.Caching.Configuration;
 
 namespace Enyim.Caching.Memcached
 {

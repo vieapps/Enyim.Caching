@@ -244,14 +244,16 @@ namespace Enyim.Caching.Configuration
 		/// Adds a new server to the pool.
 		/// </summary>
 		/// <param name="address">The address and the port of the server in the format 'host:port'.</param>
-		public void AddServer(string address) => this.Servers.Add(ConfigurationHelper.ResolveToEndPoint(address));
+		public void AddServer(string address)
+			=> this.Servers.Add(ConfigurationHelper.ResolveToEndPoint(address));
 
 		/// <summary>
 		/// Adds a new server to the pool.
 		/// </summary>
 		/// <param name="address">The host name or IP address of the server.</param>
 		/// <param name="port">The port number of the memcached instance.</param>
-		public void AddServer(string address, int port) => this.Servers.Add(ConfigurationHelper.ResolveToEndPoint(address, port));
+		public void AddServer(string address, int port)
+			=> this.Servers.Add(ConfigurationHelper.ResolveToEndPoint(address, port));
 
 		/// <summary>
 		/// Gets a list of <see cref="IPEndPoint"/> each representing a Memcached server in the pool.
@@ -274,7 +276,7 @@ namespace Enyim.Caching.Configuration
 		public IAuthenticationConfiguration Authentication { get; internal set; }
 
 		/// <summary>
-		/// Gets or sets the <see cref="Enyim.Caching.Memcached.IKeyTransformer"/> which will be used to convert item keys for Memcached.
+		/// Gets or sets the <see cref="IKeyTransformer"/> which will be used to convert item keys for Memcached.
 		/// </summary>
 		public IKeyTransformer KeyTransformer
 		{

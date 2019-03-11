@@ -2,11 +2,9 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-
 using Enyim.Caching.Memcached;
 using Enyim.Caching.Memcached.Results;
 using Enyim.Caching.Memcached.Results.Factories;
-
 using CacheUtils;
 #endregion
 

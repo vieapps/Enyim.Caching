@@ -8,18 +8,19 @@ namespace Enyim.Caching.Memcached
 	/// </summary>
 	public class DefaultTranscoder : ITranscoder
 	{
-		protected virtual ArraySegment<byte> SerializeObject(object value) => new ArraySegment<byte>(CacheUtils.Helper.Serialize(value).Item2);
+		protected virtual ArraySegment<byte> SerializeObject(object value)
+			=> new ArraySegment<byte>(CacheUtils.Helper.Serialize(value).Item2);
 
 		protected virtual CacheItem Serialize(object value)
 		{
 			// ArraySegment<byte> is only passed in when a part of buffer is being serialized,
 			// usually from a MemoryStream (to avoid duplicating arrays, the byte[] returned by MemoryStream.GetBuffer is placed into an ArraySegment)
 			if (value != null && value is ArraySegment<byte>)
-				return new CacheItem(CacheUtils.Helper.FlagOfRawData, (ArraySegment<byte>)value);
+				return new CacheItem(flags: CacheUtils.Helper.FlagOfRawData, data: (ArraySegment<byte>)value);
 
 			// or we just received a byte[], means no further processing is needed
 			else if (value != null && value is byte[])
-				return new CacheItem(CacheUtils.Helper.FlagOfRawData, new ArraySegment<byte>(value as byte[]));
+				return new CacheItem(flags: CacheUtils.Helper.FlagOfRawData, data: new ArraySegment<byte>(value as byte[]));
 
 			// serialize object
 			else
@@ -28,20 +29,22 @@ namespace Enyim.Caching.Memcached
 
 				// object
 				if (typeCode.Equals(TypeCode.Object))
-					return new CacheItem((uint)((int)TypeCode.Object | 0x0100), this.SerializeObject(value));
+					return new CacheItem(flags: (uint)((int)TypeCode.Object | 0x0100), data: this.SerializeObject(value));
 
 				// primitive
 				else
 				{
 					var data = CacheUtils.Helper.Serialize(value);
-					return new CacheItem((uint)data.Item1, new ArraySegment<byte>(data.Item2));
+					return new CacheItem(flags: (uint)data.Item1, data: new ArraySegment<byte>(data.Item2));
 				}
 			}
 		}
 
-		CacheItem ITranscoder.Serialize(object value) => this.Serialize(value);
+		CacheItem ITranscoder.Serialize(object value)
+			=> this.Serialize(value);
 
-		protected virtual object DeserializeObject(ArraySegment<byte> value) => CacheUtils.Helper.Deserialize(value.Array, (int)TypeCode.Object | 0x0100, value.Offset, value.Count);
+		protected virtual object DeserializeObject(ArraySegment<byte> value)
+			=> CacheUtils.Helper.Deserialize(value.Array, (int)TypeCode.Object | 0x0100, value.Offset, value.Count);
 
 		protected virtual object Deserialize(CacheItem item)
 		{

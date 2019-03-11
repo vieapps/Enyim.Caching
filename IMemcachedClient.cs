@@ -2,7 +2,6 @@
 using System.Threading;
 using System.Threading.Tasks;
 using System.Collections.Generic;
-
 using Enyim.Caching.Memcached;
 using Enyim.Caching.Memcached.Results;
 

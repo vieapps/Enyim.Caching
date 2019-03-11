@@ -6,16 +6,13 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using System.Collections.Concurrent;
-
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Caching.Distributed;
+using Microsoft.Extensions.DependencyInjection;
 using Enyim.Caching.Configuration;
 using Enyim.Caching.Memcached;
 using Enyim.Caching.Memcached.Results;
 using Enyim.Caching.Memcached.Results.Factories;
-
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Caching.Distributed;
-using Microsoft.Extensions.DependencyInjection;
-
 using CacheUtils;
 #endregion
 
@@ -92,7 +89,8 @@ namespace Enyim.Caching
 		#region Get instance (singleton)
 		static MemcachedClient _Instance = null;
 
-		internal static MemcachedClient GetInstance(IServiceProvider svcProvider) => MemcachedClient._Instance ?? (MemcachedClient._Instance = new MemcachedClient(svcProvider.GetService<ILoggerFactory>(), svcProvider.GetService<IMemcachedClientConfiguration>()));
+		internal static MemcachedClient GetInstance(IServiceProvider svcProvider)
+			=> MemcachedClient._Instance ?? (MemcachedClient._Instance = new MemcachedClient(svcProvider.GetService<ILoggerFactory>(), svcProvider.GetService<IMemcachedClientConfiguration>()));
 		#endregion
 
 		#region Store

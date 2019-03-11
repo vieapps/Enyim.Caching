@@ -3,23 +3,19 @@ using System.Linq;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-
-using Enyim.Caching.Memcached.Results;
-
 using Microsoft.Extensions.Logging;
+using Enyim.Caching.Memcached.Results;
 
 namespace Enyim.Caching.Memcached.Protocol.Text
 {
 	public class MultiGetOperation : MultiItemOperation, IMultiGetOperation
 	{
-		ILogger _logger;
+		readonly ILogger _logger;
 
 		Dictionary<string, CacheItem> _result;
 
 		public MultiGetOperation(IList<string> keys) : base(keys)
-		{
-			this._logger = Logger.CreateLogger<MultiGetOperation>();
-		}
+			=> this._logger = Logger.CreateLogger<MultiGetOperation>();
 
 		protected internal override IList<ArraySegment<byte>> GetBuffer()
 		{
@@ -29,7 +25,7 @@ namespace Enyim.Caching.Memcached.Protocol.Text
 
 		Dictionary<string, CacheItem> IMultiGetOperation.Result
 		{
-			get { return this._result; }
+			get => this._result;
 		}
 
 		protected internal override IOperationResult ReadResponse(PooledSocket socket)
@@ -97,9 +93,7 @@ namespace Enyim.Caching.Memcached.Protocol.Text
 		}
 
 		protected internal override bool ReadResponseAsync(PooledSocket socket, Action<bool> next)
-		{
-			throw new NotSupportedException();
-		}
+			=> throw new NotSupportedException();
 	}
 }
 

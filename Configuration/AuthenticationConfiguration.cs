@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-
 using Enyim.Caching.Memcached;
 
 namespace Enyim.Caching.Configuration
@@ -12,7 +11,7 @@ namespace Enyim.Caching.Configuration
 
 		public string Type
 		{
-			get { return this._type; }
+			get => this._type;
 			set
 			{
 				if (!string.IsNullOrWhiteSpace(value))
@@ -23,10 +22,7 @@ namespace Enyim.Caching.Configuration
 
 		public Dictionary<string, object> Parameters
 		{
-			get
-			{
-				return this._parameters ?? (this._parameters = new Dictionary<string, object>());
-			}
+			get => this._parameters ?? (this._parameters = new Dictionary<string, object>());
 		}
 	}
 }
