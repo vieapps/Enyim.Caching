@@ -11,14 +11,14 @@
 		<AssemblyTitle>Enyim Memcached</AssemblyTitle>
 		<SignAssembly>false</SignAssembly>
 		<AssemblyOriginatorKeyFile>../VIEApps.Components.snk</AssemblyOriginatorKeyFile>
-		<AssemblyVersion>1.6.1902.1</AssemblyVersion>
-		<FileVersion>1.6.1902.1</FileVersion>
-		<InformationalVersion>v1.6.netstandard-2+rev:2019.01.31-assembly.loader.net.core</InformationalVersion>
+		<AssemblyVersion>1.6.1904.1</AssemblyVersion>
+		<FileVersion>1.6.1904.1</FileVersion>
+		<InformationalVersion>v1.6.netstandard-2+rev:2019.03.29-assembly.loader.net.core</InformationalVersion>
 		<Product>Enyim Memcached</Product>
 		<Company>VIEApps.net</Company>
 		<GeneratePackageOnBuild>false</GeneratePackageOnBuild>
 		<PackageId>VIEApps.Enyim.Caching</PackageId>
-		<Version>1.6.1902.1</Version>
+		<Version>1.6.1904.1</Version>
 		<Title>Enyim Memcached</Title>
 		<Description>The memcached client library, fully async with various transcoders (binary formatter, bson, protobuf, msgpack) on .NET Standard 2.0</Description>
 		<Authors>VIEApps.net</Authors>
@@ -26,7 +26,7 @@
 		<PackageLicense>LICENSE.md</PackageLicense>
 		<PackageOutputPath>..\</PackageOutputPath>
 		<PackageTags>cache;caching;distributed;distributed-cache;memcached;enyim;enyim-memcached;enyim-caching;vieapps;vieapps.components</PackageTags>
-		<PackageReleaseNotes>Dynamic load a type from an external assembly in .NET Core</PackageReleaseNotes>
+		<PackageReleaseNotes>Refactoring: add methods to dynamic load a type from an external assembly in .NET Core</PackageReleaseNotes>
 		<PackageIconUrl>https://github.com/vieapps/Components.Utility/raw/master/logo.png</PackageIconUrl>
 		<PackageProjectUrl>https://github.com/vieapps/Enyim.Caching</PackageProjectUrl>
 		<RepositoryUrl>https://github.com/vieapps/Enyim.Caching</RepositoryUrl>
