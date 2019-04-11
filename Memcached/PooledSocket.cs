@@ -94,7 +94,7 @@ namespace Enyim.Caching.Memcached
 				this.Receive(data, 0, available);
 				this._logger.Log(LogLevel.Debug, LogLevel.Warning, Encoding.UTF8.GetString(data.Length > 255 ? data.Take(255).ToArray() : data));
 			}
-			this._logger.Log(LogLevel.Trace, LogLevel.Debug, $"Socket was reset ({this.InstanceID})");
+			this._logger.Log(LogLevel.Trace, LogLevel.Debug, $"Socket was reset ({this._endpoint} => {this.InstanceID})");
 		}
 
 		/// <summary>
@@ -108,7 +108,8 @@ namespace Enyim.Caching.Memcached
 		/// Releases all resources used by this instance and shuts down the inner <see cref="Socket"/>. This instance will not be usable anymore.
 		/// </summary>
 		/// <remarks>Use the IDisposable.Dispose method if you want to release this instance back into the pool.</remarks>
-		public void Destroy() => this.Dispose(true);
+		public void Destroy()
+			=> this.Dispose(true);
 
 		~PooledSocket()
 		{

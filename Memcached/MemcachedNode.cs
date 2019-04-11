@@ -35,14 +35,14 @@ namespace Enyim.Caching.Memcached
 		public event Action<IMemcachedNode> Failed = null;
 		#endregion
 
-		public MemcachedNode(EndPoint endpoint, ISocketPoolConfiguration socketPoolConfig)
+		public MemcachedNode(EndPoint endpoint, ISocketPoolConfiguration config)
 		{
-			if (socketPoolConfig.ConnectionTimeout.TotalMilliseconds >= Int32.MaxValue)
+			if (config.ConnectionTimeout.TotalMilliseconds >= Int32.MaxValue)
 				throw new InvalidOperationException($"ConnectionTimeout must be < {Int32.MaxValue}");
 
 			this._logger = Logger.CreateLogger<IMemcachedNode>();
 			this._endpoint = endpoint;
-			this._config = socketPoolConfig;
+			this._config = config;
 			this._internalPoolImpl = new InternalPoolImpl(this, this._config);
 		}
 
@@ -51,7 +51,10 @@ namespace Enyim.Caching.Memcached
 		/// <summary>
 		/// Gets the <see cref="IPEndPoint"/> of this instance
 		/// </summary>
-		public EndPoint EndPoint { get => this._endpoint; }
+		public EndPoint EndPoint
+		{
+			get => this._endpoint;
+		}
 
 		/// <summary>
 		/// <para>Gets a value indicating whether the server is working or not. Returns a <b>cached</b> state.</para>
@@ -68,7 +71,7 @@ namespace Enyim.Caching.Memcached
 		public bool Ping()
 		{
 			// is the server working?
-			if (this._internalPoolImpl.IsAlive)
+			if (this.IsAlive)
 				return true;
 
 			// this codepath is (should be) called very rarely
@@ -88,7 +91,7 @@ namespace Enyim.Caching.Memcached
 						this._logger.Log(LogLevel.Debug, LogLevel.Debug, $"Try to connect to the memcached server: {this.EndPoint}");
 					}
 
-					if (this._internalPoolImpl.IsAlive)
+					if (this.IsAlive)
 						return true;
 
 					// it's easier to create a new pool than reinitializing a dead one
@@ -321,7 +324,7 @@ namespace Enyim.Caching.Memcached
 
 				// free item pool is empty
 				message = $"Could not get a socket from the pool => create new ({this._endpoint})";
-				this._logger.Log(LogLevel.Debug, LogLevel.Warning, message);
+				this._logger.Log(LogLevel.Trace, LogLevel.Warning, message);
 
 				try
 				{
@@ -469,13 +472,7 @@ namespace Enyim.Caching.Memcached
 					var startTime = DateTime.Now;
 					var socket = result.Value;
 					socket.Send(op.GetBuffer());
-
-					if (this._logger.IsEnabled(LogLevel.Debug))
-					{
-						var duration = (DateTime.Now - startTime).TotalMilliseconds;
-						if (duration > 50)
-							this._logger.LogWarning($"Cost for writting into socket when execute operation: {duration}ms");
-					}
+					this._logger.Log(LogLevel.Trace, LogLevel.Warning, $"Cost for writting into socket when execute operation: {(DateTime.Now - startTime).TotalMilliseconds}ms");
 
 					var readResult = op.ReadResponse(socket);
 					if (readResult.Success)
@@ -510,13 +507,7 @@ namespace Enyim.Caching.Memcached
 					var startTime = DateTime.Now;
 					var socket = result.Value;
 					await socket.SendAsync(op.GetBuffer(), cancellationToken).ConfigureAwait(false);
-
-					if (this._logger.IsEnabled(LogLevel.Debug))
-					{
-						var duration = (DateTime.Now - startTime).TotalMilliseconds;
-						if (duration > 50)
-							this._logger.LogWarning($"Cost for writting into socket when execute operation (async): {duration}ms");
-					}
+					this._logger.Log(LogLevel.Trace, LogLevel.Warning, $"Cost for writting into socket when execute operation (async): {(DateTime.Now - startTime).TotalMilliseconds}ms");
 
 					var readResult = await op.ReadResponseAsync(socket, cancellationToken).ConfigureAwait(false);
 					if (readResult.Success)

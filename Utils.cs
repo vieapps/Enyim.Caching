@@ -96,7 +96,8 @@ namespace CacheUtils
 		/// </summary>
 		/// <param name="key"></param>
 		/// <returns></returns>
-		public static string GetIDistributedCacheExpirationKey(this string key) => $"i-distributed-cache#{key}";
+		public static string GetIDistributedCacheExpirationKey(this string key)
+			=> $"i-distributed-cache#{key}";
 
 		/// <summary>
 		/// Combines arrays of bytes

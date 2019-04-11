@@ -11,7 +11,6 @@ namespace Enyim.Caching.Memcached
 	{
 		IMemcachedNode _node;
 		bool _isInitialized;
-		object _locker = new Object();
 
 		void INodeLocator.Initialize(IList<IMemcachedNode> nodes)
 		{
@@ -21,18 +20,14 @@ namespace Enyim.Caching.Memcached
 		}
 
 		IMemcachedNode INodeLocator.Locate(string key)
-		{
-			return !this._isInitialized
+			=> !this._isInitialized
 				? throw new InvalidOperationException("You must call Initialize first")
 				: this._node;
-		}
 
 		IEnumerable<IMemcachedNode> INodeLocator.GetWorkingNodes()
-		{
-			return this._node.IsAlive
+			=> this._node.IsAlive
 				? new IMemcachedNode[] { this._node }
 				: Enumerable.Empty<IMemcachedNode>();
-		}
 	}
 }
 

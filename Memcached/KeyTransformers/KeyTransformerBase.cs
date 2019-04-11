@@ -5,9 +5,7 @@ namespace Enyim.Caching.Memcached
 		public abstract string Transform(string key);
 
 		string IKeyTransformer.Transform(string key)
-		{
-			return this.Transform(key);
-		}
+			=> this.Transform(key);
 	}
 }
 

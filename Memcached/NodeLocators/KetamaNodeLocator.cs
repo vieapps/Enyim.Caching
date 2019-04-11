@@ -27,7 +27,6 @@ namespace Enyim.Caching.Memcached
 			{ "oneatatime", () => new HashkitOneAtATime() }
 		};
 
-
 		LookupData _lookupData;
 		readonly string _hashName;
 		readonly Func<HashAlgorithm> _hashFactory;

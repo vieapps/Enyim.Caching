@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-
 namespace Enyim.Caching
 {
 	/// <summary>
@@ -7,15 +6,9 @@ namespace Enyim.Caching
 	/// </summary>
 	public sealed class UIntEqualityComparer : IEqualityComparer<uint>
 	{
-		bool IEqualityComparer<uint>.Equals(uint x, uint y)
-		{
-			return x == y;
-		}
+		bool IEqualityComparer<uint>.Equals(uint x, uint y) => x == y;
 
-		int IEqualityComparer<uint>.GetHashCode(uint value)
-		{
-			return value.GetHashCode();
-		}
+		int IEqualityComparer<uint>.GetHashCode(uint value) => value.GetHashCode();
 	}
 }
 

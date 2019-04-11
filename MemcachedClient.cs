@@ -134,7 +134,7 @@ namespace Enyim.Caching
 					if (this._logger.IsEnabled(LogLevel.Debug))
 					{
 						if (result.Message.StartsWith("Too large."))
-							this._logger.LogWarning(result.Exception, $"Failed to execute Store command: Object too large to cache");
+							this._logger.LogWarning(result.Exception, $"Failed to execute Store command: Object too large => {item.Data.Count:###,###,##0} bytes ({key})");
 						else
 							this._logger.LogDebug(result.Exception, $"Failed to execute Store command: {result.Message}");
 					}
@@ -236,7 +236,7 @@ namespace Enyim.Caching
 					if (this._logger.IsEnabled(LogLevel.Debug))
 					{
 						if (result.Message.StartsWith("Too large."))
-							this._logger.LogWarning(result.Exception, $"Failed to execute Store command: Object too large to cache");
+							this._logger.LogWarning(result.Exception, $"Failed to execute Store command: Object too large => {item.Data.Count:###,###,##0} bytes ({key})");
 						else
 							this._logger.LogDebug(result.Exception, $"Failed to execute Store command: {result.Message}");
 					}
@@ -284,7 +284,7 @@ namespace Enyim.Caching
 			=> (await this.PerformStoreAsync(mode, key, value, expiresAt.GetExpiration(), 0, cancellationToken).ConfigureAwait(false)).Success;
 		#endregion
 
-		#region CAS (Check And Set)
+		#region CAS (Check And Store)
 		/// <summary>
 		/// Inserts an item into the cache with a cache key to reference its location and returns its version.
 		/// </summary>

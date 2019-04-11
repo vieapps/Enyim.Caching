@@ -463,7 +463,7 @@ namespace Enyim.Caching
 					var assemblyPaths = new List<string>();
 					this.AssemblyResolver.TryResolveAssemblyPaths(compilationLib, assemblyPaths);
 					if (assemblyPaths.Count > 0)
-						return this.LoadContext.LoadFromAssemblyPath(assemblyPaths[0]);
+						return loadContext.LoadFromAssemblyPath(assemblyPaths[0]);
 				}
 				return null;
 			};

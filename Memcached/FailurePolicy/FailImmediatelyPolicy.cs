@@ -5,10 +5,7 @@
 	/// </summary>
 	public sealed class FailImmediatelyPolicy : INodeFailurePolicy
 	{
-		bool INodeFailurePolicy.ShouldFail()
-		{
-			return true;
-		}
+		bool INodeFailurePolicy.ShouldFail() => true;
 	}
 
 	/// <summary>
@@ -16,12 +13,9 @@
 	/// </summary>
 	public class FailImmediatelyPolicyFactory : INodeFailurePolicyFactory
 	{
-		private static readonly INodeFailurePolicy PolicyInstance = new FailImmediatelyPolicy();
+		static readonly INodeFailurePolicy PolicyInstance = new FailImmediatelyPolicy();
 
-		INodeFailurePolicy INodeFailurePolicyFactory.Create(IMemcachedNode node)
-		{
-			return PolicyInstance;
-		}
+		INodeFailurePolicy INodeFailurePolicyFactory.Create(IMemcachedNode node) => PolicyInstance;
 	}
 }
 

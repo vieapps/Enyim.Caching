@@ -8,9 +8,6 @@ namespace Enyim.Caching.Memcached
 	/// </summary>
 	public struct CacheItem
 	{
-		ArraySegment<byte> data;
-		uint flags;
-
 		/// <summary>
 		/// Initializes a new instance of <see cref="CacheItem"/>.
 		/// </summary>
@@ -18,27 +15,19 @@ namespace Enyim.Caching.Memcached
 		/// <param name="data">The serialized item.</param>
 		public CacheItem(uint flags, ArraySegment<byte> data)
 		{
-			this.data = data;
-			this.flags = flags;
+			this.Data = data;
+			this.Flags = flags;
 		}
 
 		/// <summary>
 		/// The data representing the item being stored/retireved.
 		/// </summary>
-		public ArraySegment<byte> Data
-		{
-			get { return this.data; }
-			set { this.data = value; }
-		}
+		public ArraySegment<byte> Data { get; set; }
 
 		/// <summary>
 		/// Flags set for this instance.
 		/// </summary>
-		public uint Flags
-		{
-			get { return this.flags; }
-			set { this.flags = value; }
-		}
+		public uint Flags { get; set; }
 	}
 }
 

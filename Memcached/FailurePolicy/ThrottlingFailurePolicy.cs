@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-
 using Enyim.Caching.Configuration;
-
 using Microsoft.Extensions.Logging;
 
 namespace Enyim.Caching.Memcached
@@ -12,10 +10,10 @@ namespace Enyim.Caching.Memcached
 	/// </summary>
 	public class ThrottlingFailurePolicy : INodeFailurePolicy
 	{
-		ILogger _logger;
-		bool _isDebugEnabled = false;
-
-		int resetAfter, failureThreshold, failCounter;
+		readonly ILogger _logger;
+		readonly int resetAfter;
+		readonly int failureThreshold;
+		int failCounter;
 		DateTime lastFailed;
 
 		/// <summary>
@@ -26,8 +24,6 @@ namespace Enyim.Caching.Memcached
 		public ThrottlingFailurePolicy(int resetAfter, int failureThreshold)
 		{
 			this._logger = Logger.CreateLogger<ThrottlingFailurePolicy>();
-			this._isDebugEnabled = this._logger.IsEnabled(LogLevel.Debug);
-
 			this.resetAfter = resetAfter;
 			this.failureThreshold = failureThreshold;
 		}
@@ -38,16 +34,13 @@ namespace Enyim.Caching.Memcached
 
 			if (lastFailed == DateTime.MinValue)
 			{
-				if (this._isDebugEnabled)
-					this._logger.LogDebug("Setting fail counter to 1.");
-
+				this._logger.Log(LogLevel.Debug, LogLevel.Debug, "Setting fail counter to 1.");
 				failCounter = 1;
 			}
 			else
 			{
 				var diff = (int)(now - lastFailed).TotalMilliseconds;
-				if (this._isDebugEnabled)
-					this._logger.LogDebug("Last fail was {0} msec ago with counter {1}.", diff, this.failCounter);
+				this._logger.Log(LogLevel.Debug, LogLevel.Debug, $"Last fail was {diff} msec ago with counter {this.failCounter}.");
 
 				if (diff <= this.resetAfter)
 					this.failCounter++;
@@ -61,18 +54,13 @@ namespace Enyim.Caching.Memcached
 
 			if (this.failCounter == this.failureThreshold)
 			{
-				if (this._isDebugEnabled)
-					this._logger.LogDebug("Threshold reached, node will fail.");
-
+				this._logger.Log(LogLevel.Debug, LogLevel.Debug, "Threshold reached, node will fail.");
 				this.lastFailed = DateTime.MinValue;
 				this.failCounter = 0;
-
 				return true;
 			}
 
-			if (this._isDebugEnabled)
-				this._logger.LogDebug("Current counter is {0}, threshold not reached.", this.failCounter);
-
+			this._logger.Log(LogLevel.Debug, LogLevel.Debug, $"Current counter is {this.failCounter}, threshold not reached.");
 			return false;
 		}
 	}
@@ -104,14 +92,10 @@ namespace Enyim.Caching.Memcached
 		public int FailureThreshold { get; set; }
 
 		INodeFailurePolicy INodeFailurePolicyFactory.Create(IMemcachedNode node)
-		{
-			return new ThrottlingFailurePolicy(this.ResetAfter, this.FailureThreshold);
-		}
+			=> new ThrottlingFailurePolicy(this.ResetAfter, this.FailureThreshold);
 
 		INodeFailurePolicyFactory IProviderFactory<INodeFailurePolicyFactory>.Create()
-		{
-			return new ThrottlingFailurePolicyFactory(this.FailureThreshold, this.ResetAfter);
-		}
+			=> new ThrottlingFailurePolicyFactory(this.FailureThreshold, this.ResetAfter);
 
 		void IProvider.Initialize(Dictionary<string, string> parameters)
 		{

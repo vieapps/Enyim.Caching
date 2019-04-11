@@ -11,22 +11,22 @@
 		<AssemblyTitle>Enyim Memcached</AssemblyTitle>
 		<SignAssembly>false</SignAssembly>
 		<AssemblyOriginatorKeyFile>../VIEApps.Components.snk</AssemblyOriginatorKeyFile>
-		<AssemblyVersion>1.6.1904.1</AssemblyVersion>
-		<FileVersion>1.6.1904.1</FileVersion>
-		<InformationalVersion>v1.6.netstandard-2+rev:2019.03.29-assembly.loader.net.core</InformationalVersion>
+		<AssemblyVersion>1.6.1904.3</AssemblyVersion>
+		<FileVersion>1.6.1904.3</FileVersion>
+		<InformationalVersion>v1.6.netstandard-2+rev:2019.04.11-object.too.large</InformationalVersion>
 		<Product>Enyim Memcached</Product>
 		<Company>VIEApps.net</Company>
 		<GeneratePackageOnBuild>false</GeneratePackageOnBuild>
 		<PackageId>VIEApps.Enyim.Caching</PackageId>
-		<Version>1.6.1904.1</Version>
+		<Version>1.6.1904.3</Version>
 		<Title>Enyim Memcached</Title>
-		<Description>The memcached client library, fully async with various transcoders (binary formatter, bson, protobuf, msgpack) on .NET Standard 2.0</Description>
+		<Description>High performance Memcached client, incorporating both synchronous and asynchronous with various transcoders (binary formatter, bson, protobuf, msgpack)</Description>
 		<Authors>VIEApps.net</Authors>
 		<Copyright>© 2010 Attila Kiskó, © 2016 CNBlogs, © 2019 VIEApps.net</Copyright>
 		<PackageLicense>LICENSE.md</PackageLicense>
 		<PackageOutputPath>..\</PackageOutputPath>
 		<PackageTags>cache;caching;distributed;distributed-cache;memcached;enyim;enyim-memcached;enyim-caching;vieapps;vieapps.components</PackageTags>
-		<PackageReleaseNotes>Refactoring: add methods to dynamic load a type from an external assembly in .NET Core</PackageReleaseNotes>
+		<PackageReleaseNotes>Refactoring: object too large</PackageReleaseNotes>
 		<PackageIconUrl>https://github.com/vieapps/Components.Utility/raw/master/logo.png</PackageIconUrl>
 		<PackageProjectUrl>https://github.com/vieapps/Enyim.Caching</PackageProjectUrl>
 		<RepositoryUrl>https://github.com/vieapps/Enyim.Caching</RepositoryUrl>
