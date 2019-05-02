@@ -12,7 +12,7 @@ namespace Enyim.Caching.Memcached
 	{
 		readonly ILogger _logger;
 
-		IMemcachedNode[] _allNodes;
+		IMemcachedNode[] _nodes;
 		readonly IMemcachedClientConfiguration _configuration;
 		readonly IOperationFactory _factory;
 		INodeLocator _nodeLocator;
@@ -45,7 +45,8 @@ namespace Enyim.Caching.Memcached
 
 		void OnResurrectCallback(object state)
 		{
-			this._logger.Log(LogLevel.Debug, LogLevel.Debug, "Checking the dead servers");
+			if (this._logger.IsEnabled(LogLevel.Debug))
+				this._logger.LogDebug("Checking the dead servers");
 
 			// how this works:
 			// 1. timer is created but suspended
@@ -66,11 +67,12 @@ namespace Enyim.Caching.Memcached
 			{
 				if (this._isDisposed)
 				{
-					this._logger.Log(LogLevel.Debug, LogLevel.Warning, "IsAlive timer was triggered but the pool is already disposed. Ignoring.");
+					if (this._logger.IsEnabled(LogLevel.Debug))
+						this._logger.LogWarning("IsAlive timer was triggered but the pool is already disposed. Ignoring.");
 					return;
 				}
 
-				var nodes = this._allNodes;
+				var nodes = this._nodes;
 				var aliveList = new List<IMemcachedNode>(nodes.Length);
 				var changed = false;
 				var deadCount = 0;
@@ -80,21 +82,25 @@ namespace Enyim.Caching.Memcached
 					var node = nodes[index];
 					if (node.IsAlive)
 					{
-						this._logger.Log(LogLevel.Debug, LogLevel.Debug, $"Alive: {node.EndPoint}");
+						if (this._logger.IsEnabled(LogLevel.Debug))
+							this._logger.LogDebug($"Alive: {node.EndPoint}");
 						aliveList.Add(node);
 					}
 					else
 					{
-						this._logger.Log(LogLevel.Debug, LogLevel.Debug, $"Dead: {node.EndPoint}");
+						if (this._logger.IsEnabled(LogLevel.Debug))
+							this._logger.LogDebug($"Dead: {node.EndPoint}");
 						if (node.Ping())
 						{
 							changed = true;
 							aliveList.Add(node);
-							this._logger.Log(LogLevel.Debug, LogLevel.Debug, "Ping OK, go back alive");
+							if (this._logger.IsEnabled(LogLevel.Debug))
+								this._logger.LogDebug("Ping OK, go back alive");
 						}
 						else
 						{
-							this._logger.Log(LogLevel.Debug, LogLevel.Debug, "Still dead");
+							if (this._logger.IsEnabled(LogLevel.Debug))
+								this._logger.LogDebug("Still dead");
 							deadCount++;
 						}
 					}
@@ -103,19 +109,22 @@ namespace Enyim.Caching.Memcached
 				// reinit the locator
 				if (changed)
 				{
-					this._logger.Log(LogLevel.Debug, LogLevel.Debug, "Reinitializing the locator");
+					if (this._logger.IsEnabled(LogLevel.Debug))
+						this._logger.LogDebug("Reinitializing the locator");
 					this._nodeLocator.Initialize(aliveList);
 				}
 
 				// stop or restart the timer
 				if (deadCount == 0)
 				{
-					this._logger.Log(LogLevel.Debug, LogLevel.Debug, "Count of dead is 0, stopping the timer.");
+					if (this._logger.IsEnabled(LogLevel.Debug))
+						this._logger.LogDebug("Count of dead is 0, stopping the timer.");
 					this._isTimerActive = false;
 				}
 				else
 				{
-					this._logger.Log(LogLevel.Debug, LogLevel.Debug, $"Count of dead is {deadCount}, starting the timer.");
+					if (this._logger.IsEnabled(LogLevel.Debug))
+						this._logger.LogDebug($"Count of dead is {deadCount}, starting the timer.");
 					this._resurrectTimer.Change(this._deadTimeoutMsec, Timeout.Infinite);
 				}
 			}
@@ -123,7 +132,8 @@ namespace Enyim.Caching.Memcached
 
 		void NodeFail(IMemcachedNode node)
 		{
-			this._logger.Log(LogLevel.Debug, LogLevel.Debug, $"Node {node.EndPoint} is dead");
+			if (this._logger.IsEnabled(LogLevel.Debug))
+				this._logger.LogDebug($"Node {node.EndPoint} is dead");
 
 			// the timer is stopped until we encounter the first dead server
 			// when we have one, we trigger it and it will run after DeadTimeout has elapsed
@@ -131,7 +141,8 @@ namespace Enyim.Caching.Memcached
 			{
 				if (this._isDisposed)
 				{
-					this._logger.Log(LogLevel.Debug, LogLevel.Warning, "Got a node fail but the pool is already disposed. Ignoring.");
+					if (this._logger.IsEnabled(LogLevel.Debug))
+						this._logger.LogWarning("Got a node fail but the pool is already disposed. Ignoring.");
 					return;
 				}
 
@@ -140,7 +151,7 @@ namespace Enyim.Caching.Memcached
 
 				// re-initialize the locator
 				var newLocator = this._configuration.CreateNodeLocator();
-				newLocator.Initialize(this._allNodes.Where(n => n.IsAlive).ToArray());
+				newLocator.Initialize(this._nodes.Where(n => n.IsAlive).ToArray());
 				Interlocked.Exchange(ref this._nodeLocator, newLocator);
 
 				// the timer is stopped until we encounter the first dead server
@@ -153,21 +164,24 @@ namespace Enyim.Caching.Memcached
 						this._resurrectTimer.Change(this._deadTimeoutMsec, Timeout.Infinite);
 
 					this._isTimerActive = true;
-					this._logger.Log(LogLevel.Debug, LogLevel.Information, " =====> Recovery timer is started");
+					if (this._logger.IsEnabled(LogLevel.Debug))
+						this._logger.LogDebug("=====> Recovery timer is started");
 				}
 			}
 		}
 
 		#region [ IServerPool                  ]
-		IMemcachedNode IServerPool.Locate(string key) => this._nodeLocator.Locate(key);
+		IMemcachedNode IServerPool.Locate(string key)
+			=> this._nodeLocator.Locate(key);
 
 		IOperationFactory IServerPool.OperationFactory => this._factory;
 
-		IEnumerable<IMemcachedNode> IServerPool.GetWorkingNodes() => this._nodeLocator.GetWorkingNodes();
+		IEnumerable<IMemcachedNode> IServerPool.GetWorkingNodes()
+			=> this._nodeLocator.GetWorkingNodes();
 
 		void IServerPool.Start()
 		{
-			this._allNodes = this._configuration.Servers
+			this._nodes = this._configuration.Servers
 				.Select(endpoint =>
 				{
 					var node = this.CreateNode(endpoint);
@@ -177,19 +191,13 @@ namespace Enyim.Caching.Memcached
 				.ToArray();
 
 			this._nodeLocator = this._configuration.CreateNodeLocator();
-			this._nodeLocator.Initialize(this._allNodes);
+			this._nodeLocator.Initialize(this._nodes);
 		}
 
 		event Action<IMemcachedNode> IServerPool.NodeFailed
 		{
-			add
-			{
-				this._onNodeFailed += value;
-			}
-			remove
-			{
-				this._onNodeFailed -= value;
-			}
+			add => this._onNodeFailed += value;
+			remove => this._onNodeFailed -= value;
 		}
 		#endregion
 
@@ -200,27 +208,27 @@ namespace Enyim.Caching.Memcached
 
 			lock (this._locker)
 			{
-				if (this._isDisposed) return;
+				if (this._isDisposed)
+					return;
 
 				this._isDisposed = true;
 
 				// dispose the locator first, maybe it wants to access the nodes one last time
-				if (this._nodeLocator is IDisposable nd)
+				if (this._nodeLocator is IDisposable)
 					try
 					{
-						nd.Dispose();
+						(this._nodeLocator as IDisposable).Dispose();
 					}
 					catch (Exception e)
 					{
 						this._logger.LogError(nameof(DefaultServerPool), e);
 					}
-
 				this._nodeLocator = null;
 
-				for (var index = 0; index < this._allNodes.Length; index++)
+				for (var index = 0; index < this._nodes.Length; index++)
 					try
 					{
-						this._allNodes[index].Dispose();
+						this._nodes[index].Dispose();
 					}
 					catch (Exception e)
 					{
@@ -234,7 +242,7 @@ namespace Enyim.Caching.Memcached
 						this._resurrectTimer.Change(Timeout.Infinite, Timeout.Infinite);
 					}
 
-				this._allNodes = null;
+				this._nodes = null;
 				this._resurrectTimer = null;
 			}
 		}

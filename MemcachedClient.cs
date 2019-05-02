@@ -96,6 +96,10 @@ namespace Enyim.Caching
 		#region Store
 		protected virtual IStoreOperationResult PerformStore(StoreMode mode, string key, object value, uint expires, ref ulong cas, out int statusCode)
 		{
+			var start = DateTime.Now;
+			if (this._logger.IsEnabled(LogLevel.Trace))
+				this._logger.LogDebug($"> Start to perform Store command => {key} ({mode})");
+
 			var result = this.StoreOperationResultFactory.Create();
 			statusCode = -1;
 			if (value == null)
@@ -135,11 +139,13 @@ namespace Enyim.Caching
 					{
 						if (result.Message.StartsWith("Too large."))
 							this._logger.LogWarning(result.Exception, $"Failed to execute Store command: Object too large => {item.Data.Count:###,###,##0} bytes ({key})");
-						else
-							this._logger.LogDebug(result.Exception, $"Failed to execute Store command: {result.Message}");
+						else if (result.Message != "Data exists for key.")
+							this._logger.LogDebug(result.Exception, $"Failed to execute Store command: {result.Message} ({key} - {mode})");
 					}
 				}
 
+				if (this._logger.IsEnabled(LogLevel.Trace))
+					this._logger.LogDebug($"Perform Store command successful - Duration: {(DateTime.Now - start).TotalMilliseconds}ms");
 				return result;
 			}
 
@@ -198,6 +204,10 @@ namespace Enyim.Caching
 
 		protected virtual async Task<IStoreOperationResult> PerformStoreAsync(StoreMode mode, string key, object value, uint expires, ulong cas = 0, CancellationToken cancellationToken = default(CancellationToken))
 		{
+			var start = DateTime.Now;
+			if (this._logger.IsEnabled(LogLevel.Trace))
+				this._logger.LogDebug($"> Start to perform Store command => {key} ({mode})");
+
 			var result = this.StoreOperationResultFactory.Create();
 			if (value == null)
 			{
@@ -237,11 +247,13 @@ namespace Enyim.Caching
 					{
 						if (result.Message.StartsWith("Too large."))
 							this._logger.LogWarning(result.Exception, $"Failed to execute Store command: Object too large => {item.Data.Count:###,###,##0} bytes ({key})");
-						else
-							this._logger.LogDebug(result.Exception, $"Failed to execute Store command: {result.Message}");
+						else if (result.Message != "Data exists for key.")
+							this._logger.LogDebug(result.Exception, $"Failed to execute Store command: {result.Message} ({key} - {mode})");
 					}
 				}
 
+				if (this._logger.IsEnabled(LogLevel.Trace))
+					this._logger.LogDebug($"Perform Store command successful - Duration: {(DateTime.Now - start).TotalMilliseconds}ms");
 				return result;
 			}
 
@@ -497,6 +509,10 @@ namespace Enyim.Caching
 		#region Mutate
 		protected virtual IMutateOperationResult PerformMutate(MutationMode mode, string key, ulong defaultValue, ulong delta, uint expires, ulong cas = 0)
 		{
+			var start = DateTime.Now;
+			if (this._logger.IsEnabled(LogLevel.Trace))
+				this._logger.LogDebug($"> Start to perform Mutate command => {key} ({mode})");
+
 			var hashedKey = this.KeyTransformer.Transform(key);
 			var node = this.Pool.Locate(hashedKey);
 			var result = this.MutateOperationResultFactory.Create();
@@ -520,6 +536,8 @@ namespace Enyim.Caching
 					result.Fail("Mutate operation failed, see InnerResult or StatusCode for more details");
 				}
 
+				if (this._logger.IsEnabled(LogLevel.Trace))
+					this._logger.LogDebug($"Perform Mutate command successful - Duration: {(DateTime.Now - start).TotalMilliseconds}ms");
 				return result;
 			}
 
@@ -727,6 +745,10 @@ namespace Enyim.Caching
 
 		protected virtual async Task<IMutateOperationResult> PerformMutateAsync(MutationMode mode, string key, ulong defaultValue, ulong delta, uint expires, ulong cas = 0, CancellationToken cancellationToken = default(CancellationToken))
 		{
+			var start = DateTime.Now;
+			if (this._logger.IsEnabled(LogLevel.Trace))
+				this._logger.LogDebug($"> Start to perform Mutate command => {key} ({mode})");
+
 			var hashedKey = this.KeyTransformer.Transform(key);
 			var node = this.Pool.Locate(hashedKey);
 			var result = this.MutateOperationResultFactory.Create();
@@ -750,6 +772,8 @@ namespace Enyim.Caching
 					result.Fail("Mutate operation failed, see InnerResult or StatusCode for more details");
 				}
 
+				if (this._logger.IsEnabled(LogLevel.Trace))
+					this._logger.LogDebug($"Perform Mutate command successful - Duration: {(DateTime.Now - start).TotalMilliseconds}ms");
 				return result;
 			}
 
@@ -959,6 +983,10 @@ namespace Enyim.Caching
 		#region Concatenate
 		protected virtual IConcatOperationResult PerformConcatenate(ConcatenationMode mode, string key, ref ulong cas, ArraySegment<byte> data)
 		{
+			var start = DateTime.Now;
+			if (this._logger.IsEnabled(LogLevel.Trace))
+				this._logger.LogDebug($"> Start to perform Concat command => {key} ({mode})");
+
 			var hashedKey = this.KeyTransformer.Transform(key);
 			var node = this.Pool.Locate(hashedKey);
 			var result = this.ConcatOperationResultFactory.Create();
@@ -980,6 +1008,8 @@ namespace Enyim.Caching
 					result.Fail("Concat operation failed, see InnerResult or StatusCode for details");
 				}
 
+				if (this._logger.IsEnabled(LogLevel.Trace))
+					this._logger.LogDebug($"Perform Concat command successful - Duration: {(DateTime.Now - start).TotalMilliseconds}ms");
 				return result;
 			}
 
@@ -1050,6 +1080,10 @@ namespace Enyim.Caching
 
 		protected virtual async Task<IConcatOperationResult> PerformConcatenateAsync(ConcatenationMode mode, string key, ArraySegment<byte> data, ulong cas = 0, CancellationToken cancellationToken = default(CancellationToken))
 		{
+			var start = DateTime.Now;
+			if (this._logger.IsEnabled(LogLevel.Trace))
+				this._logger.LogDebug($"> Start to perform Concat command => {key} ({mode})");
+
 			var hashedKey = this.KeyTransformer.Transform(key);
 			var node = this.Pool.Locate(hashedKey);
 			var result = this.ConcatOperationResultFactory.Create();
@@ -1071,6 +1105,8 @@ namespace Enyim.Caching
 					result.Fail("Concat operation failed, see InnerResult or StatusCode for details");
 				}
 
+				if (this._logger.IsEnabled(LogLevel.Trace))
+					this._logger.LogDebug($"Perform Concat command successful - Duration: {(DateTime.Now - start).TotalMilliseconds}ms");
 				return result;
 			}
 
@@ -1133,6 +1169,10 @@ namespace Enyim.Caching
 		#region Get
 		protected virtual IGetOperationResult PerformGet(string key, out ulong cas, out object value)
 		{
+			var start = DateTime.Now;
+			if (this._logger.IsEnabled(LogLevel.Trace))
+				this._logger.LogDebug($"> Start to perform Get command => {key}");
+
 			var hashedKey = this.KeyTransformer.Transform(key);
 			var node = this.Pool.Locate(hashedKey);
 			var result = this.GetOperationResultFactory.Create();
@@ -1153,6 +1193,8 @@ namespace Enyim.Caching
 				else
 					commandResult.Combine(result);
 
+				if (this._logger.IsEnabled(LogLevel.Trace))
+					this._logger.LogDebug($"Perform Get command successful - Duration: {(DateTime.Now - start).TotalMilliseconds}ms");
 				return result;
 			}
 
@@ -1240,6 +1282,10 @@ namespace Enyim.Caching
 
 		protected virtual async Task<IGetOperationResult> PerformGetAsync(string key, CancellationToken cancellationToken = default(CancellationToken))
 		{
+			var start = DateTime.Now;
+			if (this._logger.IsEnabled(LogLevel.Trace))
+				this._logger.LogDebug($"> Start to perform Get command => {key}");
+
 			var hashedKey = this.KeyTransformer.Transform(key);
 			var node = this.Pool.Locate(hashedKey);
 			var result = this.GetOperationResultFactory.Create();
@@ -1258,6 +1304,8 @@ namespace Enyim.Caching
 				else
 					commandResult.Combine(result);
 
+				if (this._logger.IsEnabled(LogLevel.Trace))
+					this._logger.LogDebug($"Perform Get command successful - Duration: {(DateTime.Now - start).TotalMilliseconds}ms");
 				return result;
 			}
 
@@ -1336,6 +1384,10 @@ namespace Enyim.Caching
 
 		protected virtual IDictionary<string, T> PerformMultiGet<T>(IEnumerable<string> keys, Func<IMultiGetOperation, KeyValuePair<string, CacheItem>, T> collector)
 		{
+			var start = DateTime.Now;
+			if (this._logger.IsEnabled(LogLevel.Trace))
+				this._logger.LogDebug($"> Start to perform Multi-Get command => {string.Join(" - ", keys)}");
+
 			// transform the keys and index them by hashed => original, the multi-get results will be mapped using this index
 			var hashed = keys.Distinct(StringComparer.OrdinalIgnoreCase).ToDictionary(key => this.KeyTransformer.Transform(key), key => key);
 
@@ -1368,6 +1420,8 @@ namespace Enyim.Caching
 
 			// execute each list of keys on their respective node (in parallel)
 			Task.WaitAll(this.GroupByServer(hashed.Keys.ToList()).Select(kvp => executeCmdAsync(kvp.Key, kvp.Value)).ToArray(), TimeSpan.FromSeconds(13));
+			if (this._logger.IsEnabled(LogLevel.Trace))
+				this._logger.LogDebug($"Perform Multi-Get command successful - Duration: {(DateTime.Now - start).TotalMilliseconds}ms");
 			return results;
 		}
 
@@ -1402,6 +1456,10 @@ namespace Enyim.Caching
 
 		protected virtual async Task<IDictionary<string, T>> PerformMultiGetAsync<T>(IEnumerable<string> keys, Func<IMultiGetOperation, KeyValuePair<string, CacheItem>, T> collector, CancellationToken cancellationToken = default(CancellationToken))
 		{
+			var start = DateTime.Now;
+			if (this._logger.IsEnabled(LogLevel.Trace))
+				this._logger.LogDebug($"> Start to perform Multi-Get command => {string.Join(" - ", keys)}");
+
 			// transform the keys and index them by hashed => original, the multi-get results will be mapped using this index
 			var hashedKeys = keys.Distinct(StringComparer.OrdinalIgnoreCase).ToDictionary(key => this.KeyTransformer.Transform(key), key => key);
 
@@ -1435,6 +1493,8 @@ namespace Enyim.Caching
 
 			// execute each list of keys on their respective node (in parallel)
 			await Task.WhenAll(this.GroupByServer(hashedKeys.Keys.ToList()).Select(kvp => executeCmdAsync(kvp.Key, kvp.Value))).ConfigureAwait(false);
+			if (this._logger.IsEnabled(LogLevel.Trace))
+				this._logger.LogDebug($"Perform Multi-Get command successful - Duration: {(DateTime.Now - start).TotalMilliseconds}ms");
 			return results;
 		}
 
@@ -1471,6 +1531,10 @@ namespace Enyim.Caching
 		#region Remove
 		protected IRemoveOperationResult PerformRemove(string key)
 		{
+			var start = DateTime.Now;
+			if (this._logger.IsEnabled(LogLevel.Trace))
+				this._logger.LogDebug($"> Start to perform Remove command => {key}");
+
 			var hashedKey = this.KeyTransformer.Transform(key);
 			var node = this.Pool.Locate(hashedKey);
 			var result = this.RemoveOperationResultFactory.Create();
@@ -1488,6 +1552,8 @@ namespace Enyim.Caching
 					result.Fail("Failed to remove item, see InnerResult or StatusCode for details");
 				}
 
+				if (this._logger.IsEnabled(LogLevel.Trace))
+					this._logger.LogDebug($"Perform Remove command successful - Duration: {(DateTime.Now - start).TotalMilliseconds}ms");
 				return result;
 			}
 
@@ -1506,6 +1572,10 @@ namespace Enyim.Caching
 
 		protected async Task<IRemoveOperationResult> PerformRemoveAsync(string key, CancellationToken cancellationToken = default(CancellationToken))
 		{
+			var start = DateTime.Now;
+			if (this._logger.IsEnabled(LogLevel.Trace))
+				this._logger.LogDebug($"> Start to perform Remove command => {key}");
+
 			var hashedKey = this.KeyTransformer.Transform(key);
 			var node = this.Pool.Locate(hashedKey);
 			var result = this.RemoveOperationResultFactory.Create();
@@ -1523,6 +1593,8 @@ namespace Enyim.Caching
 					result.Fail("Failed to remove item, see InnerResult or StatusCode for details");
 				}
 
+				if (this._logger.IsEnabled(LogLevel.Trace))
+					this._logger.LogDebug($"Perform Remove command successful - Duration: {(DateTime.Now - start).TotalMilliseconds}ms");
 				return result;
 			}
 

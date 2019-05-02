@@ -60,7 +60,8 @@ namespace Enyim.Caching.Memcached
 					throw new ArgumentException($"Could not resolve host \"{host}\".");
 
 				endpoint = new IPEndPoint(address, dnsEndPoint.Port);
-				this._logger.Log(LogLevel.Trace, LogLevel.Debug, $"Resolved \"{host}\" to \"{address}\"");
+				if (this._logger.IsEnabled(LogLevel.Trace))
+					this._logger.LogDebug($"Resolved \"{host}\" to \"{address}\"");
 			}
 
 			var completed = new AutoResetEvent(false);
@@ -75,7 +76,10 @@ namespace Enyim.Caching.Memcached
 			if (!completed.WaitOne(timeout) || !socket.Connected)
 				using (socket)
 				{
-					throw new TimeoutException($"Could not connect to \"{endpoint}\"");
+					if (!socket.Connected)
+						throw new Exception($"Could not connect to {endpoint}", new SocketException((int)SocketError.NotConnected));
+					else
+						throw new TimeoutException($"Could not connect to {endpoint}");
 				}
 		}
 
@@ -92,9 +96,9 @@ namespace Enyim.Caching.Memcached
 				this._logger.LogWarning($"Socket bound to {this._endpoint} has {available} unread data! This is probably a bug in the code (ID: {this.InstanceID}).");
 				var data = new byte[available];
 				this.Receive(data, 0, available);
-				this._logger.Log(LogLevel.Debug, LogLevel.Warning, Encoding.UTF8.GetString(data.Length > 255 ? data.Take(255).ToArray() : data));
+				if (this._logger.IsEnabled(LogLevel.Debug))
+					this._logger.LogWarning(Encoding.UTF8.GetString(data.Length > 255 ? data.Take(255).ToArray() : data));
 			}
-			this._logger.Log(LogLevel.Trace, LogLevel.Debug, $"Socket was reset ({this._endpoint} => {this.InstanceID})");
 		}
 
 		/// <summary>

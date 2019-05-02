@@ -13,7 +13,7 @@
 		<AssemblyOriginatorKeyFile>../VIEApps.Components.snk</AssemblyOriginatorKeyFile>
 		<AssemblyVersion>1.6.1904.3</AssemblyVersion>
 		<FileVersion>1.6.1904.3</FileVersion>
-		<InformationalVersion>v1.6.netstandard-2+rev:2019.04.11-object.too.large</InformationalVersion>
+		<InformationalVersion>v1.6.netstandard-2+rev:2019.05.03-logs</InformationalVersion>
 		<Product>Enyim Memcached</Product>
 		<Company>VIEApps.net</Company>
 		<GeneratePackageOnBuild>false</GeneratePackageOnBuild>
