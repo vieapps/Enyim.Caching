@@ -64,28 +64,22 @@ namespace Enyim.Caching.Memcached
 					this._logger.LogDebug($"Resolved \"{host}\" to \"{address}\"");
 			}
 
-			var completed = new AutoResetEvent(false);
 			var socketArgs = new SocketAsyncEventArgs
 			{
 				RemoteEndPoint = endpoint,
-				UserToken = completed
+				UserToken = new AutoResetEvent(false)
 			};
-			socketArgs.Completed += (sender, args) => (args.UserToken as AutoResetEvent)?.Set();
-
+			socketArgs.Completed += (sender, args) => (args.UserToken as AutoResetEvent).Set();
 			socket.ConnectAsync(socketArgs);
-			if (!completed.WaitOne(timeout) || !socket.Connected)
+
+			if (!(socketArgs.UserToken as AutoResetEvent).WaitOne(timeout) || !socket.Connected)
 				using (socket)
 				{
-					if (!socket.Connected)
-						throw new Exception($"Could not connect to {endpoint}", new SocketException((int)SocketError.NotConnected));
-					else
-						throw new TimeoutException($"Could not connect to {endpoint}");
+					throw new Exception($"Could not connect to {endpoint}", new SocketException((int)SocketError.NotConnected));
 				}
 		}
 
 		public Action<PooledSocket> CleanupCallback { get; set; }
-
-		public int Available => this._socket.Available;
 
 		public void Reset()
 		{
@@ -104,8 +98,11 @@ namespace Enyim.Caching.Memcached
 		/// <summary>
 		/// The identity of this instance. Used by the <see cref="IServerPool"/> to identify the instance in its inner lists.
 		/// </summary>
-		public readonly Guid InstanceID = Guid.NewGuid();
+		public Guid InstanceID { get; } = Guid.NewGuid();
 
+		/// <summary>
+		/// Gets the alive state
+		/// </summary>
 		public bool IsAlive => this._isAlive;
 
 		/// <summary>
@@ -144,7 +141,8 @@ namespace Enyim.Caching.Memcached
 				this.CleanupCallback?.Invoke(this);
 		}
 
-		void IDisposable.Dispose() => this.Dispose(false);
+		void IDisposable.Dispose()
+			=> this.Dispose(false);
 
 		void CheckDisposed()
 		{

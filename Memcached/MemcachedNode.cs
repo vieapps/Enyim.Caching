@@ -51,10 +51,7 @@ namespace Enyim.Caching.Memcached
 		/// <summary>
 		/// Gets the <see cref="IPEndPoint"/> of this instance
 		/// </summary>
-		public EndPoint EndPoint
-		{
-			get => this._endpoint;
-		}
+		public EndPoint EndPoint => this._endpoint;
 
 		/// <summary>
 		/// <para>Gets a value indicating whether the server is working or not. Returns a <b>cached</b> state.</para>
@@ -130,7 +127,7 @@ namespace Enyim.Caching.Memcached
 						this._internalPoolImpl.InitPool();
 						this._isInitialized = true;
 						if (this._logger.IsEnabled(LogLevel.Trace))
-							this._logger.LogDebug($"Cost for initiaizing pool: {(DateTime.Now - startTime).TotalMilliseconds}ms");
+							this._logger.LogInformation($"Cost for initiaizing pool: {(DateTime.Now - startTime).TotalMilliseconds}ms");
 					}
 				}
 
@@ -230,7 +227,7 @@ namespace Enyim.Caching.Memcached
 				this._minItems = config.MinPoolSize;
 				this._maxItems = config.MaxPoolSize;
 
-				this._semaphore = new Semaphore(this._minItems, this._maxItems);
+				this._semaphore = new Semaphore(this._maxItems, this._maxItems);
 				this._freeItems = new InterlockedStack<PooledSocket>();
 
 				this._logger = Logger.CreateLogger<InternalPoolImpl>();
@@ -315,7 +312,7 @@ namespace Enyim.Caching.Memcached
 						result.Pass();
 						result.Value = socket;
 						if (this._logger.IsEnabled(LogLevel.Trace))
-							this._logger.LogDebug($"Socket was reset and ready to re-use ({socket.InstanceID})");
+							this._logger.LogDebug($"Socket is ready to use ({socket.InstanceID})");
 						return result;
 					}
 					catch (Exception e)
@@ -329,7 +326,7 @@ namespace Enyim.Caching.Memcached
 
 				// free item pool is empty
 				if (this._logger.IsEnabled(LogLevel.Trace))
-					this._logger.LogWarning($"Could not get a socket from the pool => create new ({this._endpoint})");
+					this._logger.LogInformation($"Could not get a socket from the pool => create new ({this._endpoint})");
 
 				try
 				{
@@ -339,7 +336,7 @@ namespace Enyim.Caching.Memcached
 					result.Value = socket;
 					result.Pass();
 					if (this._logger.IsEnabled(LogLevel.Trace))
-						this._logger.LogDebug($"A new socket is created ({socket.InstanceID}). Cost for creating socket when acquire: {(DateTime.Now - startTime).TotalMilliseconds}ms");
+						this._logger.LogWarning($"A new socket is created ({socket.InstanceID}). Cost for creating socket when acquire: {(DateTime.Now - startTime).TotalMilliseconds}ms");
 				}
 				catch (Exception e)
 				{
@@ -485,7 +482,7 @@ namespace Enyim.Caching.Memcached
 					var socket = result.Value;
 					socket.Send(op.GetBuffer());
 					if (this._logger.IsEnabled(LogLevel.Trace))
-						this._logger.LogWarning($"Cost for writting into socket when execute operation: {(DateTime.Now - startTime).TotalMilliseconds}ms");
+						this._logger.LogInformation($"Cost for writting into socket when execute operation: {(DateTime.Now - startTime).TotalMilliseconds}ms");
 
 					var readResult = op.ReadResponse(socket);
 					if (readResult.Success)
@@ -521,7 +518,7 @@ namespace Enyim.Caching.Memcached
 					var socket = result.Value;
 					await socket.SendAsync(op.GetBuffer(), cancellationToken).ConfigureAwait(false);
 					if (this._logger.IsEnabled(LogLevel.Trace))
-						this._logger.LogWarning($"Cost for writting into socket when execute operation (async): {(DateTime.Now - startTime).TotalMilliseconds}ms");
+						this._logger.LogInformation($"Cost for writting into socket when execute operation (async): {(DateTime.Now - startTime).TotalMilliseconds}ms");
 
 					var readResult = await op.ReadResponseAsync(socket, cancellationToken).ConfigureAwait(false);
 					if (readResult.Success)

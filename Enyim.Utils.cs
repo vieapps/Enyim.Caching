@@ -225,7 +225,7 @@ namespace Enyim.Reflection
 	/// </summary>
 	public static class FastActivator
 	{
-		static Dictionary<Type, Func<object>> Factories = new Dictionary<Type, Func<object>>();
+		static Dictionary<Type, Func<object>> Factories { get; } = new Dictionary<Type, Func<object>>();
 
 		/// <summary>
 		/// Creates an instance of the specified type using a generated factory to avoid using Reflection.

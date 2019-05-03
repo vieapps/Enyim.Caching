@@ -67,7 +67,7 @@ namespace Enyim.Caching.Configuration
 			if (string.IsNullOrWhiteSpace(location))
 				throw new ArgumentNullException(nameof(location), "The location is required");
 
-			var uri = new Uri(location);
+			var uri = new Uri((location.Contains("://") ? "" : "memcached://") + location);
 			return ConfigurationHelper.ResolveToEndPoint(uri.Host, uri.Port);
 		}
 

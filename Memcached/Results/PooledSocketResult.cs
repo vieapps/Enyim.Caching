@@ -2,7 +2,7 @@
 {
 	public class PooledSocketResult : OperationResultBase, IPooledSocketResult
 	{
-		public bool HasValue { get { return Value != null; } }
+		public bool HasValue => this.Value != null;
 
 		public PooledSocket Value { get; set; }
 	}
