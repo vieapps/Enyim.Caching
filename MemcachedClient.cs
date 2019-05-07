@@ -138,7 +138,7 @@ namespace Enyim.Caching
 					if (this._logger.IsEnabled(LogLevel.Debug))
 					{
 						if (result.Message.StartsWith("Too large."))
-							this._logger.LogWarning(result.Exception, $"Failed to execute Store command: Object too large => {item.Data.Count:###,###,##0} bytes ({key})");
+							this._logger.LogWarning(result.Exception, $"Failed to execute Store command: Object too large => {item.Data.Count:###,###,###,##0} bytes ({key})");
 						else if (result.Message != "Data exists for key.")
 							this._logger.LogDebug(result.Exception, $"Failed to execute Store command: {result.Message} ({key} - {mode})");
 					}
@@ -246,7 +246,7 @@ namespace Enyim.Caching
 					if (this._logger.IsEnabled(LogLevel.Debug))
 					{
 						if (result.Message.StartsWith("Too large."))
-							this._logger.LogWarning(result.Exception, $"Failed to execute Store command: Object too large => {item.Data.Count:###,###,##0} bytes ({key})");
+							this._logger.LogWarning(result.Exception, $"Failed to execute Store command: Object too large => {item.Data.Count:###,###,###,##0} bytes ({key})");
 						else if (result.Message != "Data exists for key.")
 							this._logger.LogDebug(result.Exception, $"Failed to execute Store command: {result.Message} ({key} - {mode})");
 					}
