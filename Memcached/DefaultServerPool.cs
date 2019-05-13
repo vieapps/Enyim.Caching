@@ -50,9 +50,8 @@ namespace Enyim.Caching.Memcached
 
 			// how this works:
 			// 1. timer is created but suspended
-			// 2. Locate encounters a dead server, so it starts the timer which will trigger after deadTimeout has elapsed
-			// 3. if another server goes down before the timer is triggered, nothing happens in Locate (isRunning == true).
-			//		however that server will be inspected sooner than Dead Timeout.
+			// 2. locate encounters a dead server, so it starts the timer which will trigger after deadTimeout has elapsed
+			// 3. if another server goes down before the timer is triggered, nothing happens in Locate (isRunning == true), however that server will be inspected sooner than Dead Timeout
 			//		   S1 died   S2 died    dead timeout
 			//		|----*--------*------------*-
 			//           |                     |
@@ -90,6 +89,7 @@ namespace Enyim.Caching.Memcached
 					{
 						if (this._logger.IsEnabled(LogLevel.Debug))
 							this._logger.LogDebug($"Dead: {node.EndPoint}");
+
 						if (node.Ping())
 						{
 							changed = true;
@@ -106,7 +106,7 @@ namespace Enyim.Caching.Memcached
 					}
 				}
 
-				// reinit the locator
+				// re-initialize the locator
 				if (changed)
 				{
 					if (this._logger.IsEnabled(LogLevel.Debug))
