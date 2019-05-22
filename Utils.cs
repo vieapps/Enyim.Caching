@@ -7,14 +7,12 @@ using System.Numerics;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Runtime.Serialization.Formatters.Binary;
-
-using Enyim.Caching;
-using Enyim.Caching.Configuration;
-
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.DependencyInjection;
+using Enyim.Caching;
+using Enyim.Caching.Configuration;
 #endregion
 
 namespace CacheUtils
@@ -145,6 +143,32 @@ namespace CacheUtils
 		}
 
 		/// <summary>
+		/// Gets the array buffer of this stream with TryGetBuffer first, then ToArray if not success
+		/// </summary>
+		/// <param name="stream"></param>
+		/// <returns></returns>
+		public static byte[] GetArray(this MemoryStream stream)
+		{
+			if (stream.TryGetBuffer(out ArraySegment<byte> buffer))
+			{
+				var array = new byte[buffer.Count];
+				Buffer.BlockCopy(buffer.Array, buffer.Offset, array, 0, buffer.Count);
+				return array;
+			}
+			return stream.ToArray();
+		}
+
+		/// <summary>
+		/// Gets the array segment of this stream with TryGetBuffer first, then ToArray if not success
+		/// </summary>
+		/// <param name="stream"></param>
+		/// <returns></returns>
+		public static ArraySegment<byte> GetArraySegment(this MemoryStream stream)
+			=> stream.TryGetBuffer(out ArraySegment<byte> buffer)
+				? buffer
+				: new ArraySegment<byte>(stream.ToArray());
+
+		/// <summary>
 		/// Serialize an object to array of bytes
 		/// </summary>
 		/// <param name="value"></param>
@@ -238,13 +262,7 @@ namespace CacheUtils
 							using (var stream = Helper.CreateMemoryStream())
 							{
 								new BinaryFormatter().Serialize(stream, value);
-								if (stream.TryGetBuffer(out ArraySegment<byte> buffer))
-								{
-									data = new byte[buffer.Count];
-									Buffer.BlockCopy(buffer.Array, buffer.Offset, data, 0, buffer.Count);
-								}
-								else
-									data = stream.ToArray();
+								data = stream.GetArray();
 							}
 						else
 							throw new ArgumentException($"The type '{value.GetType()}' of '{nameof(value)}' must have Serializable attribute");
