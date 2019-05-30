@@ -13,10 +13,10 @@
 		<AssemblyOriginatorKeyFile>../VIEApps.Components.snk</AssemblyOriginatorKeyFile>
 		<AssemblyVersion>1.6.1906.1</AssemblyVersion>
 		<FileVersion>1.6.1906.1</FileVersion>
-		<InformationalVersion>v1.6.netstandard-2+rev:2019.05.23-extensions</InformationalVersion>
+		<InformationalVersion>v1.6.netstandard-2+rev:2019.05.30-static.stream.manager</InformationalVersion>
 		<Product>Enyim Memcached</Product>
 		<Company>VIEApps.net</Company>
-		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+		<GeneratePackageOnBuild>false</GeneratePackageOnBuild>
 		<PackageId>VIEApps.Enyim.Caching</PackageId>
 		<Version>1.6.1906.1</Version>
 		<Title>Enyim Memcached</Title>

@@ -121,16 +121,18 @@ namespace CacheUtils
 		#endregion
 
 		#region Serialize & Deserialize
+		static Microsoft.IO.RecyclableMemoryStreamManager RecyclableMemoryStreamManager { get; } = new Microsoft.IO.RecyclableMemoryStreamManager();
+
 		/// <summary>
-		/// Creates a recycled memory stream
+		/// Creates a recyclable memory stream
 		/// </summary>
-		/// <param name="buffer"></param>
-		/// <param name="index"></param>
-		/// <param name="count"></param>
+		/// <param name="buffer">The buffer to initialize data of the stream</param>
+		/// <param name="index">The zero-based byte offset in buffer at which to begin copying bytes to the stream</param>
+		/// <param name="count">The maximum number of bytes to write</param>
 		/// <returns></returns>
 		public static MemoryStream CreateMemoryStream(byte[] buffer = null, int index = 0, int count = 0)
 		{
-			var stream = new Microsoft.IO.RecyclableMemoryStreamManager().GetStream();
+			var stream = Helper.RecyclableMemoryStreamManager.GetStream();
 			if (buffer == null || buffer.Length < 1)
 				return stream;
 
@@ -147,7 +149,7 @@ namespace CacheUtils
 		/// </summary>
 		/// <param name="stream"></param>
 		/// <returns></returns>
-		public static byte[] GetArray(this MemoryStream stream)
+		public static byte[] ToBytes(this MemoryStream stream)
 		{
 			if (stream.TryGetBuffer(out ArraySegment<byte> buffer))
 			{
@@ -163,7 +165,7 @@ namespace CacheUtils
 		/// </summary>
 		/// <param name="stream"></param>
 		/// <returns></returns>
-		public static ArraySegment<byte> GetArraySegment(this MemoryStream stream)
+		public static ArraySegment<byte> ToArraySegment(this MemoryStream stream)
 			=> stream.TryGetBuffer(out ArraySegment<byte> buffer)
 				? buffer
 				: new ArraySegment<byte>(stream.ToArray());
@@ -262,7 +264,7 @@ namespace CacheUtils
 							using (var stream = Helper.CreateMemoryStream())
 							{
 								new BinaryFormatter().Serialize(stream, value);
-								data = stream.GetArray();
+								data = stream.ToBytes();
 							}
 						else
 							throw new ArgumentException($"The type '{value.GetType()}' of '{nameof(value)}' must have Serializable attribute");
