@@ -11,14 +11,14 @@
 		<AssemblyTitle>Enyim Memcached</AssemblyTitle>
 		<SignAssembly>false</SignAssembly>
 		<AssemblyOriginatorKeyFile>../VIEApps.Components.snk</AssemblyOriginatorKeyFile>
-		<AssemblyVersion>1.6.1906.1</AssemblyVersion>
-		<FileVersion>1.6.1906.1</FileVersion>
-		<InformationalVersion>v1.6.netstandard-2+rev:2019.05.30-static.stream.manager</InformationalVersion>
+		<AssemblyVersion>1.6.1906.2</AssemblyVersion>
+		<FileVersion>1.6.1906.2</FileVersion>
+		<InformationalVersion>v1.6.netstandard-2+rev:2019.06.12-static.stream.manager</InformationalVersion>
 		<Product>Enyim Memcached</Product>
 		<Company>VIEApps.net</Company>
 		<GeneratePackageOnBuild>false</GeneratePackageOnBuild>
 		<PackageId>VIEApps.Enyim.Caching</PackageId>
-		<Version>1.6.1906.1</Version>
+		<Version>1.6.1906.2</Version>
 		<Title>Enyim Memcached</Title>
 		<Description>High performance Memcached client, incorporating both synchronous and asynchronous with various transcoders (binary formatter, bson, protobuf, msgpack)</Description>
 		<Authors>VIEApps.net</Authors>
@@ -26,7 +26,7 @@
 		<PackageLicense>LICENSE.md</PackageLicense>
 		<PackageOutputPath>..\</PackageOutputPath>
 		<PackageTags>cache;caching;distributed;distributed-cache;memcached;enyim;enyim-memcached;enyim-caching;vieapps;vieapps.components</PackageTags>
-		<PackageReleaseNotes>Improvement: extensions for working with streams and loggings</PackageReleaseNotes>
+		<PackageReleaseNotes>Improvement: recyclable stream manager as static property</PackageReleaseNotes>
 		<PackageProjectUrl>https://vieapps.net/</PackageProjectUrl>
 		<PackageIconUrl>https://github.com/vieapps/Components.Utility/raw/master/logo.png</PackageIconUrl>
 		<RepositoryUrl>https://github.com/vieapps/Enyim.Caching</RepositoryUrl>
