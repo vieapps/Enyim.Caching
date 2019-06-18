@@ -11,7 +11,7 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 {
 	public class StatsOperation : BinaryOperation, IStatsOperation
 	{
-		string _type;
+		readonly string _type;
 		Dictionary<string, string> _result;
 
 		public StatsOperation(string type)
@@ -57,7 +57,7 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 			return result;
 		}
 
-        protected internal override async Task<IOperationResult> ReadResponseAsync(PooledSocket socket, CancellationToken cancellationToken = default(CancellationToken))
+        protected internal override async Task<IOperationResult> ReadResponseAsync(PooledSocket socket, CancellationToken cancellationToken = default)
         {
 			var response = new BinaryResponse();
 			var serverData = new Dictionary<string, string>();

@@ -174,7 +174,7 @@ namespace Enyim.Caching.Memcached
 		/// <param name="offset"></param>
 		/// <param name="size"></param>
 		/// <returns></returns>
-		public async Task SendAsync(byte[] buffer, int offset, int size, CancellationToken cancellationToken = default(CancellationToken))
+		public async Task SendAsync(byte[] buffer, int offset, int size, CancellationToken cancellationToken = default)
 		{
 			this.CheckDisposed();
 			try
@@ -218,7 +218,7 @@ namespace Enyim.Caching.Memcached
 		/// </summary>
 		/// <param name="buffers"></param>
 		/// <returns></returns>
-		public async Task SendAsync(IList<ArraySegment<byte>> buffers, CancellationToken cancellationToken = default(CancellationToken))
+		public async Task SendAsync(IList<ArraySegment<byte>> buffers, CancellationToken cancellationToken = default)
 		{
 			this.CheckDisposed();
 			try
@@ -286,7 +286,7 @@ namespace Enyim.Caching.Memcached
 		/// <param name="offset">The location in buffer to store the received data.</param>
 		/// <param name="count">The number of bytes to read.</param>
 		/// <returns>The number of read bytes</returns>
-		public async Task<int> ReceiveAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken = default(CancellationToken))
+		public async Task<int> ReceiveAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken = default)
 		{
 			this.CheckDisposed();
 			var total = 0;
@@ -334,7 +334,7 @@ namespace Enyim.Caching.Memcached
 		/// Receives the next byte from the server's response
 		/// </summary>
 		/// <remarks>This method blocks and will not return until the value is read.</remarks>
-		public async Task<byte> ReceiveAsync(CancellationToken cancellationToken = default(CancellationToken))
+		public async Task<byte> ReceiveAsync(CancellationToken cancellationToken = default)
 		{
 			var buffer = new byte[1];
 			return await this.ReceiveAsync(buffer, 0, 1, cancellationToken).ConfigureAwait(false) > 0 ? buffer[0] : (byte)0;

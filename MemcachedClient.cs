@@ -24,7 +24,7 @@ namespace Enyim.Caching
 	{
 
 		#region Attributes
-		ILogger _logger;
+		readonly ILogger _logger;
 
 		public IStoreOperationResultFactory StoreOperationResultFactory { get; set; }
 
@@ -202,7 +202,7 @@ namespace Enyim.Caching
 			return this.PerformStore(mode, key, value, expiresAt.GetExpiration(), ref tmp, out int status).Success;
 		}
 
-		protected virtual async Task<IStoreOperationResult> PerformStoreAsync(StoreMode mode, string key, object value, uint expires, ulong cas = 0, CancellationToken cancellationToken = default(CancellationToken))
+		protected virtual async Task<IStoreOperationResult> PerformStoreAsync(StoreMode mode, string key, object value, uint expires, ulong cas = 0, CancellationToken cancellationToken = default)
 		{
 			var start = DateTime.Now;
 			if (this._logger.IsEnabled(LogLevel.Trace))
@@ -270,7 +270,7 @@ namespace Enyim.Caching
 		/// <param name="value">The object to be inserted into the cache.</param>
 		/// <remarks>The item does not expire unless it is removed due memory pressure.</remarks>
 		/// <returns>true if the item was successfully stored in the cache; false otherwise.</returns>
-		public async Task<bool> StoreAsync(StoreMode mode, string key, object value, CancellationToken cancellationToken = default(CancellationToken))
+		public async Task<bool> StoreAsync(StoreMode mode, string key, object value, CancellationToken cancellationToken = default)
 			=> (await this.PerformStoreAsync(mode, key, value, 0, 0, cancellationToken).ConfigureAwait(false)).Success;
 
 		/// <summary>
@@ -281,7 +281,7 @@ namespace Enyim.Caching
 		/// <param name="value">The object to be inserted into the cache.</param>
 		/// <param name="validFor">The interval after the item is invalidated in the cache.</param>
 		/// <returns>true if the item was successfully stored in the cache; false otherwise.</returns>
-		public async Task<bool> StoreAsync(StoreMode mode, string key, object value, TimeSpan validFor, CancellationToken cancellationToken = default(CancellationToken))
+		public async Task<bool> StoreAsync(StoreMode mode, string key, object value, TimeSpan validFor, CancellationToken cancellationToken = default)
 			=> (await this.PerformStoreAsync(mode, key, value, validFor.GetExpiration(), 0, cancellationToken).ConfigureAwait(false)).Success;
 
 		/// <summary>
@@ -292,7 +292,7 @@ namespace Enyim.Caching
 		/// <param name="value">The object to be inserted into the cache.</param>
 		/// <param name="expiresAt">The time when the item is invalidated in the cache.</param>
 		/// <returns>true if the item was successfully stored in the cache; false otherwise.</returns>
-		public async Task<bool> StoreAsync(StoreMode mode, string key, object value, DateTime expiresAt, CancellationToken cancellationToken = default(CancellationToken))
+		public async Task<bool> StoreAsync(StoreMode mode, string key, object value, DateTime expiresAt, CancellationToken cancellationToken = default)
 			=> (await this.PerformStoreAsync(mode, key, value, expiresAt.GetExpiration(), 0, cancellationToken).ConfigureAwait(false)).Success;
 		#endregion
 
@@ -377,7 +377,7 @@ namespace Enyim.Caching
 		/// <param name="cas">The cas value which must match the item's version.</param>
 		/// <remarks>The item does not expire unless it is removed due memory pressure.</remarks>
 		/// <returns>A CasResult object containing the version of the item and the result of the operation (true if the item was successfully stored in the cache; false otherwise).</returns>
-		public async Task<CasResult<bool>> CasAsync(StoreMode mode, string key, object value, ulong cas, CancellationToken cancellationToken = default(CancellationToken))
+		public async Task<CasResult<bool>> CasAsync(StoreMode mode, string key, object value, ulong cas, CancellationToken cancellationToken = default)
 		{
 			var result = await this.PerformStoreAsync(mode, key, value, 0, cas, cancellationToken).ConfigureAwait(false);
 			return new CasResult<bool>
@@ -396,7 +396,7 @@ namespace Enyim.Caching
 		/// <param name="value">The object to be inserted into the cache.</param>
 		/// <remarks>The item does not expire unless it is removed due memory pressure. The text protocol does not support this operation, you need to Store then GetWithCas.</remarks>
 		/// <returns>A CasResult object containing the version of the item and the result of the operation (true if the item was successfully stored in the cache; false otherwise).</returns>
-		public Task<CasResult<bool>> CasAsync(StoreMode mode, string key, object value, CancellationToken cancellationToken = default(CancellationToken))
+		public Task<CasResult<bool>> CasAsync(StoreMode mode, string key, object value, CancellationToken cancellationToken = default)
 			=> this.CasAsync(mode, key, value, 0, cancellationToken);
 
 		/// <summary>
@@ -408,7 +408,7 @@ namespace Enyim.Caching
 		/// <param name="validFor">The interval after the item is invalidated in the cache.</param>
 		/// <param name="cas">The cas value which must match the item's version.</param>
 		/// <returns>A CasResult object containing the version of the item and the result of the operation (true if the item was successfully stored in the cache; false otherwise).</returns>
-		public async Task<CasResult<bool>> CasAsync(StoreMode mode, string key, object value, TimeSpan validFor, ulong cas, CancellationToken cancellationToken = default(CancellationToken))
+		public async Task<CasResult<bool>> CasAsync(StoreMode mode, string key, object value, TimeSpan validFor, ulong cas, CancellationToken cancellationToken = default)
 		{
 			var result = await this.PerformStoreAsync(mode, key, value, validFor.GetExpiration(), cas, cancellationToken).ConfigureAwait(false);
 			return new CasResult<bool>
@@ -428,7 +428,7 @@ namespace Enyim.Caching
 		/// <param name="expiresAt">The time when the item is invalidated in the cache.</param>
 		/// <param name="cas">The cas value which must match the item's version.</param>
 		/// <returns>A CasResult object containing the version of the item and the result of the operation (true if the item was successfully stored in the cache; false otherwise).</returns>
-		public async Task<CasResult<bool>> CasAsync(StoreMode mode, string key, object value, DateTime expiresAt, ulong cas, CancellationToken cancellationToken = default(CancellationToken))
+		public async Task<CasResult<bool>> CasAsync(StoreMode mode, string key, object value, DateTime expiresAt, ulong cas, CancellationToken cancellationToken = default)
 		{
 			var result = await this.PerformStoreAsync(mode, key, value, expiresAt.GetExpiration(), cas, cancellationToken).ConfigureAwait(false);
 			return new CasResult<bool>
@@ -458,7 +458,7 @@ namespace Enyim.Caching
 		/// <param name="value"></param>
 		/// <param name="cacheMinutes"></param>
 		/// <returns>true if the item was successfully added in the cache; false otherwise.</returns>
-		public Task<bool> SetAsync(string key, object value, int cacheMinutes, CancellationToken cancellationToken = default(CancellationToken))
+		public Task<bool> SetAsync(string key, object value, int cacheMinutes, CancellationToken cancellationToken = default)
 			=> this.StoreAsync(StoreMode.Set, key, value, cacheMinutes < 1 ? TimeSpan.Zero : TimeSpan.FromMinutes(cacheMinutes), cancellationToken);
 		#endregion
 
@@ -480,7 +480,7 @@ namespace Enyim.Caching
 		/// <param name="value"></param>
 		/// <param name="cacheMinutes"></param>
 		/// <returns>true if the item was successfully added in the cache; false otherwise.</returns>
-		public Task<bool> AddAsync(string key, object value, int cacheMinutes, CancellationToken cancellationToken = default(CancellationToken))
+		public Task<bool> AddAsync(string key, object value, int cacheMinutes, CancellationToken cancellationToken = default)
 			=> this.StoreAsync(StoreMode.Add, key, value, cacheMinutes < 1 ? TimeSpan.Zero : TimeSpan.FromMinutes(cacheMinutes), cancellationToken);
 		#endregion
 
@@ -502,7 +502,7 @@ namespace Enyim.Caching
 		/// <param name="value"></param>
 		/// <param name="cacheMinutes"></param>
 		/// <returns>true if the item was successfully replaced in the cache; false otherwise.</returns>
-		public Task<bool> ReplaceAsync(string key, object value, int cacheMinutes, CancellationToken cancellationToken = default(CancellationToken))
+		public Task<bool> ReplaceAsync(string key, object value, int cacheMinutes, CancellationToken cancellationToken = default)
 			=> this.StoreAsync(StoreMode.Replace, key, value, cacheMinutes < 1 ? TimeSpan.Zero : TimeSpan.FromMinutes(cacheMinutes), cancellationToken);
 		#endregion
 
@@ -743,7 +743,7 @@ namespace Enyim.Caching
 			};
 		}
 
-		protected virtual async Task<IMutateOperationResult> PerformMutateAsync(MutationMode mode, string key, ulong defaultValue, ulong delta, uint expires, ulong cas = 0, CancellationToken cancellationToken = default(CancellationToken))
+		protected virtual async Task<IMutateOperationResult> PerformMutateAsync(MutationMode mode, string key, ulong defaultValue, ulong delta, uint expires, ulong cas = 0, CancellationToken cancellationToken = default)
 		{
 			var start = DateTime.Now;
 			if (this._logger.IsEnabled(LogLevel.Trace))
@@ -782,7 +782,7 @@ namespace Enyim.Caching
 			return result;
 		}
 
-		Task<IMutateOperationResult> CasMutateAsync(MutationMode mode, string key, ulong defaultValue, ulong delta, uint expires, ulong cas, CancellationToken cancellationToken = default(CancellationToken))
+		Task<IMutateOperationResult> CasMutateAsync(MutationMode mode, string key, ulong defaultValue, ulong delta, uint expires, ulong cas, CancellationToken cancellationToken = default)
 			=> this.PerformMutateAsync(mode, key, defaultValue, delta, expires, cas, cancellationToken);
 
 		/// <summary>
@@ -793,7 +793,7 @@ namespace Enyim.Caching
 		/// <param name="delta">The amount by which the client wants to increase the item.</param>
 		/// <returns>The new value of the item or defaultValue if the key was not found.</returns>
 		/// <remarks>If the client uses the Text protocol, the item must be inserted into the cache before it can be changed. It must be inserted as a <see cref="System.String"/>. Moreover the Text protocol only works with <see cref="System.UInt32"/> values, so return value -1 always indicates that the item was not found.</remarks>
-		public async Task<ulong> IncrementAsync(string key, ulong defaultValue, ulong delta, CancellationToken cancellationToken = default(CancellationToken))
+		public async Task<ulong> IncrementAsync(string key, ulong defaultValue, ulong delta, CancellationToken cancellationToken = default)
 			=> (await this.PerformMutateAsync(MutationMode.Increment, key, defaultValue, delta, 0, 0, cancellationToken).ConfigureAwait(false)).Value;
 
 		/// <summary>
@@ -805,7 +805,7 @@ namespace Enyim.Caching
 		/// <param name="validFor">The interval after the item is invalidated in the cache.</param>
 		/// <returns>The new value of the item or defaultValue if the key was not found.</returns>
 		/// <remarks>If the client uses the Text protocol, the item must be inserted into the cache before it can be changed. It must be inserted as a <see cref="System.String"/>. Moreover the Text protocol only works with <see cref="System.UInt32"/> values, so return value -1 always indicates that the item was not found.</remarks>
-		public async Task<ulong> IncrementAsync(string key, ulong defaultValue, ulong delta, TimeSpan validFor, CancellationToken cancellationToken = default(CancellationToken))
+		public async Task<ulong> IncrementAsync(string key, ulong defaultValue, ulong delta, TimeSpan validFor, CancellationToken cancellationToken = default)
 			=> (await this.PerformMutateAsync(MutationMode.Increment, key, defaultValue, delta, validFor.GetExpiration(), 0, cancellationToken).ConfigureAwait(false)).Value;
 
 		/// <summary>
@@ -817,7 +817,7 @@ namespace Enyim.Caching
 		/// <param name="expiresAt">The time when the item is invalidated in the cache.</param>
 		/// <returns>The new value of the item or defaultValue if the key was not found.</returns>
 		/// <remarks>If the client uses the Text protocol, the item must be inserted into the cache before it can be changed. It must be inserted as a <see cref="System.String"/>. Moreover the Text protocol only works with <see cref="System.UInt32"/> values, so return value -1 always indicates that the item was not found.</remarks>
-		public async Task<ulong> IncrementAsync(string key, ulong defaultValue, ulong delta, DateTime expiresAt, CancellationToken cancellationToken = default(CancellationToken))
+		public async Task<ulong> IncrementAsync(string key, ulong defaultValue, ulong delta, DateTime expiresAt, CancellationToken cancellationToken = default)
 			=> (await this.PerformMutateAsync(MutationMode.Increment, key, defaultValue, delta, expiresAt.GetExpiration(), 0, cancellationToken).ConfigureAwait(false)).Value;
 
 		/// <summary>
@@ -829,7 +829,7 @@ namespace Enyim.Caching
 		/// <param name="cas">The cas value which must match the item's version.</param>
 		/// <returns>The new value of the item or defaultValue if the key was not found.</returns>
 		/// <remarks>If the client uses the Text protocol, the item must be inserted into the cache before it can be changed. It must be inserted as a <see cref="System.String"/>. Moreover the Text protocol only works with <see cref="System.UInt32"/> values, so return value -1 always indicates that the item was not found.</remarks>
-		public async Task<CasResult<ulong>> IncrementAsync(string key, ulong defaultValue, ulong delta, ulong cas, CancellationToken cancellationToken = default(CancellationToken))
+		public async Task<CasResult<ulong>> IncrementAsync(string key, ulong defaultValue, ulong delta, ulong cas, CancellationToken cancellationToken = default)
 		{
 			var result = await this.CasMutateAsync(MutationMode.Increment, key, defaultValue, delta, 0, cas, cancellationToken).ConfigureAwait(false);
 			return new CasResult<ulong>
@@ -850,7 +850,7 @@ namespace Enyim.Caching
 		/// <param name="cas">The cas value which must match the item's version.</param>
 		/// <returns>The new value of the item or defaultValue if the key was not found.</returns>
 		/// <remarks>If the client uses the Text protocol, the item must be inserted into the cache before it can be changed. It must be inserted as a <see cref="System.String"/>. Moreover the Text protocol only works with <see cref="System.UInt32"/> values, so return value -1 always indicates that the item was not found.</remarks>
-		public async Task<CasResult<ulong>> IncrementAsync(string key, ulong defaultValue, ulong delta, TimeSpan validFor, ulong cas, CancellationToken cancellationToken = default(CancellationToken))
+		public async Task<CasResult<ulong>> IncrementAsync(string key, ulong defaultValue, ulong delta, TimeSpan validFor, ulong cas, CancellationToken cancellationToken = default)
 		{
 			var result = await this.CasMutateAsync(MutationMode.Increment, key, defaultValue, delta, validFor.GetExpiration(), cas, cancellationToken).ConfigureAwait(false);
 			return new CasResult<ulong>
@@ -871,7 +871,7 @@ namespace Enyim.Caching
 		/// <param name="cas">The cas value which must match the item's version.</param>
 		/// <returns>The new value of the item or defaultValue if the key was not found.</returns>
 		/// <remarks>If the client uses the Text protocol, the item must be inserted into the cache before it can be changed. It must be inserted as a <see cref="System.String"/>. Moreover the Text protocol only works with <see cref="System.UInt32"/> values, so return value -1 always indicates that the item was not found.</remarks>
-		public async Task<CasResult<ulong>> IncrementAsync(string key, ulong defaultValue, ulong delta, DateTime expiresAt, ulong cas, CancellationToken cancellationToken = default(CancellationToken))
+		public async Task<CasResult<ulong>> IncrementAsync(string key, ulong defaultValue, ulong delta, DateTime expiresAt, ulong cas, CancellationToken cancellationToken = default)
 		{
 			var result = await this.CasMutateAsync(MutationMode.Increment, key, defaultValue, delta, expiresAt.GetExpiration(), cas, cancellationToken).ConfigureAwait(false);
 			return new CasResult<ulong>
@@ -890,7 +890,7 @@ namespace Enyim.Caching
 		/// <param name="delta">The amount by which the client wants to decrease the item.</param>
 		/// <returns>The new value of the item or defaultValue if the key was not found.</returns>
 		/// <remarks>If the client uses the Text protocol, the item must be inserted into the cache before it can be changed. It must be inserted as a <see cref="System.String"/>. Moreover the Text protocol only works with <see cref="System.UInt32"/> values, so return value -1 always indicates that the item was not found.</remarks>
-		public async Task<ulong> DecrementAsync(string key, ulong defaultValue, ulong delta, CancellationToken cancellationToken = default(CancellationToken))
+		public async Task<ulong> DecrementAsync(string key, ulong defaultValue, ulong delta, CancellationToken cancellationToken = default)
 			=> (await this.PerformMutateAsync(MutationMode.Decrement, key, defaultValue, delta, 0, 0, cancellationToken).ConfigureAwait(false)).Value;
 
 		/// <summary>
@@ -902,7 +902,7 @@ namespace Enyim.Caching
 		/// <param name="validFor">The interval after the item is invalidated in the cache.</param>
 		/// <returns>The new value of the item or defaultValue if the key was not found.</returns>
 		/// <remarks>If the client uses the Text protocol, the item must be inserted into the cache before it can be changed. It must be inserted as a <see cref="System.String"/>. Moreover the Text protocol only works with <see cref="System.UInt32"/> values, so return value -1 always indicates that the item was not found.</remarks>
-		public async Task<ulong> DecrementAsync(string key, ulong defaultValue, ulong delta, TimeSpan validFor, CancellationToken cancellationToken = default(CancellationToken))
+		public async Task<ulong> DecrementAsync(string key, ulong defaultValue, ulong delta, TimeSpan validFor, CancellationToken cancellationToken = default)
 			=> (await this.PerformMutateAsync(MutationMode.Decrement, key, defaultValue, delta, validFor.GetExpiration(), 0, cancellationToken).ConfigureAwait(false)).Value;
 
 		/// <summary>
@@ -914,7 +914,7 @@ namespace Enyim.Caching
 		/// <param name="expiresAt">The time when the item is invalidated in the cache.</param>
 		/// <returns>The new value of the item or defaultValue if the key was not found.</returns>
 		/// <remarks>If the client uses the Text protocol, the item must be inserted into the cache before it can be changed. It must be inserted as a <see cref="System.String"/>. Moreover the Text protocol only works with <see cref="System.UInt32"/> values, so return value -1 always indicates that the item was not found.</remarks>
-		public async Task<ulong> DecrementAsync(string key, ulong defaultValue, ulong delta, DateTime expiresAt, CancellationToken cancellationToken = default(CancellationToken))
+		public async Task<ulong> DecrementAsync(string key, ulong defaultValue, ulong delta, DateTime expiresAt, CancellationToken cancellationToken = default)
 			=> (await this.PerformMutateAsync(MutationMode.Decrement, key, defaultValue, delta, expiresAt.GetExpiration(), 0, cancellationToken).ConfigureAwait(false)).Value;
 
 		/// <summary>
@@ -926,7 +926,7 @@ namespace Enyim.Caching
 		/// <param name="cas">The cas value which must match the item's version.</param>
 		/// <returns>The new value of the item or defaultValue if the key was not found.</returns>
 		/// <remarks>If the client uses the Text protocol, the item must be inserted into the cache before it can be changed. It must be inserted as a <see cref="System.String"/>. Moreover the Text protocol only works with <see cref="System.UInt32"/> values, so return value -1 always indicates that the item was not found.</remarks>
-		public async Task<CasResult<ulong>> DecrementAsync(string key, ulong defaultValue, ulong delta, ulong cas, CancellationToken cancellationToken = default(CancellationToken))
+		public async Task<CasResult<ulong>> DecrementAsync(string key, ulong defaultValue, ulong delta, ulong cas, CancellationToken cancellationToken = default)
 		{
 			var result = await this.CasMutateAsync(MutationMode.Decrement, key, defaultValue, delta, 0, cas, cancellationToken).ConfigureAwait(false);
 			return new CasResult<ulong>
@@ -947,7 +947,7 @@ namespace Enyim.Caching
 		/// <param name="cas">The cas value which must match the item's version.</param>
 		/// <returns>The new value of the item or defaultValue if the key was not found.</returns>
 		/// <remarks>If the client uses the Text protocol, the item must be inserted into the cache before it can be changed. It must be inserted as a <see cref="System.String"/>. Moreover the Text protocol only works with <see cref="System.UInt32"/> values, so return value -1 always indicates that the item was not found.</remarks>
-		public async Task<CasResult<ulong>> DecrementAsync(string key, ulong defaultValue, ulong delta, TimeSpan validFor, ulong cas, CancellationToken cancellationToken = default(CancellationToken))
+		public async Task<CasResult<ulong>> DecrementAsync(string key, ulong defaultValue, ulong delta, TimeSpan validFor, ulong cas, CancellationToken cancellationToken = default)
 		{
 			var result = await this.CasMutateAsync(MutationMode.Decrement, key, defaultValue, delta, validFor.GetExpiration(), cas, cancellationToken).ConfigureAwait(false);
 			return new CasResult<ulong>
@@ -968,7 +968,7 @@ namespace Enyim.Caching
 		/// <param name="cas">The cas value which must match the item's version.</param>
 		/// <returns>The new value of the item or defaultValue if the key was not found.</returns>
 		/// <remarks>If the client uses the Text protocol, the item must be inserted into the cache before it can be changed. It must be inserted as a <see cref="System.String"/>. Moreover the Text protocol only works with <see cref="System.UInt32"/> values, so return value -1 always indicates that the item was not found.</remarks>
-		public async Task<CasResult<ulong>> DecrementAsync(string key, ulong defaultValue, ulong delta, DateTime expiresAt, ulong cas, CancellationToken cancellationToken = default(CancellationToken))
+		public async Task<CasResult<ulong>> DecrementAsync(string key, ulong defaultValue, ulong delta, DateTime expiresAt, ulong cas, CancellationToken cancellationToken = default)
 		{
 			var result = await this.CasMutateAsync(MutationMode.Decrement, key, defaultValue, delta, expiresAt.GetExpiration(), cas, cancellationToken).ConfigureAwait(false);
 			return new CasResult<ulong>
@@ -1078,7 +1078,7 @@ namespace Enyim.Caching
 			};
 		}
 
-		protected virtual async Task<IConcatOperationResult> PerformConcatenateAsync(ConcatenationMode mode, string key, ArraySegment<byte> data, ulong cas = 0, CancellationToken cancellationToken = default(CancellationToken))
+		protected virtual async Task<IConcatOperationResult> PerformConcatenateAsync(ConcatenationMode mode, string key, ArraySegment<byte> data, ulong cas = 0, CancellationToken cancellationToken = default)
 		{
 			var start = DateTime.Now;
 			if (this._logger.IsEnabled(LogLevel.Trace))
@@ -1121,7 +1121,7 @@ namespace Enyim.Caching
 		/// <param name="key">The key used to reference the item.</param>
 		/// <param name="data">The data to be appended to the item.</param>
 		/// <returns>true if the data was successfully stored; false otherwise.</returns>
-		public async Task<bool> AppendAsync(string key, ArraySegment<byte> data, CancellationToken cancellationToken = default(CancellationToken))
+		public async Task<bool> AppendAsync(string key, ArraySegment<byte> data, CancellationToken cancellationToken = default)
 			=> (await this.PerformConcatenateAsync(ConcatenationMode.Append, key, data, 0, cancellationToken).ConfigureAwait(false)).Success;
 
 		/// <summary>
@@ -1131,7 +1131,7 @@ namespace Enyim.Caching
 		/// <param name="cas">The cas value which must match the item's version.</param>
 		/// <param name="data">The data to be prepended to the item.</param>
 		/// <returns>true if the data was successfully stored; false otherwise.</returns>
-		public async Task<CasResult<bool>> AppendAsync(string key, ulong cas, ArraySegment<byte> data, CancellationToken cancellationToken = default(CancellationToken))
+		public async Task<CasResult<bool>> AppendAsync(string key, ulong cas, ArraySegment<byte> data, CancellationToken cancellationToken = default)
 		{
 			var result = await this.PerformConcatenateAsync(ConcatenationMode.Append, key, data, cas, cancellationToken).ConfigureAwait(false);
 			return new CasResult<bool>
@@ -1145,7 +1145,7 @@ namespace Enyim.Caching
 		/// Inserts the data before the specified item's data on the server.
 		/// </summary>
 		/// <returns>true if the data was successfully stored; false otherwise.</returns>
-		public async Task<bool> PrependAsync(string key, ArraySegment<byte> data, CancellationToken cancellationToken = default(CancellationToken))
+		public async Task<bool> PrependAsync(string key, ArraySegment<byte> data, CancellationToken cancellationToken = default)
 			=> (await this.PerformConcatenateAsync(ConcatenationMode.Prepend, key, data, 0, cancellationToken).ConfigureAwait(false)).Success;
 
 		/// <summary>
@@ -1155,7 +1155,7 @@ namespace Enyim.Caching
 		/// <param name="cas">The cas value which must match the item's version.</param>
 		/// <param name="data">The data to be prepended to the item.</param>
 		/// <returns>true if the data was successfully stored; false otherwise.</returns>
-		public async Task<CasResult<bool>> PrependAsync(string key, ulong cas, ArraySegment<byte> data, CancellationToken cancellationToken = default(CancellationToken))
+		public async Task<CasResult<bool>> PrependAsync(string key, ulong cas, ArraySegment<byte> data, CancellationToken cancellationToken = default)
 		{
 			var result = await this.PerformConcatenateAsync(ConcatenationMode.Prepend, key, data, cas, cancellationToken).ConfigureAwait(false);
 			return new CasResult<bool>
@@ -1236,7 +1236,7 @@ namespace Enyim.Caching
 				? value is string && typeof(T) == typeof(Guid)
 					? (T)(object)new Guid(value as string)
 					: (T)value
-				: default(T);
+				: default;
 		}
 
 		/// <summary>
@@ -1268,7 +1268,7 @@ namespace Enyim.Caching
 			return new CasResult<T>
 			{
 				Cas = tmp.Cas,
-				Result = success ? (T)tmp.Result : default(T)
+				Result = success ? (T)tmp.Result : default
 			};
 		}
 
@@ -1280,7 +1280,7 @@ namespace Enyim.Caching
 		public CasResult<object> GetWithCas(string key)
 			=> this.GetWithCas<object>(key);
 
-		protected virtual async Task<IGetOperationResult> PerformGetAsync(string key, CancellationToken cancellationToken = default(CancellationToken))
+		protected virtual async Task<IGetOperationResult> PerformGetAsync(string key, CancellationToken cancellationToken = default)
 		{
 			var start = DateTime.Now;
 			if (this._logger.IsEnabled(LogLevel.Trace))
@@ -1322,7 +1322,7 @@ namespace Enyim.Caching
 		/// </summary>
 		/// <param name="key">The identifier for the item to retrieve.</param>
 		/// <returns>The retrieved item, or <value>null</value> if the key was not found.</returns>
-		public async Task<object> GetAsync(string key, CancellationToken cancellationToken = default(CancellationToken))
+		public async Task<object> GetAsync(string key, CancellationToken cancellationToken = default)
 		{
 			var result = await this.PerformGetAsync(key, cancellationToken).ConfigureAwait(false);
 			return result.Success ? result.Value : null;
@@ -1334,14 +1334,14 @@ namespace Enyim.Caching
 		/// <typeparam name="T"></typeparam>
 		/// <param name="key">The identifier for the item to retrieve.</param>
 		/// <returns>The retrieved item, or <value>null</value> if the key was not found.</returns>
-		public async Task<T> GetAsync<T>(string key, CancellationToken cancellationToken = default(CancellationToken))
+		public async Task<T> GetAsync<T>(string key, CancellationToken cancellationToken = default)
 		{
 			var value = await this.GetAsync(key, cancellationToken).ConfigureAwait(false);
 			return value != null
 				? value is string && typeof(T) == typeof(Guid)
 					? (T)(object)new Guid(value as string)
 					: (T)value
-				: default(T);
+				: default;
 		}
 
 		/// <summary>
@@ -1350,13 +1350,13 @@ namespace Enyim.Caching
 		/// <typeparam name="T"></typeparam>
 		/// <param name="key"></param>
 		/// <returns></returns>
-		public async Task<CasResult<T>> GetWithCasAsync<T>(string key, CancellationToken cancellationToken = default(CancellationToken))
+		public async Task<CasResult<T>> GetWithCasAsync<T>(string key, CancellationToken cancellationToken = default)
 		{
 			var result = await this.PerformGetAsync(key, cancellationToken).ConfigureAwait(false);
 			return new CasResult<T>
 			{
 				Cas = result.Cas,
-				Result = result.Success ? (T)result.Value : default(T)
+				Result = result.Success ? (T)result.Value : default
 			};
 		}
 
@@ -1365,7 +1365,7 @@ namespace Enyim.Caching
 		/// </summary>
 		/// <param name="key"></param>
 		/// <returns></returns>
-		public Task<CasResult<object>> GetWithCasAsync(string key, CancellationToken cancellationToken = default(CancellationToken))
+		public Task<CasResult<object>> GetWithCasAsync(string key, CancellationToken cancellationToken = default)
 			=> this.GetWithCasAsync<object>(key, cancellationToken);
 		#endregion
 
@@ -1454,7 +1454,7 @@ namespace Enyim.Caching
 				Cas = op.Cas[kvp.Key]
 			});
 
-		protected virtual async Task<IDictionary<string, T>> PerformMultiGetAsync<T>(IEnumerable<string> keys, Func<IMultiGetOperation, KeyValuePair<string, CacheItem>, T> collector, CancellationToken cancellationToken = default(CancellationToken))
+		protected virtual async Task<IDictionary<string, T>> PerformMultiGetAsync<T>(IEnumerable<string> keys, Func<IMultiGetOperation, KeyValuePair<string, CacheItem>, T> collector, CancellationToken cancellationToken = default)
 		{
 			var start = DateTime.Now;
 			if (this._logger.IsEnabled(LogLevel.Trace))
@@ -1503,7 +1503,7 @@ namespace Enyim.Caching
 		/// </summary>
 		/// <param name="keys">The list of identifiers for the items to retrieve.</param>
 		/// <returns>a Dictionary holding all items indexed by their key.</returns>
-		public Task<IDictionary<string, object>> GetAsync(IEnumerable<string> keys, CancellationToken cancellationToken = default(CancellationToken))
+		public Task<IDictionary<string, object>> GetAsync(IEnumerable<string> keys, CancellationToken cancellationToken = default)
 			=> this.PerformMultiGetAsync(keys, (op, kvp) => this.Transcoder.Deserialize(kvp.Value), cancellationToken);
 
 		/// <summary>
@@ -1512,7 +1512,7 @@ namespace Enyim.Caching
 		/// <typeparam name="T"></typeparam>
 		/// <param name="keys">The list of identifiers for the items to retrieve.</param>
 		/// <returns>a Dictionary holding all items indexed by their key.</returns>
-		public Task<IDictionary<string, T>> GetAsync<T>(IEnumerable<string> keys, CancellationToken cancellationToken = default(CancellationToken))
+		public Task<IDictionary<string, T>> GetAsync<T>(IEnumerable<string> keys, CancellationToken cancellationToken = default)
 			=> this.PerformMultiGetAsync(keys, (op, kvp) => this.Transcoder.Deserialize<T>(kvp.Value), cancellationToken);
 
 		/// <summary>
@@ -1520,7 +1520,7 @@ namespace Enyim.Caching
 		/// </summary>
 		/// <param name="keys"></param>
 		/// <returns></returns>
-		public Task<IDictionary<string, CasResult<object>>> GetWithCasAsync(IEnumerable<string> keys, CancellationToken cancellationToken = default(CancellationToken))
+		public Task<IDictionary<string, CasResult<object>>> GetWithCasAsync(IEnumerable<string> keys, CancellationToken cancellationToken = default)
 			=> this.PerformMultiGetAsync(keys, (op, kvp) => new CasResult<object>
 			{
 				Result = this.Transcoder.Deserialize(kvp.Value),
@@ -1570,7 +1570,7 @@ namespace Enyim.Caching
 		public bool Remove(string key)
 			=> this.PerformRemove(key).Success;
 
-		protected async Task<IRemoveOperationResult> PerformRemoveAsync(string key, CancellationToken cancellationToken = default(CancellationToken))
+		protected async Task<IRemoveOperationResult> PerformRemoveAsync(string key, CancellationToken cancellationToken = default)
 		{
 			var start = DateTime.Now;
 			if (this._logger.IsEnabled(LogLevel.Trace))
@@ -1608,7 +1608,7 @@ namespace Enyim.Caching
 		/// </summary>
 		/// <param name="key">The identifier for the item to delete.</param>
 		/// <returns>true if the item was successfully removed from the cache; false otherwise.</returns>
-		public async Task<bool> RemoveAsync(string key, CancellationToken cancellationToken = default(CancellationToken))
+		public async Task<bool> RemoveAsync(string key, CancellationToken cancellationToken = default)
 			=> (await this.PerformRemoveAsync(key, cancellationToken).ConfigureAwait(false)).Success;
 		#endregion
 
@@ -1633,7 +1633,7 @@ namespace Enyim.Caching
 		/// </summary>
 		/// <param name="key">The key</param>
 		/// <returns>Returns a boolean value indicating if the object that associates with the key is cached or not</returns>
-		public async Task<bool> ExistsAsync(string key, CancellationToken cancellationToken = default(CancellationToken))
+		public async Task<bool> ExistsAsync(string key, CancellationToken cancellationToken = default)
 		{
 			if (!await this.AppendAsync(key, new ArraySegment<byte>(new byte[0])).ConfigureAwait(false))
 			{
@@ -1654,7 +1654,7 @@ namespace Enyim.Caching
 		/// <summary>
 		/// Removes all data from the cache. Note: this will invalidate all data on all servers in the pool.
 		/// </summary>
-		public Task FlushAllAsync(CancellationToken cancellationToken = default(CancellationToken))
+		public Task FlushAllAsync(CancellationToken cancellationToken = default)
 			=> Task.WhenAll(this.Pool.GetWorkingNodes().Select(node => node.ExecuteAsync(this.Pool.OperationFactory.Flush(), cancellationToken)));
 		#endregion
 
@@ -1693,7 +1693,7 @@ namespace Enyim.Caching
 		/// </summary>
 		/// <param name="type"></param>
 		/// <returns></returns>
-		public async Task<ServerStats> StatsAsync(string type, CancellationToken cancellationToken = default(CancellationToken))
+		public async Task<ServerStats> StatsAsync(string type, CancellationToken cancellationToken = default)
 		{
 			var results = new ConcurrentDictionary<EndPoint, Dictionary<string, string>>();
 
@@ -1711,7 +1711,7 @@ namespace Enyim.Caching
 		/// Gets statistics about the servers.
 		/// </summary>
 		/// <returns></returns>
-		public Task<ServerStats> StatsAsync(CancellationToken cancellationToken = default(CancellationToken))
+		public Task<ServerStats> StatsAsync(CancellationToken cancellationToken = default)
 			=> this.StatsAsync(null, cancellationToken);
 		#endregion
 
@@ -1758,7 +1758,7 @@ namespace Enyim.Caching
 				this.Store(StoreMode.Set, key.GetIDistributedCacheExpirationKey(), expires, validFor);
 		}
 
-		async Task IDistributedCache.SetAsync(string key, byte[] value, DistributedCacheEntryOptions options, CancellationToken cancellationToken = default(CancellationToken))
+		async Task IDistributedCache.SetAsync(string key, byte[] value, DistributedCacheEntryOptions options, CancellationToken cancellationToken = default)
 		{
 			if (string.IsNullOrWhiteSpace(key))
 				throw new ArgumentNullException(nameof(key));
@@ -1779,7 +1779,7 @@ namespace Enyim.Caching
 				? throw new ArgumentNullException(nameof(key))
 				: this.Get<byte[]>(key);
 
-		Task<byte[]> IDistributedCache.GetAsync(string key, CancellationToken cancellationToken = default(CancellationToken))
+		Task<byte[]> IDistributedCache.GetAsync(string key, CancellationToken cancellationToken = default)
 			=> string.IsNullOrWhiteSpace(key)
 				? Task.FromException<byte[]>(new ArgumentNullException(nameof(key)))
 				: this.GetAsync<byte[]>(key, cancellationToken);
@@ -1798,7 +1798,7 @@ namespace Enyim.Caching
 				this.Store(StoreMode.Replace, key.GetIDistributedCacheExpirationKey(), expires, (TimeSpan)expires);
 		}
 
-		async Task IDistributedCache.RefreshAsync(string key, CancellationToken cancellationToken = default(CancellationToken))
+		async Task IDistributedCache.RefreshAsync(string key, CancellationToken cancellationToken = default)
 		{
 			if (string.IsNullOrWhiteSpace(key))
 				throw new ArgumentNullException(nameof(key));
@@ -1821,7 +1821,7 @@ namespace Enyim.Caching
 			this.Remove(key.GetIDistributedCacheExpirationKey());
 		}
 
-		Task IDistributedCache.RemoveAsync(string key, CancellationToken cancellationToken = default(CancellationToken))
+		Task IDistributedCache.RemoveAsync(string key, CancellationToken cancellationToken = default)
 			=> string.IsNullOrWhiteSpace(key)
 				? Task.FromException(new ArgumentNullException(nameof(key)))
 				: Task.WhenAll(this.RemoveAsync(key, cancellationToken), this.RemoveAsync(key.GetIDistributedCacheExpirationKey(), cancellationToken));

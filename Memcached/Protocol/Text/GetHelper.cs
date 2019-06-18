@@ -17,7 +17,7 @@ namespace Enyim.Caching.Memcached.Protocol.Text
 				throw new MemcachedClientException("No END was received.");
 		}
 
-		public static async Task FinishCurrentAsync(PooledSocket socket, CancellationToken cancellationToken = default(CancellationToken))
+		public static async Task FinishCurrentAsync(PooledSocket socket, CancellationToken cancellationToken = default)
 		{
 			string response = await TextSocketHelper.ReadResponseAsync(socket, cancellationToken).ConfigureAwait(false);
 
@@ -69,7 +69,7 @@ namespace Enyim.Caching.Memcached.Protocol.Text
 			return result;
 		}
 
-		public static async Task<GetResponse> ReadItemAsync(PooledSocket socket, CancellationToken cancellationToken = default(CancellationToken))
+		public static async Task<GetResponse> ReadItemAsync(PooledSocket socket, CancellationToken cancellationToken = default)
 		{
 			var description = await TextSocketHelper.ReadResponseAsync(socket, cancellationToken).ConfigureAwait(false);
 			if (String.Compare(description, "END", StringComparison.Ordinal) == 0)

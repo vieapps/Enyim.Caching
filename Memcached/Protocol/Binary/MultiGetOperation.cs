@@ -100,7 +100,7 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 			return result.Fail($"Found response with correlation ID {response.CorrelationID}, but no key is matching it");
 		}
 
-		protected internal override async Task<IOperationResult> ReadResponseAsync(PooledSocket socket, CancellationToken cancellationToken = default(CancellationToken))
+		protected internal override async Task<IOperationResult> ReadResponseAsync(PooledSocket socket, CancellationToken cancellationToken = default)
 		{
 			this.Result = new Dictionary<string, CacheItem>();
 			this.Cas = new Dictionary<string, ulong>();

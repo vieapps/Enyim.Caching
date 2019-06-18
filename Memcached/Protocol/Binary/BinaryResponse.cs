@@ -9,7 +9,7 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 {
 	public class BinaryResponse
 	{
-		ILogger _logger;
+		readonly ILogger _logger;
 		PooledSocket _socket;
 		int _dataLength, _extraLength;
 		bool _shouldCallNext;
@@ -86,7 +86,7 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 		/// </summary>
 		/// <param name="socket"></param>
 		/// <returns></returns>
-		public async Task<bool> ReadAsync(PooledSocket socket, CancellationToken cancellationToken = default(CancellationToken))
+		public async Task<bool> ReadAsync(PooledSocket socket, CancellationToken cancellationToken = default)
 		{
 			this.StatusCode = -1;
 

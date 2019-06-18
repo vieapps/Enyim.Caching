@@ -508,7 +508,7 @@ namespace Enyim.Caching.Memcached
 			return result;
 		}
 
-		protected async virtual Task<IPooledSocketResult> ExecuteOperationAsync(IOperation op, CancellationToken cancellationToken = default(CancellationToken))
+		protected async virtual Task<IPooledSocketResult> ExecuteOperationAsync(IOperation op, CancellationToken cancellationToken = default)
 		{
 			var result = this.Acquire();
 			if (result.Success && result.HasValue)
@@ -579,7 +579,7 @@ namespace Enyim.Caching.Memcached
 		IOperationResult IMemcachedNode.Execute(IOperation op)
 			=> this.ExecuteOperation(op);
 
-		async Task<IOperationResult> IMemcachedNode.ExecuteAsync(IOperation op, CancellationToken cancellationToken = default(CancellationToken))
+		async Task<IOperationResult> IMemcachedNode.ExecuteAsync(IOperation op, CancellationToken cancellationToken = default)
 			=> await this.ExecuteOperationAsync(op).ConfigureAwait(false);
 
 		bool IMemcachedNode.ExecuteAsync(IOperation op, Action<bool> next)

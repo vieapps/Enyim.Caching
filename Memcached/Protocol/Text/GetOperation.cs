@@ -36,7 +36,7 @@ namespace Enyim.Caching.Memcached.Protocol.Text
 			return result.Pass();
 		}
 
-		protected internal override async Task<IOperationResult> ReadResponseAsync(PooledSocket socket, CancellationToken cancellationToken = default(CancellationToken))
+		protected internal override async Task<IOperationResult> ReadResponseAsync(PooledSocket socket, CancellationToken cancellationToken = default)
 		{
 			var response = await GetHelper.ReadItemAsync(socket, cancellationToken).ConfigureAwait(false);
 			var result = new TextOperationResult();

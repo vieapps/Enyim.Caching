@@ -25,7 +25,7 @@ namespace Enyim.Caching.Memcached.Protocol.Text
 			};
 		}
 
-		protected internal override async Task<IOperationResult> ReadResponseAsync(PooledSocket socket, CancellationToken cancellationToken = default(CancellationToken))
+		protected internal override async Task<IOperationResult> ReadResponseAsync(PooledSocket socket, CancellationToken cancellationToken = default)
 		{
 			return new TextOperationResult
 			{

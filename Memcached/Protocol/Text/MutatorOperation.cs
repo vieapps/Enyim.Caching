@@ -10,8 +10,8 @@ namespace Enyim.Caching.Memcached.Protocol.Text
 {
 	public class MutatorOperation : SingleItemOperation, IMutatorOperation
 	{
-		MutationMode mode;
-		ulong delta;
+		readonly MutationMode mode;
+		readonly ulong delta;
 		ulong result;
 
 		internal MutatorOperation(MutationMode mode, string key, ulong delta) : base(key)
@@ -59,7 +59,7 @@ namespace Enyim.Caching.Memcached.Protocol.Text
 			return result;
 		}
 
-		protected internal override async Task<IOperationResult> ReadResponseAsync(PooledSocket socket, CancellationToken cancellationToken = default(CancellationToken))
+		protected internal override async Task<IOperationResult> ReadResponseAsync(PooledSocket socket, CancellationToken cancellationToken = default)
 		{
 			string response = await TextSocketHelper.ReadResponseAsync(socket, cancellationToken).ConfigureAwait(false);
 			var result = new TextOperationResult();

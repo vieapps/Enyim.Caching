@@ -11,11 +11,11 @@ namespace Enyim.Caching.Memcached.Protocol.Text
 {
 	public class StoreOperationBase : SingleItemOperation
 	{
-		private static readonly ArraySegment<byte> DataTerminator = new ArraySegment<byte>(new byte[2] { (byte)'\r', (byte)'\n' });
-		private StoreCommand command;
-		private CacheItem value;
-		private uint expires;
-		private ulong cas;
+		static readonly ArraySegment<byte> DataTerminator = new ArraySegment<byte>(new byte[2] { (byte)'\r', (byte)'\n' });
+		readonly StoreCommand command;
+		readonly uint expires;
+		readonly ulong cas;
+		CacheItem value;
 
 		internal StoreOperationBase(StoreCommand mode, string key, CacheItem value, uint expires, ulong cas) : base(key)
 		{
@@ -75,7 +75,7 @@ namespace Enyim.Caching.Memcached.Protocol.Text
 			};
 		}
 
-		protected internal override async Task<IOperationResult> ReadResponseAsync(PooledSocket socket, CancellationToken cancellationToken = default(CancellationToken))
+		protected internal override async Task<IOperationResult> ReadResponseAsync(PooledSocket socket, CancellationToken cancellationToken = default)
 		{
 			return new TextOperationResult
 			{

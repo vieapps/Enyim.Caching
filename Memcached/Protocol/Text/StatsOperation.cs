@@ -12,9 +12,8 @@ namespace Enyim.Caching.Memcached.Protocol.Text
 {
 	public class StatsOperation : Operation, IStatsOperation
 	{
-		ILogger _logger;
-
-		string _type;
+		readonly ILogger _logger;
+		readonly string _type;
 		Dictionary<string, string> _result;
 
 		public StatsOperation(string type)
@@ -76,7 +75,7 @@ namespace Enyim.Caching.Memcached.Protocol.Text
 			return new TextOperationResult().Pass();
 		}
 
-		protected internal override async Task<IOperationResult> ReadResponseAsync(PooledSocket socket, CancellationToken cancellationToken = default(CancellationToken))
+		protected internal override async Task<IOperationResult> ReadResponseAsync(PooledSocket socket, CancellationToken cancellationToken = default)
 		{
 			var serverData = new Dictionary<string, string>();
 

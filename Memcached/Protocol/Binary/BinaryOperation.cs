@@ -14,7 +14,7 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 			return this.Build().CreateBuffer();
 		}
 
-		protected internal override Task<Results.IOperationResult> ReadResponseAsync(PooledSocket socket, CancellationToken cancellationToken = default(CancellationToken))
+		protected internal override Task<Results.IOperationResult> ReadResponseAsync(PooledSocket socket, CancellationToken cancellationToken = default)
 		{
 			throw new NotImplementedException();
 		}

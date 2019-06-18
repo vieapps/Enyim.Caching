@@ -101,7 +101,7 @@ namespace Enyim.Caching.Memcached.Protocol.Text
 		/// Reads a line from the socket. A line is terninated by \r\n.
 		/// </summary>
 		/// <returns></returns>
-		static async Task<string> ReadLineAsync(PooledSocket socket, CancellationToken cancellationToken = default(CancellationToken))
+		static async Task<string> ReadLineAsync(PooledSocket socket, CancellationToken cancellationToken = default)
 		{
 			using (var stream = new MemoryStream(50))
 			{
@@ -148,7 +148,7 @@ namespace Enyim.Caching.Memcached.Protocol.Text
 		/// <exception cref="InvalidOperationException">The server did not sent a response or an empty line was returned.</exception>
 		/// <exception cref="MemcachedClientException">The server did not specified any reason just returned the string ERROR. - or - The server returned a SERVER_ERROR, in this case the Message of the exception is the message returned by the server.</exception>
 		/// <exception cref="MemcachedClientException">The server did not recognize the request sent by the client. The Message of the exception is the message returned by the server.</exception>
-		public static async Task<string> ReadResponseAsync(PooledSocket socket, CancellationToken cancellationToken = default(CancellationToken))
+		public static async Task<string> ReadResponseAsync(PooledSocket socket, CancellationToken cancellationToken = default)
 		{
 			string response = await TextSocketHelper.ReadLineAsync(socket, cancellationToken).ConfigureAwait(false);
 
