@@ -11,14 +11,14 @@
 		<AssemblyTitle>Enyim Memcached</AssemblyTitle>
 		<SignAssembly>false</SignAssembly>
 		<AssemblyOriginatorKeyFile>../VIEApps.Components.snk</AssemblyOriginatorKeyFile>
-		<AssemblyVersion>1.7.1906.3</AssemblyVersion>
-		<FileVersion>1.7.1906.3</FileVersion>
-		<InformationalVersion>v1.7.netstandard-2.x+rev:2019.06.18-multiple.targets.preview</InformationalVersion>
+		<AssemblyVersion>1.7.1906.4</AssemblyVersion>
+		<FileVersion>1.7.1906.4</FileVersion>
+		<InformationalVersion>v1.7+rev:2019.06.20-multiple.targets</InformationalVersion>
 		<Product>Enyim Memcached</Product>
 		<Company>VIEApps.net</Company>
-		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+		<GeneratePackageOnBuild>false</GeneratePackageOnBuild>
 		<PackageId>VIEApps.Enyim.Caching</PackageId>
-		<Version>1.7.1906.3-preview</Version>
+		<Version>1.7.1906.4-preview</Version>
 		<Title>Enyim Memcached</Title>
 		<Description>High performance Memcached client, incorporating both synchronous and asynchronous with various transcoders (binary formatter, bson, protobuf, msgpack)</Description>
 		<Authors>VIEApps.net</Authors>
@@ -42,15 +42,28 @@
 
 	<ItemGroup>
 		<PackageReference Include="Microsoft.AspNetCore.Http.Abstractions" Version="2.2.0" />
+		<PackageReference Include="Microsoft.IO.RecyclableMemoryStream" Version="1.2.2" />
+		<PackageReference Include="System.Runtime.Loader" Version="4.3.0" />
+	</ItemGroup>
+
+	<ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
+		<PackageReference Include="Microsoft.Extensions.Caching.Abstractions" Version="2.2.0" />
+		<PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="2.2.0" />
+		<PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="2.2.0" />
+		<PackageReference Include="Microsoft.Extensions.DependencyModel" Version="2.1.0" />
+		<PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="2.2.0" />
+		<PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="2.2.0" />
+		<PackageReference Include="System.Configuration.ConfigurationManager" Version="4.5.0" />
+	</ItemGroup>
+
+	<ItemGroup Condition="'$(TargetFramework)' != 'netstandard2.0'">
 		<PackageReference Include="Microsoft.Extensions.Caching.Abstractions" Version="3.0.0-preview6.19304.6" />
 		<PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="3.0.0-preview6.19304.6" />
 		<PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="3.0.0-preview6.19304.6" />
 		<PackageReference Include="Microsoft.Extensions.DependencyModel" Version="3.0.0-preview6-27804-01" />
 		<PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="3.0.0-preview6.19304.6" />
 		<PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="3.0.0-preview6.19304.6" />
-		<PackageReference Include="Microsoft.IO.RecyclableMemoryStream" Version="1.2.2" />
 		<PackageReference Include="System.Configuration.ConfigurationManager" Version="4.6.0-preview6.19303.8" />
-		<PackageReference Include="System.Runtime.Loader" Version="4.3.0" />
 	</ItemGroup>
 
 </Project>
