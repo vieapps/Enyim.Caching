@@ -1,11 +1,11 @@
 # VIEApps.Enyim.Caching
 
-The .NET Standard 2.0 memcached client library: 
+The memcached client library on .NET Standard 2.x: 
 - 100% compatible with [EnyimMemcached 2.x](https://github.com/enyim/EnyimMemcached)
 - Fully async (EnyimMemcached still blocks threads while reading from sockets/response)
 - Multiple nodes supported with Ketama for better distribution
 - Object serialization by various transcoders: Binary Formatter, Protocol Buffers, Json.NET Bson, MessagePack
-- Ready with .NET Core 2.0 and .NET Framework 4.6.1 (and higher) with more useful methods (Set, Add, Replace, Exists)
+- Ready with .NET Core 2.0/.NET Framework 4.6.1 and higher with more useful methods (Set, Add, Replace, Refresh, Exists)
 
 ### NuGet
 
