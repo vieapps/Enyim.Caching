@@ -9,20 +9,21 @@
 		<RootNamespace>Enyim</RootNamespace>
 		<AssemblyName>Enyim.Caching</AssemblyName>
 		<AssemblyTitle>Enyim Memcached</AssemblyTitle>
-		<SignAssembly>false</SignAssembly>
+		<SignAssembly>$(Sign)</SignAssembly>
+		<DefineConstants>$(SignConstant)</DefineConstants>
 		<AssemblyOriginatorKeyFile>../VIEApps.Components.snk</AssemblyOriginatorKeyFile>
-		<AssemblyVersion>1.7.1906.5</AssemblyVersion>
-		<FileVersion>1.7.1906.5</FileVersion>
-		<InformationalVersion>v1.7.1906+rev:2019.06.21-multiple.targets</InformationalVersion>
+		<AssemblyVersion>1.7$(ReleaseVersion)</AssemblyVersion>
+		<FileVersion>1.7$(ReleaseVersion)</FileVersion>
+		<InformationalVersion>1.7$(ReleaseRevision)</InformationalVersion>
+		<Version>1.7$(ReleaseVersion)$(ReleaseSurfix)</Version>
 		<Product>Enyim Memcached</Product>
-		<Company>VIEApps.net</Company>
-		<GeneratePackageOnBuild>false</GeneratePackageOnBuild>
-		<PackageId>VIEApps.Enyim.Caching</PackageId>
-		<Version>1.7.1906.5-preview</Version>
 		<Title>Enyim Memcached</Title>
 		<Description>High performance Memcached client on .NET Standard 2.x, incorporating both synchronous and asynchronous with various transcoders (binary formatter, bson, protobuf, msgpack)</Description>
-		<Authors>VIEApps.net</Authors>
 		<Copyright>© 2010 Attila Kiskó, © 2016 CNBlogs, © 2019 VIEApps.net</Copyright>
+		<Authors>VIEApps.net</Authors>
+		<Company>VIEApps.net</Company>
+		<GeneratePackageOnBuild>$(GeneratePackage)</GeneratePackageOnBuild>
+		<PackageId>VIEApps.Enyim.Caching$(PackageSurfix)</PackageId>
 		<PackageLicense>LICENSE.md</PackageLicense>
 		<PackageOutputPath>..\</PackageOutputPath>
 		<PackageTags>cache;caching;distributed;distributed-cache;memcached;enyim;enyim-memcached;enyim-caching;vieapps;vieapps.components</PackageTags>

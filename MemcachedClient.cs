@@ -16,7 +16,9 @@ using Enyim.Caching.Memcached.Results.Factories;
 using CacheUtils;
 #endregion
 
+#if !SIGN
 [assembly: System.Runtime.CompilerServices.InternalsVisibleTo("VIEApps.Components.XUnitTests")]
+#endif
 
 namespace Enyim.Caching
 {
