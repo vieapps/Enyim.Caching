@@ -14,7 +14,7 @@
 		<AssemblyOriginatorKeyFile>../VIEApps.Components.snk</AssemblyOriginatorKeyFile>
 		<AssemblyVersion>1.7$(ReleaseVersion)</AssemblyVersion>
 		<FileVersion>1.7$(ReleaseVersion)</FileVersion>
-		<InformationalVersion>1.7$(ReleaseRevision)</InformationalVersion>
+		<InformationalVersion>1.7-$(TargetFramework)-$(ReleaseRevision)</InformationalVersion>
 		<Version>1.7$(ReleaseVersion)$(ReleaseSurfix)</Version>
 		<Product>Enyim Memcached</Product>
 		<Title>Enyim Memcached</Title>
