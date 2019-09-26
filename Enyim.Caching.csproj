@@ -15,7 +15,7 @@
 		<AssemblyVersion>1.7$(ReleaseVersion)</AssemblyVersion>
 		<FileVersion>1.7$(ReleaseVersion)</FileVersion>
 		<InformationalVersion>1.7-$(TargetFramework)-$(ReleaseRevision)</InformationalVersion>
-		<Version>1.7$(ReleaseVersion)$(ReleaseSurfix)</Version>
+		<Version>1.7$(ReleaseVersion)$(ReleaseSuffix)</Version>
 		<Product>Enyim Memcached</Product>
 		<Title>Enyim Memcached</Title>
 		<Description>High performance Memcached client on .NET Standard 2.x, incorporating both synchronous and asynchronous with various transcoders (binary formatter, bson, protobuf, msgpack)</Description>
@@ -23,13 +23,13 @@
 		<Authors>VIEApps.net</Authors>
 		<Company>VIEApps.net</Company>
 		<GeneratePackageOnBuild>$(GeneratePackage)</GeneratePackageOnBuild>
-		<PackageId>VIEApps.Enyim.Caching$(PackageSurfix)</PackageId>
-		<PackageLicense>LICENSE.md</PackageLicense>
+		<PackageId>VIEApps.Enyim.Caching$(PackageSuffix)</PackageId>
+		<PackageLicenseFile>LICENSE.md</PackageLicenseFile>
+		<PackageIcon>Icon.png</PackageIcon>
 		<PackageOutputPath>..\</PackageOutputPath>
 		<PackageTags>cache;caching;distributed;distributed-cache;memcached;enyim;enyim-memcached;enyim-caching;vieapps;vieapps.components</PackageTags>
 		<PackageReleaseNotes>Support .NET Standard 2.1</PackageReleaseNotes>
-		<PackageProjectUrl>https://vieapps.net/</PackageProjectUrl>
-		<PackageIconUrl>https://github.com/vieapps/Components.Utility/raw/master/logo.png</PackageIconUrl>
+		<PackageProjectUrl>https://vieapps.net</PackageProjectUrl>
 		<RepositoryUrl>https://github.com/vieapps/Enyim.Caching</RepositoryUrl>
 	</PropertyGroup>
 
@@ -37,34 +37,22 @@
 		<None Remove=".DS_Store" />
 		<None Remove=".gitattributes" />
 		<None Remove=".gitignore" />
-		<None Remove="LICENSE.md" />
 		<None Remove="README.md" />
+		<None Visible="false" Include="LICENSE.md" Pack="true" PackagePath="\" />
+		<None Visible="false" Include="Icon.png" Pack="true" PackagePath="\" />
 	</ItemGroup>
 
 	<ItemGroup>
 		<PackageReference Include="Microsoft.AspNetCore.Http.Abstractions" Version="2.2.0" />
+		<PackageReference Include="Microsoft.Extensions.Caching.Abstractions" Version="3.0.0" />
+		<PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="3.0.0" />
+		<PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="3.0.0" />
+		<PackageReference Include="Microsoft.Extensions.DependencyModel" Version="3.0.0" />
+		<PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="3.0.0" />
+		<PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="3.0.0" />
 		<PackageReference Include="Microsoft.IO.RecyclableMemoryStream" Version="1.2.2" />
+		<PackageReference Include="System.Configuration.ConfigurationManager" Version="4.6.0" />
 		<PackageReference Include="System.Runtime.Loader" Version="4.3.0" />
-	</ItemGroup>
-
-	<ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
-		<PackageReference Include="Microsoft.Extensions.Caching.Abstractions" Version="2.2.0" />
-		<PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="2.2.0" />
-		<PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="2.2.0" />
-		<PackageReference Include="Microsoft.Extensions.DependencyModel" Version="2.1.0" />
-		<PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="2.2.0" />
-		<PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="2.2.0" />
-		<PackageReference Include="System.Configuration.ConfigurationManager" Version="4.5.0" />
-	</ItemGroup>
-
-	<ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.1'">
-		<PackageReference Include="Microsoft.Extensions.Caching.Abstractions" Version="3.0.0-preview6.19304.6" />
-		<PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="3.0.0-preview6.19304.6" />
-		<PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="3.0.0-preview6.19304.6" />
-		<PackageReference Include="Microsoft.Extensions.DependencyModel" Version="3.0.0-preview6-27804-01" />
-		<PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="3.0.0-preview6.19304.6" />
-		<PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="3.0.0-preview6.19304.6" />
-		<PackageReference Include="System.Configuration.ConfigurationManager" Version="4.6.0-preview6.19303.8" />
 	</ItemGroup>
 
 </Project>

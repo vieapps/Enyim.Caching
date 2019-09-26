@@ -22,9 +22,12 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 			this._authenticationProvider?.Initialize(configuration.Authentication.Parameters);
 		}
 
-		protected override IMemcachedNode CreateNode(EndPoint endpoint)
+		protected override IMemcachedNode CreateNode(EndPoint endpoint, Action<IMemcachedNode> onNodeFailed = null)
 		{
-			return new BinaryNode(endpoint, this._configuration.SocketPool, this._authenticationProvider);
+			var node = new BinaryNode(endpoint, this._configuration.SocketPool, this._authenticationProvider);
+			if (onNodeFailed != null)
+				node.Failed += onNodeFailed;
+			return node;
 		}
 	}
 }

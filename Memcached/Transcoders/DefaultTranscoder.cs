@@ -19,25 +19,21 @@ namespace Enyim.Caching.Memcached
 				return new CacheItem(flags: CacheUtils.Helper.FlagOfRawData, data: (ArraySegment<byte>)value);
 
 			// or we just received a byte[], means no further processing is needed
-			else if (value != null && value is byte[])
+			if (value != null && value is byte[])
 				return new CacheItem(flags: CacheUtils.Helper.FlagOfRawData, data: new ArraySegment<byte>(value as byte[]));
 
+			// prepare type code
+			var typeCode = value == null
+				? TypeCode.DBNull
+				: Type.GetTypeCode(value.GetType());
+
 			// serialize object
-			else
-			{
-				var typeCode = value == null ? TypeCode.DBNull : Type.GetTypeCode(value.GetType());
+			if (typeCode.Equals(TypeCode.Object))
+				return new CacheItem(flags: (uint)((int)TypeCode.Object | 0x0100), data: this.SerializeObject(value));
 
-				// object
-				if (typeCode.Equals(TypeCode.Object))
-					return new CacheItem(flags: (uint)((int)TypeCode.Object | 0x0100), data: this.SerializeObject(value));
-
-				// primitive
-				else
-				{
-					var data = CacheUtils.Helper.Serialize(value);
-					return new CacheItem(flags: (uint)data.Item1, data: new ArraySegment<byte>(data.Item2));
-				}
-			}
+			// serialize primitive
+			var data = CacheUtils.Helper.Serialize(value);
+			return new CacheItem(flags: (uint)data.Item1, data: new ArraySegment<byte>(data.Item2));
 		}
 
 		CacheItem ITranscoder.Serialize(object value)
@@ -67,26 +63,20 @@ namespace Enyim.Caching.Memcached
 			// prepare
 			var typeCode = (TypeCode)((int)item.Flags & 0xff);
 
-			// incrementing a non-existing key then getting it
-			// returns as a string, but the flag will be 0
-			// so treat all 0 flagged items as string
-			// this may help inter-client data management as well
-			//
-			// however we store 'null' as Empty + an empty array, 
-			// so this must special-cased for compatibilty with 
-			// earlier versions. we introduced DBNull as null marker in emc2.6
+			// incrementing a non-existing key then getting it returns as a string,
+			// but the flag will be 0 so treat all 0 flagged items as string this may help inter-client data management as well
+			// however we store 'null' as Empty + an empty array,  so this must special-cased for compatibilty with  earlier versions (we introduced DBNull as null marker in emc2.6)
 			if (typeCode.Equals(TypeCode.Empty))
 				return (item.Data.Array == null || item.Data.Count == 0)
 					? null
 					: CacheUtils.Helper.Deserialize(item.Data.Array, (int)TypeCode.String | 0x0100, item.Data.Offset, item.Data.Count);
 
 			// object
-			else if (typeCode.Equals(TypeCode.Object))
+			if (typeCode.Equals(TypeCode.Object))
 				return this.DeserializeObject(item.Data);
 
 			// primitive
-			else
-				return CacheUtils.Helper.Deserialize(item.Data.Array, (int)item.Flags, item.Data.Offset, item.Data.Count);
+			return CacheUtils.Helper.Deserialize(item.Data.Array, (int)item.Flags, item.Data.Offset, item.Data.Count);
 		}
 
 		object ITranscoder.Deserialize(CacheItem item) => this.Deserialize(item);
@@ -96,7 +86,7 @@ namespace Enyim.Caching.Memcached
 			var @object = this.Deserialize(item);
 			return @object != null && @object is T
 				? (T)@object
-				: default(T);
+				: default;
 		}
 	}
 }

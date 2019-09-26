@@ -63,7 +63,7 @@ namespace Enyim.Caching
 		public MemcachedClient(ILoggerFactory loggerFactory, IMemcachedClientConfiguration configuration)
 		{
 			if (configuration == null)
-				throw new ArgumentNullException(nameof(configuration));
+				throw new ArgumentNullException(nameof(configuration), "Configuration is invalid");
 
 			Logger.AssignLoggerFactory(loggerFactory);
 			this._logger = Logger.CreateLogger<MemcachedClient>();
@@ -84,7 +84,7 @@ namespace Enyim.Caching
 			if (this._logger.IsEnabled(LogLevel.Debug))
 			{
 				var nodes = this.Pool.GetWorkingNodes().ToList();
-				this._logger.LogDebug($"The memcached client's instance was created - {nodes.Count} node(s) => {string.Join(" - ", nodes.Select(node => node.EndPoint))}");
+				this._logger.LogDebug($"The Memcached client's instance was created - {nodes.Count} node(s) => {string.Join(" - ", nodes.Select(node => node.EndPoint))}");
 			}
 		}
 

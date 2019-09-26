@@ -455,11 +455,11 @@ namespace Microsoft.AspNetCore.Builder
 		{
 			try
 			{
-				appBuilder.ApplicationServices.GetService<ILogger<IMemcachedClient>>().LogInformation($"The service of memcached client was{(appBuilder.ApplicationServices.GetService<IMemcachedClient>() != null ? " " : " not ")}registered with application service providers");
+				appBuilder.ApplicationServices.GetService<ILogger<IMemcachedClient>>().LogInformation($"The service of Memcached client was{(appBuilder.ApplicationServices.GetService<IMemcachedClient>() != null ? " " : " not ")}registered with application service providers");
 			}
 			catch (Exception ex)
 			{
-				appBuilder.ApplicationServices.GetService<ILogger<IMemcachedClient>>().LogError(ex, $"Error occurred while collecting information of the service of memcached client => {ex.Message}");
+				appBuilder.ApplicationServices.GetService<ILogger<IMemcachedClient>>().LogError(ex, $"Error occurred while collecting information of the service of Memcached client => {ex.Message}");
 			}
 			return appBuilder;
 		}

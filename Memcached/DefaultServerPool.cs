@@ -40,8 +40,13 @@ namespace Enyim.Caching.Memcached
 			catch { }
 		}
 
-		protected virtual IMemcachedNode CreateNode(EndPoint endpoint)
-			=> new MemcachedNode(endpoint, this._configuration.SocketPool);
+		protected virtual IMemcachedNode CreateNode(EndPoint endpoint, Action<IMemcachedNode> onNodeFailed = null)
+		{
+			var node = new MemcachedNode(endpoint, this._configuration.SocketPool);
+			if (onNodeFailed != null)
+				node.Failed += onNodeFailed;
+			return node;
+		}
 
 		void OnResurrectCallback(object state)
 		{
@@ -130,7 +135,7 @@ namespace Enyim.Caching.Memcached
 			}
 		}
 
-		void NodeFail(IMemcachedNode node)
+		void OnNodeFailed(IMemcachedNode node)
 		{
 			if (this._logger.IsEnabled(LogLevel.Debug))
 				this._logger.LogDebug($"Node {node.EndPoint} is dead");
@@ -181,15 +186,7 @@ namespace Enyim.Caching.Memcached
 
 		void IServerPool.Start()
 		{
-			this._nodes = this._configuration.Servers
-				.Select(endpoint =>
-				{
-					var node = this.CreateNode(endpoint);
-					node.Failed += this.NodeFail;
-					return node;
-				})
-				.ToArray();
-
+			this._nodes = this._configuration.Servers.Select(endpoint => this.CreateNode(endpoint, this.OnNodeFailed)).ToArray();
 			this._nodeLocator = this._configuration.CreateNodeLocator();
 			this._nodeLocator.Initialize(this._nodes);
 		}
