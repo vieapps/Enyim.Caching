@@ -5,16 +5,13 @@
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 		<WarningLevel>3</WarningLevel>
 		<NoWarn>1701;1702;1705;1066;0067</NoWarn>
-		<DocumentationFile>bin\$(Configuration)\$(TargetFramework)\Enyim.Caching.xml</DocumentationFile>
+		<DocumentationFile>bin/$(Configuration)/$(TargetFramework)/Enyim.Caching.xml</DocumentationFile>
 		<RootNamespace>Enyim</RootNamespace>
 		<AssemblyName>Enyim.Caching</AssemblyName>
 		<AssemblyTitle>Enyim Memcached</AssemblyTitle>
-		<SignAssembly>$(Sign)</SignAssembly>
-		<DefineConstants>$(SignConstant)</DefineConstants>
-		<AssemblyOriginatorKeyFile>../VIEApps.Components.snk</AssemblyOriginatorKeyFile>
 		<AssemblyVersion>1.7$(ReleaseVersion)</AssemblyVersion>
 		<FileVersion>1.7$(ReleaseVersion)</FileVersion>
-		<InformationalVersion>1.7-$(TargetFramework)-$(ReleaseRevision)</InformationalVersion>
+		<InformationalVersion>1.7@$(TargetFramework)#sn:$(Sign)-$(ReleaseRevision)</InformationalVersion>
 		<Version>1.7$(ReleaseVersion)$(ReleaseSuffix)</Version>
 		<Product>Enyim Memcached</Product>
 		<Title>Enyim Memcached</Title>
@@ -22,6 +19,12 @@
 		<Copyright>© 2010 Attila Kiskó, © 2016 CNBlogs, © 2019 VIEApps.net</Copyright>
 		<Authors>VIEApps.net</Authors>
 		<Company>VIEApps.net</Company>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)'=='Release'">
+		<SignAssembly>$(Sign)</SignAssembly>
+		<AssemblyOriginatorKeyFile>../VIEApps.Components.snk</AssemblyOriginatorKeyFile>
+		<DefineConstants>$(SignConstant)</DefineConstants>
 		<GeneratePackageOnBuild>$(GeneratePackage)</GeneratePackageOnBuild>
 		<PackageId>VIEApps.Enyim.Caching$(PackageSuffix)</PackageId>
 		<PackageLicenseFile>LICENSE.md</PackageLicenseFile>
