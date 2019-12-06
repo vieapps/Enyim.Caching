@@ -151,7 +151,7 @@ namespace CacheUtils
 		/// <returns></returns>
 		public static byte[] ToBytes(this MemoryStream stream)
 		{
-			if (stream.TryGetBuffer(out ArraySegment<byte> buffer))
+			if (stream.TryGetBuffer(out var buffer))
 			{
 				var array = new byte[buffer.Count];
 				Buffer.BlockCopy(buffer.Array, buffer.Offset, array, 0, buffer.Count);
@@ -166,7 +166,7 @@ namespace CacheUtils
 		/// <param name="stream"></param>
 		/// <returns></returns>
 		public static ArraySegment<byte> ToArraySegment(this MemoryStream stream)
-			=> stream.TryGetBuffer(out ArraySegment<byte> buffer)
+			=> stream.TryGetBuffer(out var buffer)
 				? buffer
 				: new ArraySegment<byte>(stream.ToArray());
 
@@ -433,9 +433,9 @@ namespace Microsoft.Extensions.DependencyInjection
 
 			services.AddOptions().Configure(setupAction);
 			services.Add(ServiceDescriptor.Singleton<IMemcachedClientConfiguration, MemcachedClientConfiguration>());
-			services.Add(ServiceDescriptor.Singleton<IMemcachedClient, MemcachedClient>(svcProvider => MemcachedClient.GetInstance(svcProvider)));
+			services.Add(ServiceDescriptor.Singleton<IMemcachedClient, MemcachedClient>(serviceProvider => MemcachedClient.GetInstance(serviceProvider)));
 			if (addInstanceOfIDistributedCache)
-				services.Add(ServiceDescriptor.Singleton<IDistributedCache, MemcachedClient>(svcProvider => MemcachedClient.GetInstance(svcProvider)));
+				services.Add(ServiceDescriptor.Singleton<IDistributedCache, MemcachedClient>(serviceProvider => MemcachedClient.GetInstance(serviceProvider)));
 
 			return services;
 		}

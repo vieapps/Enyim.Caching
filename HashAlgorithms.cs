@@ -1088,39 +1088,24 @@ namespace Enyim
 	/// </summary>
 	public class HashCodeCombiner
 	{
-		private int currentHash;
+		public int CurrentHash { get; private set; }
 
 		public HashCodeCombiner() : this(0x1505) { }
 
 		public HashCodeCombiner(int initialValue)
-		{
-			this.currentHash = initialValue;
-		}
+			=> this.CurrentHash = initialValue;
 
 		public static int Combine(int code1, int code2)
-		{
-			return ((code1 << 5) + code1) ^ code2;
-		}
+			=> ((code1 << 5) + code1) ^ code2;
 
 		public void Add(int value)
-		{
-			this.currentHash = HashCodeCombiner.Combine(this.currentHash, value);
-		}
-
-		public int CurrentHash
-		{
-			get { return this.currentHash; }
-		}
+			=> this.CurrentHash = HashCodeCombiner.Combine(this.CurrentHash, value);
 
 		public static int Combine(int code1, int code2, int code3)
-		{
-			return HashCodeCombiner.Combine(HashCodeCombiner.Combine(code1, code2), code3);
-		}
+			=> HashCodeCombiner.Combine(HashCodeCombiner.Combine(code1, code2), code3);
 
 		public static int Combine(int code1, int code2, int code3, int code4)
-		{
-			return HashCodeCombiner.Combine(HashCodeCombiner.Combine(code1, code2), HashCodeCombiner.Combine(code3, code4));
-		}
+			=> HashCodeCombiner.Combine(HashCodeCombiner.Combine(code1, code2), HashCodeCombiner.Combine(code3, code4));
 	}
 	#endregion
 
