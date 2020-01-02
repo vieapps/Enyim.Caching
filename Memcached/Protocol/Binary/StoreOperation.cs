@@ -6,9 +6,9 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 {
 	public class StoreOperation : BinarySingleItemOperation, IStoreOperation
 	{
-		StoreMode _mode;
+		readonly StoreMode _mode;
+		readonly uint _expires;
 		CacheItem _value;
-		uint _expires;
 
 		public StoreOperation(StoreMode mode, string key, CacheItem value, uint expires) : base(key)
 		{
@@ -63,22 +63,17 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 				: result.Fail(OperationResultHelper.ProcessResponseData(response.Data));
 		}
 
-		StoreMode IStoreOperation.Mode
-		{
-			get { return this._mode; }
-		}
+		StoreMode IStoreOperation.Mode => this._mode;
 
 		protected internal override bool ReadResponseAsync(PooledSocket socket, Action<bool> next)
-		{
-			throw new NotSupportedException();
-		}
+			=> throw new NotSupportedException();
 	}
 }
 
 #region [ License information          ]
 /* ************************************************************
  * 
- *    © 2010 Attila Kiskó (aka Enyim), © 2016 CNBlogs, © 2019 VIEApps.net
+ *    © 2010 Attila Kiskó (aka Enyim), © 2016 CNBlogs, © 2020 VIEApps.net
  *    
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.

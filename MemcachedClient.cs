@@ -159,7 +159,7 @@ namespace Enyim.Caching
 		IStoreOperationResult PerformStore(StoreMode mode, string key, object value, uint expires, ulong cas = 0)
 		{
 			ulong tmp = cas;
-			return this.PerformStore(mode, key, value, expires, ref tmp, out int status);
+			return this.PerformStore(mode, key, value, expires, ref tmp, out var status);
 		}
 
 		/// <summary>
@@ -173,7 +173,7 @@ namespace Enyim.Caching
 		public bool Store(StoreMode mode, string key, object value)
 		{
 			ulong tmp = 0;
-			return this.PerformStore(mode, key, value, 0, ref tmp, out int status).Success;
+			return this.PerformStore(mode, key, value, 0, ref tmp, out var status).Success;
 		}
 
 		/// <summary>
@@ -187,7 +187,7 @@ namespace Enyim.Caching
 		public bool Store(StoreMode mode, string key, object value, TimeSpan validFor)
 		{
 			ulong tmp = 0;
-			return this.PerformStore(mode, key, value, validFor.GetExpiration(), ref tmp, out int status).Success;
+			return this.PerformStore(mode, key, value, validFor.GetExpiration(), ref tmp, out var status).Success;
 		}
 
 		/// <summary>
@@ -201,7 +201,7 @@ namespace Enyim.Caching
 		public bool Store(StoreMode mode, string key, object value, DateTime expiresAt)
 		{
 			ulong tmp = 0;
-			return this.PerformStore(mode, key, value, expiresAt.GetExpiration(), ref tmp, out int status).Success;
+			return this.PerformStore(mode, key, value, expiresAt.GetExpiration(), ref tmp, out var status).Success;
 		}
 
 		protected virtual async Task<IStoreOperationResult> PerformStoreAsync(StoreMode mode, string key, object value, uint expires, ulong cas = 0, CancellationToken cancellationToken = default)
@@ -1215,7 +1215,7 @@ namespace Enyim.Caching
 		/// <param name="value">The retrieved item or null if not found.</param>
 		/// <returns>The <value>true</value> if the item was successfully retrieved.</returns>
 		public bool TryGet(string key, out object value)
-			=> this.PerformGet(key, out ulong cas, out value).Success;
+			=> this.PerformGet(key, out var cas, out value).Success;
 
 		/// <summary>
 		/// Retrieves the specified item from the cache.
@@ -1223,7 +1223,7 @@ namespace Enyim.Caching
 		/// <param name="key">The identifier for the item to retrieve.</param>
 		/// <returns>The retrieved item, or <value>null</value> if the key was not found.</returns>
 		public object Get(string key)
-			=> this.PerformGet(key, out ulong cas, out object value).Success ? value : null;
+			=> this.PerformGet(key, out var cas, out var value).Success ? value : null;
 
 		/// <summary>
 		/// Retrieves the specified item from the cache.
@@ -1835,7 +1835,7 @@ namespace Enyim.Caching
 #region [ License information          ]
 /* ************************************************************
  * 
- *    © 2010 Attila Kiskó (aka Enyim), © 2016 CNBlogs, © 2019 VIEApps.net
+ *    © 2010 Attila Kiskó (aka Enyim), © 2016 CNBlogs, © 2020 VIEApps.net
  *    
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.

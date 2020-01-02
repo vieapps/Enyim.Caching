@@ -16,7 +16,7 @@
 		<Product>Enyim Memcached</Product>
 		<Title>Enyim Memcached</Title>
 		<Description>High performance Memcached client on .NET Standard 2.x/.NET Core 3.x, incorporating both synchronous and asynchronous with various transcoders (binary formatter, bson, protobuf, msgpack)</Description>
-		<Copyright>© 2010 Attila Kiskó, © 2016 CNBlogs, © 2019 VIEApps.net</Copyright>
+		<Copyright>© 2010 Attila Kiskó, © 2016 CNBlogs, © 2020 VIEApps.net</Copyright>
 		<Authors>VIEApps.net</Authors>
 		<Company>VIEApps.net</Company>
 	</PropertyGroup>
@@ -34,6 +34,7 @@
 		<PackageReleaseNotes>Upgrade to latest components</PackageReleaseNotes>
 		<PackageProjectUrl>https://vieapps.net</PackageProjectUrl>
 		<RepositoryUrl>https://github.com/vieapps/Enyim.Caching</RepositoryUrl>
+		<RepositoryType>git</RepositoryType>
 	</PropertyGroup>
 
 	<ItemGroup>

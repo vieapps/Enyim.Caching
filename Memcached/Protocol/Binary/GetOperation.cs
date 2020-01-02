@@ -11,13 +11,11 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 		public GetOperation(string key) : base(key) { }
 
 		protected override BinaryRequest Build()
-		{
-			return new BinaryRequest(OpCode.Get)
+			=> new BinaryRequest(OpCode.Get)
 			{
 				Key = this.Key,
 				Cas = this.Cas
 			};
-		}
 
 		protected override IOperationResult ProcessResponse(BinaryResponse response)
 		{
@@ -38,17 +36,14 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 			return result.Fail(OperationResultHelper.ProcessResponseData(response.Data));
 		}
 
-		CacheItem IGetOperation.Result
-		{
-			get { return this.result; }
-		}
+		CacheItem IGetOperation.Result => this.result;
 	}
 }
 
 #region [ License information          ]
 /* ************************************************************
  * 
- *    © 2010 Attila Kiskó (aka Enyim), © 2016 CNBlogs, © 2019 VIEApps.net
+ *    © 2010 Attila Kiskó (aka Enyim), © 2016 CNBlogs, © 2020 VIEApps.net
  *    
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.

@@ -2,22 +2,19 @@
 {
 	public class DefaultStoreOperationResultFactory : IStoreOperationResultFactory
 	{
-
-		public IStoreOperationResult Create()
-		{
-			return new StoreOperationResult()
-			{
-				Message = string.Empty,
-				Success = false
-			};
-		}
-	}
+        public IStoreOperationResult Create()
+            => new StoreOperationResult()
+            {
+                Message = string.Empty,
+                Success = false
+            };
+    }
 }
 
 #region [ License information          ]
 /* ************************************************************
  * 
- *    © 2010 Attila Kiskó (aka Enyim), © 2016 CNBlogs, © 2019 VIEApps.net
+ *    © 2010 Attila Kiskó (aka Enyim), © 2016 CNBlogs, © 2020 VIEApps.net
  *    
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.

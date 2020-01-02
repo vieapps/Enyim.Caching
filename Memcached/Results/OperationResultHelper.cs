@@ -10,7 +10,7 @@ namespace Enyim.Caching.Memcached.Results
 			if (data != null && data.Count > 0)
 				try
 				{
-					return message + (!string.IsNullOrEmpty(message) ? ": " : "") + Encoding.UTF8.GetString(data.Array, data.Offset, data.Count);
+					return (!string.IsNullOrWhiteSpace(message) ? message.Trim() + ": " : "") + Encoding.UTF8.GetString(data.Array, data.Offset, data.Count);
 				}
 				catch (Exception ex)
 				{
@@ -94,7 +94,7 @@ namespace Enyim.Caching.Memcached.Results
 #region [ License information          ]
 /* ************************************************************
  * 
- *    © 2010 Attila Kiskó (aka Enyim), © 2016 CNBlogs, © 2019 VIEApps.net
+ *    © 2010 Attila Kiskó (aka Enyim), © 2016 CNBlogs, © 2020 VIEApps.net
  *    
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.

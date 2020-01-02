@@ -2,24 +2,19 @@ namespace Enyim.Caching.Memcached.Protocol.Text
 {
 	public class StoreOperation : StoreOperationBase, IStoreOperation
 	{
-		private StoreMode mode;
+		readonly StoreMode mode;
 
-		internal StoreOperation(StoreMode mode, string key, CacheItem value, uint expires) : base((StoreCommand)mode, key, value, expires, 0)
-		{
-			this.mode = mode;
-		}
+        internal StoreOperation(StoreMode mode, string key, CacheItem value, uint expires) : base((StoreCommand)mode, key, value, expires, 0)
+            => this.mode = mode;
 
-		StoreMode IStoreOperation.Mode
-		{
-			get { return this.mode; }
-		}
-	}
+        StoreMode IStoreOperation.Mode => this.mode;
+    }
 }
 
 #region [ License information          ]
 /* ************************************************************
  * 
- *    © 2010 Attila Kiskó (aka Enyim), © 2016 CNBlogs, © 2019 VIEApps.net
+ *    © 2010 Attila Kiskó (aka Enyim), © 2016 CNBlogs, © 2020 VIEApps.net
  *    
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.

@@ -9,14 +9,13 @@ namespace Enyim.Caching.Memcached.Protocol.Text
 {
 	public class GetOperation : SingleItemOperation, IGetOperation
 	{
-		private CacheItem result;
+		CacheItem result;
 
 		internal GetOperation(string key) : base(key) { }
 
 		protected internal override IList<ArraySegment<byte>> GetBuffer()
 		{
 			var command = "gets " + this.Key + TextSocketHelper.CommandTerminator;
-
 			return TextSocketHelper.GetCommandBuffer(command);
 		}
 
@@ -53,21 +52,16 @@ namespace Enyim.Caching.Memcached.Protocol.Text
 		}
 
 		protected internal override bool ReadResponseAsync(PooledSocket socket, Action<bool> next)
-		{
-			throw new NotSupportedException();
-		}
+			=> throw new NotSupportedException();
 
-		CacheItem IGetOperation.Result
-		{
-			get { return this.result; }
-		}
+		CacheItem IGetOperation.Result => this.result;
 	}
 }
 
 #region [ License information          ]
 /* ************************************************************
  * 
- *    © 2010 Attila Kiskó (aka Enyim), © 2016 CNBlogs, © 2019 VIEApps.net
+ *    © 2010 Attila Kiskó (aka Enyim), © 2016 CNBlogs, © 2020 VIEApps.net
  *    
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.

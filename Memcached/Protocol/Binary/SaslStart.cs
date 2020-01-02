@@ -11,22 +11,20 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 	{
 		public SaslStart(ISaslAuthenticationProvider provider) : base(provider) { }
 
+		// create a Sasl Start command
 		protected override BinaryRequest Build()
-		{
-			// create a Sasl Start command
-			return new BinaryRequest(OpCode.SaslStart)
-			{
-				Key = this.Provider.Type,
-				Data = new ArraySegment<byte>(this.Provider.Authenticate())
-			};
-		}
+            => new BinaryRequest(OpCode.SaslStart)
+		    {
+			    Key = this.Provider.Type,
+			    Data = new ArraySegment<byte>(this.Provider.Authenticate())
+		    };
 	}
 }
 
 #region [ License information          ]
 /* ************************************************************
  * 
- *    © 2010 Attila Kiskó (aka Enyim), © 2016 CNBlogs, © 2019 VIEApps.net
+ *    © 2010 Attila Kiskó (aka Enyim), © 2016 CNBlogs, © 2020 VIEApps.net
  *    
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.

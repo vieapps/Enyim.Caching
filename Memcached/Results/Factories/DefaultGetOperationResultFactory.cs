@@ -3,34 +3,30 @@
 	public class DefaultGetOperationResultFactory : IGetOperationResultFactory
 	{
 		public IGetOperationResult Create()
-		{
-			return new GetOperationResult()
+			=> new GetOperationResult
 			{
 				Message = string.Empty,
 				Value = null,
 				Success = false
 			};
-		}
 	}
 
 	public class DefaultGetOperationResultFactory<T> : IGetOperationResultFactory<T>
 	{
 		public IGetOperationResult<T> Create()
-		{
-			return new GetOperationResult<T>()
+			=> new GetOperationResult<T>
 			{
 				Message = string.Empty,
 				Value = default(T),
 				Success = false
 			};
-		}
 	}
 }
 
 #region [ License information          ]
 /* ************************************************************
  * 
- *    © 2010 Attila Kiskó (aka Enyim), © 2016 CNBlogs, © 2019 VIEApps.net
+ *    © 2010 Attila Kiskó (aka Enyim), © 2016 CNBlogs, © 2020 VIEApps.net
  *    
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.

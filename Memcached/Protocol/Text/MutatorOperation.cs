@@ -25,15 +25,9 @@ namespace Enyim.Caching.Memcached.Protocol.Text
 			get { return this.result; }
 		}
 
-		MutationMode IMutatorOperation.Mode
-		{
-			get { return this.mode; }
-		}
+		MutationMode IMutatorOperation.Mode => this.mode;
 
-		ulong IMutatorOperation.Result
-		{
-			get { return this.result; }
-		}
+		ulong IMutatorOperation.Result => this.result;
 
 		protected internal override IList<ArraySegment<byte>> GetBuffer()
 		{
@@ -73,16 +67,14 @@ namespace Enyim.Caching.Memcached.Protocol.Text
 		}
 
 		protected internal override bool ReadResponseAsync(PooledSocket socket, Action<bool> next)
-		{
-			throw new NotSupportedException();
-		}
+			=> throw new NotSupportedException();
 	}
 }
 
 #region [ License information          ]
 /* ************************************************************
  * 
- *    © 2010 Attila Kiskó (aka Enyim), © 2016 CNBlogs, © 2019 VIEApps.net
+ *    © 2010 Attila Kiskó (aka Enyim), © 2016 CNBlogs, © 2020 VIEApps.net
  *    
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.

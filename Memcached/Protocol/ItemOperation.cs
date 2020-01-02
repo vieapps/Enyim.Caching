@@ -6,9 +6,7 @@ namespace Enyim.Caching.Memcached.Protocol
 	public abstract class SingleItemOperation : Operation, ISingleItemOperation
 	{
 		protected SingleItemOperation(string key)
-		{
-			this.Key = key;
-		}
+			=> this.Key = key;
 
 		public string Key { get; private set; }
 
@@ -17,22 +15,16 @@ namespace Enyim.Caching.Memcached.Protocol
 		/// <summary>
 		/// The item key of the current operation.
 		/// </summary>
-		string ISingleItemOperation.Key
-		{
-			get { return this.Key; }
-		}
+		string ISingleItemOperation.Key => this.Key;
 
-		ulong ISingleItemOperation.CasValue
-		{
-			get { return this.Cas; }
-		}
+		ulong ISingleItemOperation.CasValue => this.Cas;
 	}
 }
 
 #region [ License information          ]
 /* ************************************************************
  * 
- *    © 2010 Attila Kiskó (aka Enyim), © 2016 CNBlogs, © 2019 VIEApps.net
+ *    © 2010 Attila Kiskó (aka Enyim), © 2016 CNBlogs, © 2020 VIEApps.net
  *    
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.

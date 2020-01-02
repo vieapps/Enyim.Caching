@@ -10,26 +10,20 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 		protected abstract BinaryRequest Build();
 
 		protected internal override IList<ArraySegment<byte>> GetBuffer()
-		{
-			return this.Build().CreateBuffer();
-		}
+            => this.Build().CreateBuffer();
 
-		protected internal override Task<Results.IOperationResult> ReadResponseAsync(PooledSocket socket, CancellationToken cancellationToken = default)
-		{
-			throw new NotImplementedException();
-		}
+        protected internal override Task<Results.IOperationResult> ReadResponseAsync(PooledSocket socket, CancellationToken cancellationToken = default)
+            => throw new NotImplementedException();
 
-		protected internal override bool ReadResponseAsync(PooledSocket socket, Action<bool> next)
-		{
-			throw new NotSupportedException();
-		}
-	}
+        protected internal override bool ReadResponseAsync(PooledSocket socket, Action<bool> next)
+            => throw new NotSupportedException();
+    }
 }
 
 #region [ License information          ]
 /* ************************************************************
  * 
- *    © 2010 Attila Kiskó (aka Enyim), © 2016 CNBlogs, © 2019 VIEApps.net
+ *    © 2010 Attila Kiskó (aka Enyim), © 2016 CNBlogs, © 2020 VIEApps.net
  *    
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.

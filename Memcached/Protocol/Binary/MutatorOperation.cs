@@ -5,9 +5,9 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 {
 	public class MutatorOperation : BinarySingleItemOperation, IMutatorOperation
 	{
-		ulong _defaultValue;
-		ulong _delta;
-		uint _expires;
+		readonly ulong _defaultValue;
+		readonly ulong _delta;
+		readonly uint _expires;
 		MutationMode _mode;
 		ulong _result;
 
@@ -69,22 +69,16 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 			return result.Fail(message);
 		}
 
-		MutationMode IMutatorOperation.Mode
-		{
-			get { return this._mode; }
-		}
+		MutationMode IMutatorOperation.Mode => this._mode;
 
-		ulong IMutatorOperation.Result
-		{
-			get { return this._result; }
-		}
+		ulong IMutatorOperation.Result => this._result;
 	}
 }
 
 #region [ License information          ]
 /* ************************************************************
  * 
- *    © 2010 Attila Kiskó (aka Enyim), © 2016 CNBlogs, © 2019 VIEApps.net
+ *    © 2010 Attila Kiskó (aka Enyim), © 2016 CNBlogs, © 2020 VIEApps.net
  *    
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.

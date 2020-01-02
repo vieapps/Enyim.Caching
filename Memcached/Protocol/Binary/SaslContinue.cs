@@ -9,28 +9,24 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 	/// </summary>
 	public class SaslContinue : SaslStep
 	{
-		byte[] _continuation;
+		readonly byte[] _continuation;
 
 		public SaslContinue(ISaslAuthenticationProvider provider, byte[] continuation) : base(provider)
-		{
-			this._continuation = continuation;
-		}
+			=> this._continuation = continuation;
 
 		protected override BinaryRequest Build()
-		{
-			return new BinaryRequest(OpCode.SaslStep)
-			{
-				Key = this.Provider.Type,
-				Data = new ArraySegment<byte>(this.Provider.Continue(this._continuation))
-			};
-		}
+            => new BinaryRequest(OpCode.SaslStep)
+		    {
+			    Key = this.Provider.Type,
+			    Data = new ArraySegment<byte>(this.Provider.Continue(this._continuation))
+		    };
 	}
 }
 
 #region [ License information          ]
 /* ************************************************************
  * 
- *    © 2010 Attila Kiskó (aka Enyim), © 2016 CNBlogs, © 2019 VIEApps.net
+ *    © 2010 Attila Kiskó (aka Enyim), © 2016 CNBlogs, © 2020 VIEApps.net
  *    
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.

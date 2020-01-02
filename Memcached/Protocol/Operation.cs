@@ -23,29 +23,18 @@ namespace Enyim.Caching.Memcached.Protocol
 		internal protected abstract bool ReadResponseAsync(PooledSocket socket, Action<bool> next);
 
 		IList<ArraySegment<byte>> IOperation.GetBuffer()
-		{
-			return this.GetBuffer();
-		}
+			=> this.GetBuffer();
 
 		IOperationResult IOperation.ReadResponse(PooledSocket socket)
-		{
-			return this.ReadResponse(socket);
-		}
+			=> this.ReadResponse(socket);
 
 		Task<IOperationResult> IOperation.ReadResponseAsync(PooledSocket socket, CancellationToken cancellationToken = default)
-		{
-			return this.ReadResponseAsync(socket);
-		}
+			=> this.ReadResponseAsync(socket, cancellationToken);
 
 		bool IOperation.ReadResponseAsync(PooledSocket socket, Action<bool> next)
-		{
-			return this.ReadResponseAsync(socket, next);
-		}
+			=> this.ReadResponseAsync(socket, next);
 
-		int IOperation.StatusCode
-		{
-			get { return this.StatusCode; }
-		}
+		int IOperation.StatusCode => this.StatusCode;
 
 		public int StatusCode { get; protected set; }
 	}
@@ -54,7 +43,7 @@ namespace Enyim.Caching.Memcached.Protocol
 #region [ License information          ]
 /* ************************************************************
  * 
- *    © 2010 Attila Kiskó (aka Enyim), © 2016 CNBlogs, © 2019 VIEApps.net
+ *    © 2010 Attila Kiskó (aka Enyim), © 2016 CNBlogs, © 2020 VIEApps.net
  *    
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.

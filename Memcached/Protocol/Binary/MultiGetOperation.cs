@@ -23,12 +23,10 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 			=> this._logger = Logger.CreateLogger<MultiGetOperation>();
 
 		protected override BinaryRequest Build(string key)
-		{
-			return new BinaryRequest(OpCode.GetQ)
+			=> new BinaryRequest(OpCode.GetQ)
 			{
 				Key = key
 			};
-		}
 
 		protected internal override IList<ArraySegment<byte>> GetBuffer()
 		{
@@ -212,7 +210,7 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 #region [ License information          ]
 /* ************************************************************
  * 
- *    © 2010 Attila Kiskó (aka Enyim), © 2016 CNBlogs, © 2019 VIEApps.net
+ *    © 2010 Attila Kiskó (aka Enyim), © 2016 CNBlogs, © 2020 VIEApps.net
  *    
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.

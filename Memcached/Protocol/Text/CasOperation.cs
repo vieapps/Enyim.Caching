@@ -4,22 +4,17 @@ namespace Enyim.Caching.Memcached.Protocol.Text
 	{
 		internal CasOperation(string key, CacheItem value, uint expires, ulong cas) : base(StoreCommand.CheckAndSet, key, value, expires, cas) { }
 
-		StoreMode IStoreOperation.Mode
-		{
-			get { return StoreMode.Set; }
-		}
+        StoreMode IStoreOperation.Mode => StoreMode.Set;
 
-		protected internal override bool ReadResponseAsync(PooledSocket socket, System.Action<bool> next)
-		{
-			throw new System.NotSupportedException();
-		}
-	}
+        protected internal override bool ReadResponseAsync(PooledSocket socket, System.Action<bool> next)
+            => throw new System.NotSupportedException();
+    }
 }
 
 #region [ License information          ]
 /* ************************************************************
  * 
- *    © 2010 Attila Kiskó (aka Enyim), © 2016 CNBlogs, © 2019 VIEApps.net
+ *    © 2010 Attila Kiskó (aka Enyim), © 2016 CNBlogs, © 2020 VIEApps.net
  *    
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.

@@ -7,26 +7,19 @@ namespace Enyim.Caching.Memcached.Protocol.Text
 		private ConcatenationMode mode;
 
 		internal ConcateOperation(ConcatenationMode mode, string key, ArraySegment<byte> data) : base(mode == ConcatenationMode.Append ? StoreCommand.Append : StoreCommand.Prepend, key, new CacheItem() { Data = data, Flags = 0 }, 0, 0)
-		{
-			this.mode = mode;
-		}
+            => this.mode = mode;
 
-		ConcatenationMode IConcatOperation.Mode
-		{
-			get { return this.mode; }
-		}
+        ConcatenationMode IConcatOperation.Mode => this.mode;
 
-		protected internal override bool ReadResponseAsync(PooledSocket socket, Action<bool> next)
-		{
-			throw new NotSupportedException();
-		}
-	}
+        protected internal override bool ReadResponseAsync(PooledSocket socket, Action<bool> next)
+            => throw new NotSupportedException();
+    }
 }
 
 #region [ License information          ]
 /* ************************************************************
  * 
- *    © 2010 Attila Kiskó (aka Enyim), © 2016 CNBlogs, © 2019 VIEApps.net
+ *    © 2010 Attila Kiskó (aka Enyim), © 2016 CNBlogs, © 2020 VIEApps.net
  *    
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.

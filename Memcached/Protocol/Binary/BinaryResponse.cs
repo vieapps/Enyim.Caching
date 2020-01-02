@@ -61,7 +61,7 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 				var header = new byte[BinaryResponse.HeaderLength];
 				socket.Receive(header, 0, header.Length);
 
-				this.DeserializeHeader(header, out int dataLength, out int extraLength);
+				this.DeserializeHeader(header, out var dataLength, out var extraLength);
 
 				if (dataLength > 0)
 				{
@@ -98,7 +98,7 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 				var header = new byte[BinaryResponse.HeaderLength];
 				await socket.ReceiveAsync(header, 0, header.Length, cancellationToken).ConfigureAwait(false);
 
-				this.DeserializeHeader(header, out int dataLength, out int extraLength);
+				this.DeserializeHeader(header, out var dataLength, out var extraLength);
 
 				if (dataLength > 0)
 				{
@@ -163,7 +163,7 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 		void DoDecodeHeaderAsync(AsyncIOArgs asyncEvent)
 		{
 			this._shouldCallNext = true;
-			this.DoDecodeHeader(asyncEvent, out bool tmp);
+			this.DoDecodeHeader(asyncEvent, out var tmp);
 		}
 
 		bool DoDecodeHeader(AsyncIOArgs asyncEvent, out bool pendingIO)
@@ -251,7 +251,7 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 #region [ License information          ]
 /* ************************************************************
  * 
- *    © 2010 Attila Kiskó (aka Enyim), © 2016 CNBlogs, © 2019 VIEApps.net
+ *    © 2010 Attila Kiskó (aka Enyim), © 2016 CNBlogs, © 2020 VIEApps.net
  *    
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.

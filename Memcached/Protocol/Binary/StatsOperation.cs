@@ -15,9 +15,7 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 		Dictionary<string, string> _result;
 
 		public StatsOperation(string type)
-		{
-			this._type = type;
-		}
+			=> this._type = type;
 
 		protected override BinaryRequest Build()
 		{
@@ -77,7 +75,7 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 			this._result = serverData;
 			this.StatusCode = response.StatusCode;
 
-			var result = new BinaryOperationResult()
+			var result = new BinaryOperationResult
 			{
 				StatusCode = StatusCode
 			};
@@ -86,17 +84,14 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 			return result;
 		}
 
-		Dictionary<string, string> IStatsOperation.Result
-		{
-			get { return this._result; }
-		}
+		Dictionary<string, string> IStatsOperation.Result => this._result;
 	}
 }
 
 #region [ License information          ]
 /* ************************************************************
  * 
- *    © 2010 Attila Kiskó (aka Enyim), © 2016 CNBlogs, © 2019 VIEApps.net
+ *    © 2010 Attila Kiskó (aka Enyim), © 2016 CNBlogs, © 2020 VIEApps.net
  *    
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.

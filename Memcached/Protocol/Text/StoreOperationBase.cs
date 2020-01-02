@@ -68,32 +68,26 @@ namespace Enyim.Caching.Memcached.Protocol.Text
 		}
 
 		protected internal override IOperationResult ReadResponse(PooledSocket socket)
-		{
-			return new TextOperationResult
+			=> new TextOperationResult
 			{
 				Success = String.Compare(TextSocketHelper.ReadResponse(socket), "STORED", StringComparison.Ordinal) == 0
 			};
-		}
 
 		protected internal override async Task<IOperationResult> ReadResponseAsync(PooledSocket socket, CancellationToken cancellationToken = default)
-		{
-			return new TextOperationResult
+			=> new TextOperationResult
 			{
 				Success = String.Compare(await TextSocketHelper.ReadResponseAsync(socket, cancellationToken).ConfigureAwait(false), "STORED", StringComparison.Ordinal) == 0
 			};
-		}
 
 		protected internal override bool ReadResponseAsync(PooledSocket socket, Action<bool> next)
-		{
-			throw new NotSupportedException();
-		}
+			=> throw new NotSupportedException();
 	}
 }
 
 #region [ License information          ]
 /* ************************************************************
  * 
- *    © 2010 Attila Kiskó (aka Enyim), © 2016 CNBlogs, © 2019 VIEApps.net
+ *    © 2010 Attila Kiskó (aka Enyim), © 2016 CNBlogs, © 2020 VIEApps.net
  *    
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.

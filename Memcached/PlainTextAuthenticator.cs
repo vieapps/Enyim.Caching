@@ -14,14 +14,9 @@ namespace Enyim.Caching.Memcached
 		public PlainTextAuthenticator() { }
 
 		public PlainTextAuthenticator(string zone, string userName, string password)
-		{
-			this._authenticateData = PlainTextAuthenticator.CreateAuthenticateData(zone, userName, password);
-		}
+			=> this._authenticateData = PlainTextAuthenticator.CreateAuthenticateData(zone, userName, password);
 
-		string ISaslAuthenticationProvider.Type
-		{
-			get { return "PLAIN"; }
-		}
+		string ISaslAuthenticationProvider.Type => "PLAIN";
 
 		void ISaslAuthenticationProvider.Initialize(Dictionary<string, object> parameters)
 		{
@@ -34,38 +29,30 @@ namespace Enyim.Caching.Memcached
 		}
 
 		string GetParameter(Dictionary<string, object> parameters, string key)
-		{
-			return parameters.ContainsKey(key)
+			=> parameters.ContainsKey(key)
 				? (string)parameters[key]
 				: throw new MemcachedClientException($"Unable to find '{key}' authentication parameter for {nameof(PlainTextAuthenticator)}");
-		}
 
 		byte[] ISaslAuthenticationProvider.Authenticate()
-		{
-			return this._authenticateData;
-		}
+			=> this._authenticateData;
 
 		byte[] ISaslAuthenticationProvider.Continue(byte[] data)
-		{
-			return null;
-		}
+			=> null;
 
+		// message  = [authzid] UTF8NUL authcid UTF8NUL passwd
+		// authcid = 1*SAFE ; MUST accept up to 255 octets
+		// authzid = 1*SAFE ; MUST accept up to 255 octets
+		// passwd = 1*SAFE ; MUST accept up to 255 octets
+		// UTF8NUL = %x00 ; UTF-8 encoded NUL character
 		static byte[] CreateAuthenticateData(string zone, string userName, string password)
-		{
-			// message  = [authzid] UTF8NUL authcid UTF8NUL passwd
-			// authcid = 1*SAFE ; MUST accept up to 255 octets
-			// authzid = 1*SAFE ; MUST accept up to 255 octets
-			// passwd = 1*SAFE ; MUST accept up to 255 octets
-			// UTF8NUL = %x00 ; UTF-8 encoded NUL character
-			return Encoding.UTF8.GetBytes(zone + "\0" + userName + "\0" + password);
-		}
+			=> Encoding.UTF8.GetBytes(zone + "\0" + userName + "\0" + password);
 	}
 }
 
 #region [ License information          ]
 /* ************************************************************
  * 
- *    © 2010 Attila Kiskó (aka Enyim), © 2016 CNBlogs, © 2019 VIEApps.net
+ *    © 2010 Attila Kiskó (aka Enyim), © 2016 CNBlogs, © 2020 VIEApps.net
  *    
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.

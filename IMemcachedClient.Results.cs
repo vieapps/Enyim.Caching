@@ -10,11 +10,10 @@ namespace Enyim.Caching
 	/// </summary>
 	public interface IMemcachedResultsClient
 	{
+		IGetOperationResult ExecuteTryGet(string key, out object value);
 		IGetOperationResult ExecuteGet(string key);
 		IGetOperationResult<T> ExecuteGet<T>(string key);
 		IDictionary<string, IGetOperationResult> ExecuteGet(IEnumerable<string> keys);
-
-		IGetOperationResult ExecuteTryGet(string key, out object value);
 		
 		IStoreOperationResult ExecuteStore(StoreMode mode, string key, object value);
 		IStoreOperationResult ExecuteStore(StoreMode mode, string key, object value, DateTime expiresAt);
@@ -54,7 +53,7 @@ namespace Enyim.Caching
 #region [ License information          ]
 /* ************************************************************
  * 
- *    © 2010 Attila Kiskó (aka Enyim), © 2016 CNBlogs, © 2019 VIEApps.net
+ *    © 2010 Attila Kiskó (aka Enyim), © 2016 CNBlogs, © 2020 VIEApps.net
  *    
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.

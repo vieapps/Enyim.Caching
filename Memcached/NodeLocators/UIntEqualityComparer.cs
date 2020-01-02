@@ -6,16 +6,18 @@ namespace Enyim.Caching
 	/// </summary>
 	public sealed class UIntEqualityComparer : IEqualityComparer<uint>
 	{
-		bool IEqualityComparer<uint>.Equals(uint x, uint y) => x == y;
+		bool IEqualityComparer<uint>.Equals(uint x, uint y)
+            => x == y;
 
-		int IEqualityComparer<uint>.GetHashCode(uint value) => value.GetHashCode();
+		int IEqualityComparer<uint>.GetHashCode(uint value)
+            => value.GetHashCode();
 	}
 }
 
 #region [ License information          ]
 /* ************************************************************
  * 
- *    © 2010 Attila Kiskó (aka Enyim), © 2016 CNBlogs, © 2019 VIEApps.net
+ *    © 2010 Attila Kiskó (aka Enyim), © 2016 CNBlogs, © 2020 VIEApps.net
  *    
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.

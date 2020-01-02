@@ -9,7 +9,7 @@ namespace Enyim.Caching.Configuration
 	public interface IAuthenticationConfiguration
 	{
 		/// <summary>
-		/// Gets or sets the type of the <see cref="Enyim.Caching.Memcached.ISaslAuthenticationProvider"/> which will be used authehticate the connections to the Memcached nodes.
+		/// Gets or sets the type of the <see cref="Memcached.ISaslAuthenticationProvider"/> which will be used authehticate the connections to the Memcached nodes.
 		/// </summary>
 		string Type { get; set; }
 
@@ -23,7 +23,7 @@ namespace Enyim.Caching.Configuration
 #region [ License information          ]
 /* ************************************************************
  * 
- *    © 2010 Attila Kiskó (aka Enyim), © 2016 CNBlogs, © 2019 VIEApps.net
+ *    © 2010 Attila Kiskó (aka Enyim), © 2016 CNBlogs, © 2020 VIEApps.net
  *    
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.

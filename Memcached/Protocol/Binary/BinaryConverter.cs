@@ -6,14 +6,10 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 	public static class BinaryConverter
 	{
 		public static unsafe ushort DecodeUInt16(byte[] buffer, int offset)
-		{
-			return (ushort)((buffer[offset] << 8) + buffer[offset + 1]);
-		}
+			=> (ushort)((buffer[offset] << 8) + buffer[offset + 1]);
 
 		public static unsafe ushort DecodeUInt16(byte* buffer, int offset)
-		{
-			return (ushort)((buffer[offset] << 8) + buffer[offset + 1]);
-		}
+			=> (ushort)((buffer[offset] << 8) + buffer[offset + 1]);
 
 		public static unsafe int DecodeInt32(ArraySegment<byte> segment, int offset)
 		{
@@ -31,9 +27,7 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 		}
 
 		public static unsafe int DecodeInt32(byte[] buffer, int offset)
-		{
-			return (buffer[offset] << 24) | (buffer[offset + 1] << 16) | (buffer[offset + 2] << 8) | buffer[offset + 3];
-		}
+			=> (buffer[offset] << 24) | (buffer[offset + 1] << 16) | (buffer[offset + 2] << 8) | buffer[offset + 3];
 
 		public static unsafe ulong DecodeUInt64(byte[] buffer, int offset)
 		{
@@ -105,32 +99,26 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 		}
 
 		public static byte[] EncodeKey(string key)
-		{
-			return string.IsNullOrWhiteSpace(key)
+			=> string.IsNullOrWhiteSpace(key)
 				? null
 				: Encoding.UTF8.GetBytes(key);
-		}
 
 		public static string DecodeKey(byte[] data)
-		{
-			return data == null || data.Length == 0
-				?  null
-				:  Encoding.UTF8.GetString(data);
-		}
+			=> data == null || data.Length == 0
+				? null
+				: Encoding.UTF8.GetString(data);
 
 		public static string DecodeKey(byte[] data, int index, int count)
-		{
-			return data == null || data.Length == 0 || count == 0
+			=> data == null || data.Length == 0 || count == 0
 				? null
 				: Encoding.UTF8.GetString(data, index, count);
-		}
 	}
 }
 
 #region [ License information          ]
 /* ************************************************************
  * 
- *    © 2010 Attila Kiskó (aka Enyim), © 2016 CNBlogs, © 2019 VIEApps.net
+ *    © 2010 Attila Kiskó (aka Enyim), © 2016 CNBlogs, © 2020 VIEApps.net
  *    
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.

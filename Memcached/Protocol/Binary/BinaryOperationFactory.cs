@@ -11,51 +11,47 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 		public BinaryOperationFactory() { }
 
 		IGetOperation IOperationFactory.Get(string key)
-		{
-			return new GetOperation(key);
-		}
+			=> new GetOperation(key);
 
 		IMultiGetOperation IOperationFactory.MultiGet(IList<string> keys)
-		{
-			return new MultiGetOperation(keys);
-		}
+			=> new MultiGetOperation(keys);
 
 		IStoreOperation IOperationFactory.Store(StoreMode mode, string key, CacheItem value, uint expires, ulong cas)
-		{
-			return new StoreOperation(mode, key, value, expires) { Cas = cas };
-		}
+			=> new StoreOperation(mode, key, value, expires)
+			{
+				Cas = cas
+			};
 
 		IDeleteOperation IOperationFactory.Delete(string key, ulong cas)
-		{
-			return new DeleteOperation(key) { Cas = cas };
-		}
+			=> new DeleteOperation(key)
+			{
+				Cas = cas
+			};
 
 		IMutatorOperation IOperationFactory.Mutate(MutationMode mode, string key, ulong defaultValue, ulong delta, uint expires, ulong cas)
-		{
-			return new MutatorOperation(mode, key, defaultValue, delta, expires) { Cas = cas };
-		}
+			=> new MutatorOperation(mode, key, defaultValue, delta, expires)
+			{
+				Cas = cas
+			};
 
 		IConcatOperation IOperationFactory.Concat(ConcatenationMode mode, string key, ulong cas, ArraySegment<byte> data)
-		{
-			return new ConcatOperation(mode, key, data) { Cas = cas };
-		}
+			=> new ConcatOperation(mode, key, data)
+			{
+				Cas = cas
+			};
 
 		IStatsOperation IOperationFactory.Stats(string type)
-		{
-			return new StatsOperation(type);
-		}
+			=> new StatsOperation(type);
 
 		IFlushOperation IOperationFactory.Flush()
-		{
-			return new FlushOperation();
-		}
+			=> new FlushOperation();
 	}
 }
 
 #region [ License information          ]
 /* ************************************************************
  * 
- *    © 2010 Attila Kiskó (aka Enyim), © 2016 CNBlogs, © 2019 VIEApps.net
+ *    © 2010 Attila Kiskó (aka Enyim), © 2016 CNBlogs, © 2020 VIEApps.net
  *    
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.

@@ -2,7 +2,6 @@ using System;
 using System.Linq;
 using System.Net;
 using System.Collections.Generic;
-
 using Microsoft.Extensions.Logging;
 
 namespace Enyim.Caching.Memcached
@@ -13,23 +12,20 @@ namespace Enyim.Caching.Memcached
 	public sealed class ServerStats
 	{
 		const int OpAllowsSum = 1;
-		ILogger _logger;
+		readonly ILogger _logger;
 
 		/// <summary>
 		/// Defines a value which indicates that the statstics should be retrieved for all servers in the pool.
 		/// </summary>
 		public static readonly EndPoint All = new IPEndPoint(IPAddress.Any, 0);
 
-		#region [ readonly int[] Optable       ]
 		// defines which values can be summed and which not
 		static readonly int[] Optable =
 		{
 			0, 0, 0, 1, 1, 1, 1, 1,
 			1, 1, 1, 1, 1, 1, 1, 1
 		};
-		#endregion
 
-		#region [ readonly string[] StatKeys   ]
 		static readonly string[] StatKeys =
 		{
 			"uptime",
@@ -49,9 +45,8 @@ namespace Enyim.Caching.Memcached
 			"bytes_written",
 			"limit_maxbytes",
 		};
-		#endregion
 
-		IDictionary<EndPoint, Dictionary<string, string>> results;
+		readonly IDictionary<EndPoint, Dictionary<string, string>> results;
 
 		internal ServerStats(IDictionary<EndPoint, Dictionary<string, string>> results)
 		{
@@ -73,7 +68,7 @@ namespace Enyim.Caching.Memcached
 				var tmp = this.GetRaw(server, item);
 				return string.IsNullOrEmpty(tmp)
 					?  throw new ArgumentException("Item was not found: " + item)
-					: Int64.TryParse(tmp, out long value)
+					: Int64.TryParse(tmp, out var value)
 						? value
 						: throw new ArgumentException("Invalid value string was returned: " + tmp);
 			}
@@ -112,7 +107,7 @@ namespace Enyim.Caching.Memcached
 			string uptime = this.GetRaw(server, StatItem.Uptime);
 			return string.IsNullOrEmpty(uptime)
 				? throw new ArgumentException("No uptime found for the server " + server)
-				: !Int64.TryParse(uptime, out long value)
+				: !Int64.TryParse(uptime, out var value)
 					? throw new ArgumentException("Invalid uptime string was returned: " + uptime)
 					: TimeSpan.FromSeconds(value);
 		}
@@ -125,9 +120,9 @@ namespace Enyim.Caching.Memcached
 		/// <returns>The value of the stat item</returns>
 		public string GetRaw(IPEndPoint server, string key)
 		{
-			if (this.results.TryGetValue(server, out Dictionary<string, string> serverValues))
+			if (this.results.TryGetValue(server, out var serverValues))
 			{
-				if (serverValues.TryGetValue(key, out string result))
+				if (serverValues.TryGetValue(key, out var result))
 					return result;
 
 				if (this._logger.IsEnabled(LogLevel.Debug))
@@ -165,7 +160,7 @@ namespace Enyim.Caching.Memcached
 #region [ License information          ]
 /* ************************************************************
  * 
- *    © 2010 Attila Kiskó (aka Enyim), © 2016 CNBlogs, © 2019 VIEApps.net
+ *    © 2010 Attila Kiskó (aka Enyim), © 2016 CNBlogs, © 2020 VIEApps.net
  *    
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.

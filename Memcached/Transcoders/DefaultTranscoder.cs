@@ -29,7 +29,7 @@ namespace Enyim.Caching.Memcached
 
 			// serialize object
 			if (typeCode.Equals(TypeCode.Object))
-				return new CacheItem(flags: (uint)((int)TypeCode.Object | 0x0100), data: this.SerializeObject(value));
+				return new CacheItem(flags: (int)TypeCode.Object | 0x0100, data: this.SerializeObject(value));
 
 			// serialize primitive
 			var data = CacheUtils.Helper.Serialize(value);
@@ -79,7 +79,8 @@ namespace Enyim.Caching.Memcached
 			return CacheUtils.Helper.Deserialize(item.Data.Array, (int)item.Flags, item.Data.Offset, item.Data.Count);
 		}
 
-		object ITranscoder.Deserialize(CacheItem item) => this.Deserialize(item);
+		object ITranscoder.Deserialize(CacheItem item)
+			=> this.Deserialize(item);
 
 		T ITranscoder.Deserialize<T>(CacheItem item)
 		{
@@ -94,7 +95,7 @@ namespace Enyim.Caching.Memcached
 #region [ License information          ]
 /* ************************************************************
  * 
- *    © 2010 Attila Kiskó (aka Enyim), © 2016 CNBlogs, © 2019 VIEApps.net
+ *    © 2010 Attila Kiskó (aka Enyim), © 2016 CNBlogs, © 2020 VIEApps.net
  *    
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.

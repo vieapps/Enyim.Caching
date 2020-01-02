@@ -22,7 +22,7 @@ namespace Enyim.Caching.Memcached
 	[DebuggerDisplay("Address: {EndPoint}, Alive = {IsAlive}")]
 	public class MemcachedNode : IMemcachedNode
 	{
-		static object Locker = new object();
+		static readonly object Locker = new object();
 
 		#region Attributes
 		readonly ILogger _logger;
@@ -604,7 +604,7 @@ namespace Enyim.Caching.Memcached
 #region [ License information          ]
 /* ************************************************************
  * 
- *    © 2010 Attila Kiskó (aka Enyim), © 2016 CNBlogs, © 2019 VIEApps.net
+ *    © 2010 Attila Kiskó (aka Enyim), © 2016 CNBlogs, © 2020 VIEApps.net
  *    
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.

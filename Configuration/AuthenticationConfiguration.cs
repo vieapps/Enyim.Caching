@@ -20,17 +20,14 @@ namespace Enyim.Caching.Configuration
 			}
 		}
 
-		public Dictionary<string, object> Parameters
-		{
-			get => this._parameters ?? (this._parameters = new Dictionary<string, object>());
-		}
+		public Dictionary<string, object> Parameters => this._parameters ?? (this._parameters = new Dictionary<string, object>());
 	}
 }
 
 #region [ License information          ]
 /* ************************************************************
  * 
- *    © 2010 Attila Kiskó (aka Enyim), © 2016 CNBlogs, © 2019 VIEApps.net
+ *    © 2010 Attila Kiskó (aka Enyim), © 2016 CNBlogs, © 2020 VIEApps.net
  *    
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.

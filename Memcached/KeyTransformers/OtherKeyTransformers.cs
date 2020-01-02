@@ -10,9 +10,7 @@ namespace Enyim.Caching.Memcached
 	public class Base64KeyTransformer : KeyTransformerBase
 	{
 		public override string Transform(string key)
-		{
-			return Convert.ToBase64String(Encoding.UTF8.GetBytes(key));
-		}
+			=> Convert.ToBase64String(Encoding.UTF8.GetBytes(key));
 	}
 
 	/// <summary>
@@ -117,7 +115,7 @@ namespace Enyim.Caching.Memcached
 #region [ License information          ]
 /* ************************************************************
  * 
- *    © 2010 Attila Kiskó (aka Enyim), © 2016 CNBlogs, © 2019 VIEApps.net
+ *    © 2010 Attila Kiskó (aka Enyim), © 2016 CNBlogs, © 2020 VIEApps.net
  *    
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.

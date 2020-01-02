@@ -14,9 +14,7 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 		protected abstract BinaryRequest Build();
 
 		protected internal override IList<ArraySegment<byte>> GetBuffer()
-		{
-			return this.Build().CreateBuffer();
-		}
+			=> this.Build().CreateBuffer();
 
 		protected abstract IOperationResult ProcessResponse(BinaryResponse response);
 
@@ -28,7 +26,7 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 			this.Cas = response.CAS;
 			this.StatusCode = response.StatusCode;
 
-			var result = new BinaryOperationResult()
+			var result = new BinaryOperationResult
 			{
 				Success = success,
 				Cas = this.Cas,
@@ -53,7 +51,7 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 			this.Cas = response.CAS;
 			this.StatusCode = response.StatusCode;
 
-			var result = new BinaryOperationResult()
+			var result = new BinaryOperationResult
 			{
 				Success = success,
 				Cas = this.Cas,
@@ -71,16 +69,14 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 		}
 
 		protected internal override bool ReadResponseAsync(PooledSocket socket, Action<bool> next)
-		{
-			throw new NotImplementedException();
-		}
+			=> throw new NotImplementedException();
 	}
 }
 
 #region [ License information          ]
 /* ************************************************************
  * 
- *    © 2010 Attila Kiskó (aka Enyim), © 2016 CNBlogs, © 2019 VIEApps.net
+ *    © 2010 Attila Kiskó (aka Enyim), © 2016 CNBlogs, © 2020 VIEApps.net
  *    
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
