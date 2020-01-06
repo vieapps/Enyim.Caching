@@ -215,67 +215,6 @@ namespace Enyim.Collections
 
 }
 
-namespace Enyim.Reflection
-{
-
-	#region Fast activator to avoid reflection
-	/// <summary>
-	/// <para>Implements a very fast object factory for dynamic object creation. Dynamically generates a factory class which will use the new() constructor of the requested type.</para>
-	/// <para>Much faster than using Activator at the price of the first invocation being significantly slower than subsequent calls.</para>
-	/// </summary>
-	public static class FastActivator
-	{
-		static Dictionary<Type, Func<object>> Factories { get; } = new Dictionary<Type, Func<object>>();
-
-		/// <summary>
-		/// Creates an instance of the specified type using a generated factory to avoid using Reflection.
-		/// </summary>
-		/// <param name="type">The type to be created.</param>
-		/// <returns>The newly created instance.</returns>
-		public static object Create(Type type)
-		{
-			if (!FastActivator.Factories.TryGetValue(type, out Func<object> func))
-				lock (FastActivator.Factories)
-				{
-					if (!FastActivator.Factories.TryGetValue(type, out func))
-						FastActivator.Factories[type] = func = Expression.Lambda<Func<object>>(Expression.New(type)).Compile();
-				}
-			return func();
-		}
-
-		/// <summary>
-		/// Creates an instance of the specified type using a generated factory to avoid using Reflection.
-		/// </summary>
-		/// <typeparam name="T">The type to be created.</typeparam>
-		/// <returns>The newly created instance.</returns>
-		public static T Create<T>()
-			=> (T)FastActivator.Create(typeof(T));
-
-		/// <summary>
-		/// Creates an instance of the specified type using a generated factory to avoid using Reflection.
-		/// </summary>
-		/// <param name="type">The type to be created.</param>
-		/// <returns>The newly created instance.</returns>
-		public static object Create(string type)
-		{
-			var theType = Type.GetType(type);
-			if (theType == null)
-				try
-				{
-					var typeInfo = type.Split(',').Select(info => info.Trim()).ToList();
-					theType = new Caching.AssemblyLoader(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, $"{typeInfo[1]}.dll")).Assembly.GetExportedTypes().FirstOrDefault(serviceType => typeInfo[0].Equals(serviceType.ToString()));
-				}
-				catch (Exception ex)
-				{
-					Caching.Logger.Log<Caching.AssemblyLoader>(LogLevel.Information, LogLevel.Error, $"Error occurred while loading an assembly => {ex.Message}", ex);
-				}
-			return theType != null ? FastActivator.Create(theType) : null;
-		}
-	}
-	#endregion
-
-}
-
 namespace Enyim.Caching
 {
 
@@ -467,6 +406,62 @@ namespace Enyim.Caching
 				}
 				return null;
 			};
+		}
+	}
+	#endregion
+
+	#region Fast activator to avoid reflection
+	/// <summary>
+	/// <para>Implements a very fast object factory for dynamic object creation. Dynamically generates a factory class which will use the new() constructor of the requested type.</para>
+	/// <para>Much faster than using Activator at the price of the first invocation being significantly slower than subsequent calls.</para>
+	/// </summary>
+	public static class FastActivator
+	{
+		static Dictionary<Type, Func<object>> Factories { get; } = new Dictionary<Type, Func<object>>();
+
+		/// <summary>
+		/// Creates an instance of the specified type using a generated factory to avoid using Reflection.
+		/// </summary>
+		/// <param name="type">The type to be created.</param>
+		/// <returns>The newly created instance.</returns>
+		public static object Create(Type type)
+		{
+			if (!FastActivator.Factories.TryGetValue(type, out var func))
+				lock (FastActivator.Factories)
+				{
+					if (!FastActivator.Factories.TryGetValue(type, out func))
+						FastActivator.Factories[type] = func = Expression.Lambda<Func<object>>(Expression.New(type)).Compile();
+				}
+			return func();
+		}
+
+		/// <summary>
+		/// Creates an instance of the specified type using a generated factory to avoid using Reflection.
+		/// </summary>
+		/// <typeparam name="T">The type to be created.</typeparam>
+		/// <returns>The newly created instance.</returns>
+		public static T Create<T>()
+			=> (T)FastActivator.Create(typeof(T));
+
+		/// <summary>
+		/// Creates an instance of the specified type using a generated factory to avoid using Reflection.
+		/// </summary>
+		/// <param name="type">The type to be created.</param>
+		/// <returns>The newly created instance.</returns>
+		public static object Create(string type)
+		{
+			var theType = Type.GetType(type);
+			if (theType == null)
+				try
+				{
+					var typeInfo = type.Split(',').Select(info => info.Trim()).ToList();
+					theType = new AssemblyLoader(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, $"{typeInfo[1]}.dll")).Assembly.GetExportedTypes().FirstOrDefault(serviceType => typeInfo[0].Equals(serviceType.ToString()));
+				}
+				catch (Exception ex)
+				{
+					Logger.Log<AssemblyLoader>(LogLevel.Information, LogLevel.Error, $"Error occurred while loading an assembly => {ex.Message}", ex);
+				}
+			return theType != null ? FastActivator.Create(theType) : null;
 		}
 	}
 	#endregion

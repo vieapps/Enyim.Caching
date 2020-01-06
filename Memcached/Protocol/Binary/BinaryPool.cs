@@ -1,6 +1,5 @@
 using System;
 using System.Net;
-using Enyim.Reflection;
 using Enyim.Caching.Configuration;
 
 namespace Enyim.Caching.Memcached.Protocol.Binary

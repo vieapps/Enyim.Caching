@@ -6,7 +6,6 @@ using System.Xml;
 using System.Configuration;
 using System.Collections.Generic;
 
-using Enyim.Reflection;
 using Enyim.Caching.Memcached;
 using Enyim.Caching.Memcached.Protocol.Text;
 using Enyim.Caching.Memcached.Protocol.Binary;
