@@ -29,7 +29,7 @@ namespace Enyim.Collections
 
 		public InterlockedQueue()
 		{
-			Node node = new Node(default(T));
+			Node node = new Node(default);
 			this.headNode = node;
 			this.tailNode = node;
 		}
@@ -56,7 +56,7 @@ namespace Enyim.Collections
 						// is the queue empty?
 						if (next == null)
 						{
-							value = default(T);							
+							value = default;							
 							return false; // queue is empty and cannot dequeue
 						}
 						Interlocked.CompareExchange<Node>(ref this.tailNode, next, tail);
@@ -93,9 +93,9 @@ namespace Enyim.Collections
 					if (object.ReferenceEquals(head, tail))
 					{
 						// is the queue empty?
-						if (object.ReferenceEquals(next, null))
+						if (next is null)
 						{
-							value = default(T);
+							value = default;
 
 							// queue is empty
 							return false;
@@ -127,7 +127,7 @@ namespace Enyim.Collections
 				if (object.ReferenceEquals(tail, this.tailNode))
 				{
 					// was tail pointing to the last node?
-					if (object.ReferenceEquals(next, null))
+					if (next is null)
 					{
 						if (object.ReferenceEquals(Interlocked.CompareExchange(ref tail.Next, valueNode, next), next))
 						{
@@ -166,12 +166,10 @@ namespace Enyim.Collections
 	/// <typeparam name="T"></typeparam>
 	public class InterlockedStack<T>
 	{
-		Node head;
+		readonly Node head;
 
 		public InterlockedStack()
-		{
-			this.head = new Node(default(T));
-		}
+			=> this.head = new Node(default);
 
 		public void Push(T item)
 		{
@@ -185,7 +183,7 @@ namespace Enyim.Collections
 
 		public bool TryPop(out T value)
 		{
-			value = default(T);
+			value = default;
 			Node node;
 
 			do
@@ -238,9 +236,7 @@ namespace Enyim.Caching
 		/// </summary>
 		/// <returns></returns>
 		public static ILoggerFactory GetLoggerFactory()
-		{
-			return Logger.LoggerFactory ?? new NullLoggerFactory();
-		}
+			=> Logger.LoggerFactory ?? new NullLoggerFactory();
 
 		/// <summary>
 		/// Creates a logger
@@ -248,9 +244,7 @@ namespace Enyim.Caching
 		/// <param name="type"></param>
 		/// <returns></returns>
 		public static ILogger CreateLogger(Type type)
-		{
-			return Logger.GetLoggerFactory().CreateLogger(type);
-		}
+			=> Logger.GetLoggerFactory().CreateLogger(type);
 
 		/// <summary>
 		/// Creates a logger
@@ -258,9 +252,7 @@ namespace Enyim.Caching
 		/// <typeparam name="T"></typeparam>
 		/// <returns></returns>
 		public static ILogger CreateLogger<T>()
-		{
-			return Logger.CreateLogger(typeof(T));
-		}
+			=> Logger.CreateLogger(typeof(T));
 
 		/// <summary>
 		/// Writes a log message
@@ -340,9 +332,7 @@ namespace Enyim.Caching
 		/// <param name="message">The log message</param>
 		/// <param name="exception">The exception</param>
 		public static void Log<T>(LogLevel minLevel, LogLevel mode, string message, Exception exception = null)
-		{
-			Logger.CreateLogger<T>().Log(minLevel, mode, message, exception);
-		}
+			=> Logger.CreateLogger<T>().Log(minLevel, mode, message, exception);
 	}
 	#endregion
 
