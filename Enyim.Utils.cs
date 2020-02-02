@@ -397,6 +397,35 @@ namespace Enyim.Caching
 				return null;
 			};
 		}
+
+		/// <summary>
+		/// Gets the type from an assembly by the specified name (full class name)
+		/// </summary>
+		/// <param name="assemblyFilePath">The absolute path of assembly</param>
+		/// <param name="typeName">The type name (full class name)</param>
+		/// <returns></returns>
+		public static Type GetType(string assemblyFilePath, string typeName)
+			=> string.IsNullOrWhiteSpace(assemblyFilePath) || string.IsNullOrWhiteSpace(typeName) || !File.Exists(assemblyFilePath)
+				? null
+				: new AssemblyLoader(assemblyFilePath).Assembly.GetExportedTypes().FirstOrDefault(type => typeName.Equals(type.ToString()));
+
+		/// <summary>
+		/// Gets the type by the specified type name (full class name with assembly)
+		/// </summary>
+		/// <param name="typeNameWithAssembly">The type name (full class name with assembly)</param>
+		/// <returns></returns>
+		public static Type GetType(string typeNameWithAssembly)
+		{
+			if (string.IsNullOrWhiteSpace(typeNameWithAssembly) || typeNameWithAssembly.IndexOf(",") < 0)
+				return null;
+			var type = Type.GetType(typeNameWithAssembly);
+			if (type == null)
+			{
+				var info = typeNameWithAssembly.Trim().Split(',').Select(data => data.Trim()).ToList();
+				type = AssemblyLoader.GetType(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, $"{info[1]}{(info[1].EndsWith(".dll", StringComparison.OrdinalIgnoreCase) ? "" : ".dll")}"), info[0]);
+			}
+			return type;
+		}
 	}
 	#endregion
 
@@ -440,17 +469,7 @@ namespace Enyim.Caching
 		/// <returns>The newly created instance.</returns>
 		public static object Create(string type)
 		{
-			var theType = Type.GetType(type);
-			if (theType == null)
-				try
-				{
-					var typeInfo = type.Split(',').Select(info => info.Trim()).ToList();
-					theType = new AssemblyLoader(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, $"{typeInfo[1]}.dll")).Assembly.GetExportedTypes().FirstOrDefault(serviceType => typeInfo[0].Equals(serviceType.ToString()));
-				}
-				catch (Exception ex)
-				{
-					Logger.Log<AssemblyLoader>(LogLevel.Information, LogLevel.Error, $"Error occurred while loading an assembly => {ex.Message}", ex);
-				}
+			var theType = AssemblyLoader.GetType(type);
 			return theType != null ? FastActivator.Create(theType) : null;
 		}
 	}
