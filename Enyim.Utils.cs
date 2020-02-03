@@ -344,7 +344,7 @@ namespace Enyim.Caching
 		/// </summary>
 		public Assembly Assembly { get; }
 
-		AssemblyLoadContext LoadContext { get; }
+		AssemblyLoadContext AssemblyLoadContext { get; }
 
 		DependencyContext DependencyContext { get; }
 
@@ -357,25 +357,28 @@ namespace Enyim.Caching
 		public AssemblyLoader(string assemblyPath)
 		{
 			// load assembly
-			var path = Path.GetDirectoryName(assemblyPath);
+			var directory = Path.GetDirectoryName(assemblyPath);
 			this.Assembly = AssemblyLoadContext.Default.LoadFromAssemblyPath(assemblyPath);
-			this.LoadContext = AssemblyLoadContext.GetLoadContext(this.Assembly);
+			this.AssemblyLoadContext = AssemblyLoadContext.GetLoadContext(this.Assembly);
 
 			// not dependencies => load referenced assembies
-			if (!File.Exists(Path.Combine(path, $"{Path.GetFileNameWithoutExtension(assemblyPath)}.deps.json")))
+			if (!File.Exists(Path.Combine(directory, $"{Path.GetFileNameWithoutExtension(assemblyPath)}.deps.json")))
 			{
-				this.Assembly.GetReferencedAssemblies().ToList().ForEach(assemblyName => this.LoadContext.LoadFromAssemblyPath(Path.Combine(path, $"{assemblyName.Name}.dll")));
+				this.Assembly.GetReferencedAssemblies()
+					.Where(assemblyName => File.Exists(Path.Combine(directory, $"{assemblyName.Name}.dll")))
+					.ToList()
+					.ForEach(assemblyName => this.AssemblyLoadContext.LoadFromAssemblyPath(Path.Combine(directory, $"{assemblyName.Name}.dll")));
 				return;
 			}
 
 			this.DependencyContext = DependencyContext.Load(this.Assembly);
 			this.AssemblyResolver = new CompositeCompilationAssemblyResolver(new ICompilationAssemblyResolver[]
 			{
-				new AppBaseCompilationAssemblyResolver(path),
+				new AppBaseCompilationAssemblyResolver(directory),
 				new ReferenceAssemblyPathResolver(),
 				new PackageCompilationAssemblyResolver()
 			});
-			this.LoadContext.Resolving += (loadContext, assemblyName) =>
+			this.AssemblyLoadContext.Resolving += (assemblyLoadContext, assemblyName) =>
 			{
 				var runtimeLib = this.DependencyContext.RuntimeLibraries.FirstOrDefault(runtime => string.Equals(runtime.Name, assemblyName.Name, StringComparison.OrdinalIgnoreCase));
 				if (runtimeLib != null)
@@ -392,7 +395,7 @@ namespace Enyim.Caching
 					var assemblyPaths = new List<string>();
 					this.AssemblyResolver.TryResolveAssemblyPaths(compilationLib, assemblyPaths);
 					if (assemblyPaths.Count > 0)
-						return loadContext.LoadFromAssemblyPath(assemblyPaths[0]);
+						return assemblyLoadContext.LoadFromAssemblyPath(assemblyPaths[0]);
 				}
 				return null;
 			};
