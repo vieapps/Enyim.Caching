@@ -56,7 +56,7 @@ namespace Enyim.Collections
 						// is the queue empty?
 						if (next == null)
 						{
-							value = default;							
+							value = default;
 							return false; // queue is empty and cannot dequeue
 						}
 						Interlocked.CompareExchange<Node>(ref this.tailNode, next, tail);
@@ -361,44 +361,44 @@ namespace Enyim.Caching
 			this.Assembly = AssemblyLoadContext.Default.LoadFromAssemblyPath(assemblyPath);
 			this.AssemblyLoadContext = AssemblyLoadContext.GetLoadContext(this.Assembly);
 
-			// not dependencies => load referenced assembies
-			if (!File.Exists(Path.Combine(directory, $"{Path.GetFileNameWithoutExtension(assemblyPath)}.deps.json")))
+			// load all assemblies that specified by dependencies file
+			if (File.Exists(Path.Combine(directory, $"{Path.GetFileNameWithoutExtension(assemblyPath)}.deps.json")))
 			{
-				this.Assembly.GetReferencedAssemblies()
-					.Where(assemblyName => File.Exists(Path.Combine(directory, $"{assemblyName.Name}.dll")))
-					.ToList()
-					.ForEach(assemblyName => this.AssemblyLoadContext.LoadFromAssemblyPath(Path.Combine(directory, $"{assemblyName.Name}.dll")));
-				return;
+				this.DependencyContext = DependencyContext.Load(this.Assembly);
+
+				this.AssemblyResolver = new CompositeCompilationAssemblyResolver(new ICompilationAssemblyResolver[]
+				{
+					new AppBaseCompilationAssemblyResolver(directory),
+					new ReferenceAssemblyPathResolver(),
+					new PackageCompilationAssemblyResolver()
+				});
+
+				this.AssemblyLoadContext.Resolving += (assemblyLoadContext, assemblyName) =>
+				{
+					var runtimeLib = this.DependencyContext.RuntimeLibraries.FirstOrDefault(runtime => string.Equals(runtime.Name, assemblyName.Name, StringComparison.OrdinalIgnoreCase));
+					if (runtimeLib != null)
+					{
+						var compilationLib = new CompilationLibrary(
+							runtimeLib.Type,
+							runtimeLib.Name,
+							runtimeLib.Version,
+							runtimeLib.Hash,
+							runtimeLib.RuntimeAssemblyGroups.SelectMany(g => g.AssetPaths),
+							runtimeLib.Dependencies,
+							runtimeLib.Serviceable
+						);
+						var assemblyPaths = new List<string>();
+						this.AssemblyResolver.TryResolveAssemblyPaths(compilationLib, assemblyPaths);
+						return assemblyPaths.Count > 0 ? assemblyLoadContext.LoadFromAssemblyPath(assemblyPaths.First()) : null;
+					}
+					return null;
+				};
 			}
 
-			this.DependencyContext = DependencyContext.Load(this.Assembly);
-			this.AssemblyResolver = new CompositeCompilationAssemblyResolver(new ICompilationAssemblyResolver[]
-			{
-				new AppBaseCompilationAssemblyResolver(directory),
-				new ReferenceAssemblyPathResolver(),
-				new PackageCompilationAssemblyResolver()
-			});
-			this.AssemblyLoadContext.Resolving += (assemblyLoadContext, assemblyName) =>
-			{
-				var runtimeLib = this.DependencyContext.RuntimeLibraries.FirstOrDefault(runtime => string.Equals(runtime.Name, assemblyName.Name, StringComparison.OrdinalIgnoreCase));
-				if (runtimeLib != null)
-				{
-					var compilationLib = new CompilationLibrary(
-						runtimeLib.Type,
-						runtimeLib.Name,
-						runtimeLib.Version,
-						runtimeLib.Hash,
-						runtimeLib.RuntimeAssemblyGroups.SelectMany(g => g.AssetPaths),
-						runtimeLib.Dependencies,
-						runtimeLib.Serviceable
-					);
-					var assemblyPaths = new List<string>();
-					this.AssemblyResolver.TryResolveAssemblyPaths(compilationLib, assemblyPaths);
-					if (assemblyPaths.Count > 0)
-						return assemblyLoadContext.LoadFromAssemblyPath(assemblyPaths[0]);
-				}
-				return null;
-			};
+			// doesn't have dependencies file => load referenced assembies
+			else
+				this.Assembly.GetReferencedAssemblies().Where(assemblyName => File.Exists(Path.Combine(directory, $"{assemblyName.Name}.dll")))
+					.ToList().ForEach(assemblyName => this.AssemblyLoadContext.LoadFromAssemblyPath(Path.Combine(directory, $"{assemblyName.Name}.dll")));
 		}
 
 		/// <summary>

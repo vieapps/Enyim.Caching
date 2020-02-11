@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFrameworks>netstandard2.0;netstandard2.1;netcoreapp2.0;netcoreapp2.1;netcoreapp2.2;netcoreapp3.0;netcoreapp3.1</TargetFrameworks>
+		<TargetFrameworks>netstandard2.0;netstandard2.1;netcoreapp2.1;netcoreapp3.1</TargetFrameworks>
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 		<WarningLevel>3</WarningLevel>
 		<NoWarn>1701;1702;1705;1066;0067</NoWarn>
@@ -33,7 +33,7 @@
 		<PackageIcon>Icon.png</PackageIcon>
 		<PackageOutputPath>../</PackageOutputPath>
 		<PackageTags>cache;caching;distributed;distributed-cache;memcached;enyim;enyim-memcached;enyim-caching;vieapps;vieapps.components</PackageTags>
-		<PackageReleaseNotes>Fix bugs of extension methods for working with type</PackageReleaseNotes>
+		<PackageReleaseNotes>Restructure: only support LTS targets</PackageReleaseNotes>
 		<PackageProjectUrl>https://vieapps.net</PackageProjectUrl>
 		<RepositoryUrl>https://github.com/vieapps/Enyim.Caching</RepositoryUrl>
 		<RepositoryType>git</RepositoryType>
