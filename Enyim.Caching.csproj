@@ -33,7 +33,7 @@
 		<PackageIcon>Icon.png</PackageIcon>
 		<PackageOutputPath>../</PackageOutputPath>
 		<PackageTags>cache;caching;distributed;distributed-cache;memcached;enyim;enyim-memcached;enyim-caching;vieapps;vieapps.components</PackageTags>
-		<PackageReleaseNotes>Restructure: only support LTS targets</PackageReleaseNotes>
+		<PackageReleaseNotes>Restructure: rename static extension classes to avoid ambiguous references</PackageReleaseNotes>
 		<PackageProjectUrl>https://vieapps.net</PackageProjectUrl>
 		<RepositoryUrl>https://github.com/vieapps/Enyim.Caching</RepositoryUrl>
 		<RepositoryType>git</RepositoryType>

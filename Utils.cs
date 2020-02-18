@@ -417,7 +417,7 @@ namespace CacheUtils
 
 namespace Microsoft.Extensions.DependencyInjection
 {
-	public static partial class ServiceCollectionExtensions
+	public static class MemcachedServiceCollectionExtensions
 	{
 		/// <summary>
 		/// Adds the <see cref="IMemcachedClient">Memcached</see> service into the collection of services for using with dependency injection
@@ -444,7 +444,7 @@ namespace Microsoft.Extensions.DependencyInjection
 
 namespace Microsoft.AspNetCore.Builder
 {
-	public static partial class ApplicationBuilderExtensions
+	public static class MemcachedApplicationBuilderExtensions
 	{
 		/// <summary>
 		/// Calls to use the <see cref="IMemcachedClient">Memcached</see> service
