@@ -397,8 +397,10 @@ namespace Enyim.Caching
 
 			// doesn't have dependencies file => load referenced assembies
 			else
-				this.Assembly.GetReferencedAssemblies().Where(assemblyName => File.Exists(Path.Combine(directory, $"{assemblyName.Name}.dll")))
-					.ToList().ForEach(assemblyName => this.AssemblyLoadContext.LoadFromAssemblyPath(Path.Combine(directory, $"{assemblyName.Name}.dll")));
+				this.Assembly.GetReferencedAssemblies()
+					.Where(assemblyName => File.Exists(Path.Combine(directory, $"{assemblyName.Name}.dll")))
+					.ToList()
+					.ForEach(assemblyName => this.AssemblyLoadContext.LoadFromAssemblyPath(Path.Combine(directory, $"{assemblyName.Name}.dll")));
 		}
 
 		/// <summary>
