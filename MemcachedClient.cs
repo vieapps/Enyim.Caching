@@ -1718,8 +1718,6 @@ namespace Enyim.Caching
 		#endregion
 
 		#region Dispose
-		~MemcachedClient() => this.Dispose();
-
 		/// <summary>
 		/// Releases all resources allocated by this instance
 		/// </summary>
@@ -1741,6 +1739,9 @@ namespace Enyim.Caching
 				this.Pool = null;
 			}
 		}
+
+		~MemcachedClient()
+			=> this.Dispose();
 		#endregion
 
 		#region IDistributedCache

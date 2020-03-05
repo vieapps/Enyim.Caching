@@ -6,6 +6,7 @@ using System.Linq;
 using System.Numerics;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Collections.Generic;
 using System.Runtime.Serialization.Formatters.Binary;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Configuration;
@@ -98,20 +99,56 @@ namespace CacheUtils
 			=> $"i-distributed-cache#{key}";
 
 		/// <summary>
-		/// Combines arrays of bytes
+		/// Concatenates the arrays of bytes
 		/// </summary>
-		/// <param name="arrays"></param>
+		/// <param name="arrays">The arrays of bytes to concatenate</param>
 		/// <returns></returns>
-		public static byte[] Combine(params byte[][] arrays)
+		public static byte[] Concat(IEnumerable<byte[]> arrays)
 		{
-			var combined = new byte[arrays.Sum(a => a.Length)];
+			if (arrays == null || arrays.Count() < 1)
+				return new byte[0];
+
 			var offset = 0;
-			foreach (var array in arrays)
+			var data = arrays.Where(array => array != null).ToList();
+			var result = new byte[data.Sum(array => array.Length)];
+			data.ForEach(array =>
 			{
-				Buffer.BlockCopy(array, 0, combined, offset, array.Length);
+				Buffer.BlockCopy(array, 0, result, offset, array.Length);
 				offset += array.Length;
+			});
+			return result;
+		}
+
+		/// <summary>
+		/// Splits the array of bytes into the sub-arrays of bytes with the specified size
+		/// </summary>
+		/// <param name="bytes">The arrays of bytes to split</param>
+		/// <param name="size">The size (count/length of one array)</param>
+		/// <returns></returns>
+		public static IEnumerable<byte[]> Split(byte[] bytes, int size)
+		{
+			var result = new List<byte[]>();
+			if (bytes == null)
+				return result;
+
+			if (size < 1 || bytes.Length < 1)
+			{
+				result.Add(bytes);
+				return result;
 			}
-			return combined;
+
+			var offset = 0;
+			var length = bytes.Length;
+			while (offset < bytes.Length)
+			{
+				var count = size > length ? length : size;
+				var block = new byte[count];
+				Buffer.BlockCopy(bytes, offset, block, 0, count);
+				result.Add(block);
+				offset += count;
+				length -= count;
+			}
+			return result;
 		}
 
 		/// <summary>
@@ -243,7 +280,7 @@ namespace CacheUtils
 					break;
 
 				case TypeCode.Decimal:
-					Decimal.GetBits((decimal)value).ToList().ForEach(i => data = Helper.Combine(data, BitConverter.GetBytes(i)));
+					data = Helper.Concat(Decimal.GetBits((decimal)value).Select(@int => BitConverter.GetBytes(@int)));
 					break;
 
 				default:

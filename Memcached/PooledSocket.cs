@@ -105,45 +105,6 @@ namespace Enyim.Caching.Memcached
 		/// </summary>
 		public bool IsAlive => this._isAlive;
 
-		/// <summary>
-		/// Releases all resources used by this instance and shuts down the inner <see cref="Socket"/>. This instance will not be usable anymore.
-		/// </summary>
-		/// <remarks>Use the IDisposable.Dispose method if you want to release this instance back into the pool.</remarks>
-		public void Destroy()
-			=> this.Dispose(true);
-
-		~PooledSocket()
-		{
-			try
-			{
-				this.Dispose(true);
-			}
-			catch { }
-		}
-
-		protected void Dispose(bool disposing)
-		{
-			if (disposing)
-			{
-				GC.SuppressFinalize(this);
-				try
-				{
-					this._socket?.Dispose();
-					this._socket = null;
-					this.CleanupCallback = null;
-				}
-				catch (Exception e)
-				{
-					this._logger.LogError(e, "Error occurred while disposing");
-				}
-			}
-			else
-				this.CleanupCallback?.Invoke(this);
-		}
-
-		void IDisposable.Dispose()
-			=> this.Dispose(false);
-
 		void CheckDisposed()
 		{
 			if (this._socket == null)
@@ -359,6 +320,39 @@ namespace Enyim.Caching.Memcached
 			this._asyncHelper = this._asyncHelper ?? new AsyncSocketHelper(this);
 			return this._asyncHelper.Read(args);
 		}
+
+		/// <summary>
+		/// Releases all resources used by this instance and shuts down the inner <see cref="Socket"/>. This instance will not be usable anymore.
+		/// </summary>
+		/// <remarks>Use the IDisposable.Dispose method if you want to release this instance back into the pool.</remarks>
+		public void Destroy()
+			=> this.Dispose(true);
+
+		protected void Dispose(bool disposing)
+		{
+			if (disposing)
+			{
+				GC.SuppressFinalize(this);
+				try
+				{
+					this._socket?.Dispose();
+					this._socket = null;
+					this.CleanupCallback = null;
+				}
+				catch (Exception e)
+				{
+					this._logger.LogError(e, "Error occurred while disposing");
+				}
+			}
+			else
+				this.CleanupCallback?.Invoke(this);
+		}
+
+		public void Dispose()
+			=> this.Dispose(false);
+
+		~PooledSocket()
+				=> this.Dispose(true);
 	}
 
 	#region Helpers of Async I/O Socket 

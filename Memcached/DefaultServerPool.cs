@@ -31,15 +31,6 @@ namespace Enyim.Caching.Memcached
 			this._logger = Logger.CreateLogger<DefaultServerPool>();
 		}
 
-		~DefaultServerPool()
-		{
-			try
-			{
-				((IDisposable)this).Dispose();
-			}
-			catch { }
-		}
-
 		protected virtual IMemcachedNode CreateNode(EndPoint endpoint, Action<IMemcachedNode> onNodeFailed = null)
 		{
 			var node = new MemcachedNode(endpoint, this._configuration.SocketPool);
@@ -199,7 +190,7 @@ namespace Enyim.Caching.Memcached
 		#endregion
 
 		#region [ IDisposable                  ]
-		void IDisposable.Dispose()
+		public void Dispose()
 		{
 			GC.SuppressFinalize(this);
 
@@ -243,6 +234,9 @@ namespace Enyim.Caching.Memcached
 				this._resurrectTimer = null;
 			}
 		}
+
+		~DefaultServerPool()
+			=> this.Dispose();
 		#endregion
 
 	}

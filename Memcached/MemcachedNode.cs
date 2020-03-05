@@ -160,15 +160,6 @@ namespace Enyim.Caching.Memcached
 		}
 
 		#region Dispose
-		~MemcachedNode()
-		{
-			try
-			{
-				((IDisposable)this).Dispose();
-			}
-			catch { }
-		}
-
 		/// <summary>
 		/// Releases all resources allocated by this instance
 		/// </summary>
@@ -191,7 +182,8 @@ namespace Enyim.Caching.Memcached
 			}
 		}
 
-		void IDisposable.Dispose() => this.Dispose();
+		~MemcachedNode()
+			=> this.Dispose();
 		#endregion
 
 		#region [ InternalPoolImpl                  ]
