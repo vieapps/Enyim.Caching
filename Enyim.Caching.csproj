@@ -11,7 +11,7 @@
 		<AssemblyTitle>Enyim Memcached</AssemblyTitle>
 		<AssemblyVersion>1.7$(ReleaseVersion)</AssemblyVersion>
 		<FileVersion>1.7$(ReleaseVersion)</FileVersion>
-		<InformationalVersion>1.7@$(TargetFramework)#sn:$(Sign)-$(ReleaseRevision)</InformationalVersion>
+		<InformationalVersion>1.7.$([System.DateTime]::Now.Year).$([System.DateTime]::Now.Month).$([System.DateTime]::Now.Day)@$(TargetFramework)#sn:$(Sign)#$(ReleaseRevision)</InformationalVersion>
 		<Version>1.7$(ReleaseVersion)$(ReleaseSuffix)</Version>
 		<Product>Enyim Memcached</Product>
 		<Title>Enyim Memcached</Title>
@@ -21,7 +21,7 @@
 		<Company>VIEApps.net</Company>
 	</PropertyGroup>
 
-	<PropertyGroup Condition="'$(Configuration)'=='Release'">
+	<PropertyGroup Condition="'$(Configuration)' == 'Release'">
 		<SignAssembly>$(Sign)</SignAssembly>
 		<AssemblyOriginatorKeyFile>../VIEApps.Components.snk</AssemblyOriginatorKeyFile>
 		<DefineConstants>$(SignConstant)</DefineConstants>
@@ -33,7 +33,7 @@
 		<PackageIcon>Icon.png</PackageIcon>
 		<PackageOutputPath>../</PackageOutputPath>
 		<PackageTags>cache;caching;distributed;distributed-cache;memcached;enyim;enyim-memcached;enyim-caching;vieapps;vieapps.components</PackageTags>
-		<PackageReleaseNotes>Refactoring: concat/split array of bytes, dispose object</PackageReleaseNotes>
+		<PackageReleaseNotes>Improvement: dispose objects</PackageReleaseNotes>
 		<PackageProjectUrl>https://vieapps.net</PackageProjectUrl>
 		<RepositoryUrl>https://github.com/vieapps/Enyim.Caching</RepositoryUrl>
 		<RepositoryType>git</RepositoryType>

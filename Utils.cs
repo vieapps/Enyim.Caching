@@ -23,6 +23,11 @@ namespace CacheUtils
 
 		#region Work with caching data
 		/// <summary>
+		/// Gets the flag of raw data
+		/// </summary>
+		public const int FlagOfRawData = 0xfa52;
+
+		/// <summary>
 		/// Gets the Unix epoch
 		/// </summary>
 		public static readonly DateTime UnixEpoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
@@ -150,11 +155,6 @@ namespace CacheUtils
 			}
 			return result;
 		}
-
-		/// <summary>
-		/// Gets the flag of raw data
-		/// </summary>
-		public const int FlagOfRawData = 0xfa52;
 		#endregion
 
 		#region Serialize & Deserialize
@@ -496,7 +496,7 @@ namespace Microsoft.AspNetCore.Builder
 			}
 			catch (Exception ex)
 			{
-				appBuilder.ApplicationServices.GetService<ILogger<IMemcachedClient>>().LogError(ex, $"Error occurred while collecting information of the service of Memcached client => {ex.Message}");
+				appBuilder.ApplicationServices.GetService<ILogger<IMemcachedClient>>().LogError(ex, $"Error occurred while collecting information of Memcached client => {ex.Message}");
 			}
 			return appBuilder;
 		}

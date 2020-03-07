@@ -189,11 +189,9 @@ namespace Enyim.Caching.Memcached
 		}
 		#endregion
 
-		#region [ IDisposable                  ]
 		public void Dispose()
 		{
 			GC.SuppressFinalize(this);
-
 			lock (this._locker)
 			{
 				if (this._isDisposed)
@@ -237,8 +235,6 @@ namespace Enyim.Caching.Memcached
 
 		~DefaultServerPool()
 			=> this.Dispose();
-		#endregion
-
 	}
 }
 

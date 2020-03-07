@@ -178,13 +178,11 @@ namespace Enyim.Caching.Memcached
 			return keys;
 		}
 
-		#region [ IDisposable                  ]
-		void IDisposable.Dispose()
+		public void Dispose()
 		{
 			using (this._locker)
 			{
 				this._locker.EnterWriteLock();
-
 				try
 				{
 					// kill all pending operations (with an exception)
@@ -199,11 +197,8 @@ namespace Enyim.Caching.Memcached
 					this._locker.ExitWriteLock();
 				}
 			}
-
 			this._locker = null;
 		}
-		#endregion
-
 	}
 }
 
