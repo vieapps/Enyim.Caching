@@ -7,7 +7,7 @@ using System.Threading;
 using System.Reflection;
 using System.Runtime.Loader;
 using System.Collections.Generic;
-
+using System.Collections.Concurrent;
 using Microsoft.Extensions.DependencyModel;
 using Microsoft.Extensions.DependencyModel.Resolution;
 using Microsoft.Extensions.Logging;
@@ -410,9 +410,9 @@ namespace Enyim.Caching
 		/// <param name="typeName">The type name (full class name)</param>
 		/// <returns></returns>
 		public static Type GetType(string assemblyFilePath, string typeName)
-			=> string.IsNullOrWhiteSpace(assemblyFilePath) || string.IsNullOrWhiteSpace(typeName) || !File.Exists(assemblyFilePath)
-				? null
-				: new AssemblyLoader(assemblyFilePath).Assembly.GetExportedTypes().FirstOrDefault(type => typeName.Equals(type.ToString()));
+			=> !string.IsNullOrWhiteSpace(assemblyFilePath) && !string.IsNullOrWhiteSpace(typeName) && File.Exists(assemblyFilePath)
+				? new AssemblyLoader(assemblyFilePath).Assembly.GetExportedTypes().FirstOrDefault(type => typeName.Equals(type.ToString()))
+				:  null;
 
 		/// <summary>
 		/// Gets the type by the specified type name (full class name with assembly)
@@ -423,12 +423,14 @@ namespace Enyim.Caching
 		{
 			if (string.IsNullOrWhiteSpace(typeNameWithAssembly) || typeNameWithAssembly.IndexOf(",") < 0)
 				return null;
+
 			var type = Type.GetType(typeNameWithAssembly);
 			if (type == null)
 			{
 				var info = typeNameWithAssembly.Trim().Split(',').Select(data => data.Trim()).ToList();
 				type = AssemblyLoader.GetType(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, $"{info[1]}{(info[1].EndsWith(".dll", StringComparison.OrdinalIgnoreCase) ? "" : ".dll")}"), info[0]);
 			}
+
 			return type;
 		}
 	}
@@ -441,7 +443,7 @@ namespace Enyim.Caching
 	/// </summary>
 	public static class FastActivator
 	{
-		static Dictionary<Type, Func<object>> Factories { get; } = new Dictionary<Type, Func<object>>();
+		static ConcurrentDictionary<Type, Func<object>> Factories { get; } = new ConcurrentDictionary<Type, Func<object>>();
 
 		/// <summary>
 		/// Creates an instance of the specified type using a generated factory to avoid using Reflection.
