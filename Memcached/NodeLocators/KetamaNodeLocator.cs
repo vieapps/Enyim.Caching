@@ -3,6 +3,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Collections.Generic;
+using System.Net;
 using System.Security.Cryptography;
 
 namespace Enyim.Caching.Memcached
@@ -13,6 +14,7 @@ namespace Enyim.Caching.Memcached
 	public sealed class KetamaNodeLocator : INodeLocator
 	{
 		static int ServerAddressMutations { get; } = 160;
+		static int MemcachedDefaultPort { get; } = 11211;
 		static Dictionary<string, Func<HashAlgorithm>> Factories { get; } = new Dictionary<string, Func<HashAlgorithm>>(StringComparer.OrdinalIgnoreCase)
 		{
 			{ "md5", () => MD5.Create() },
@@ -84,6 +86,16 @@ namespace Enyim.Caching.Memcached
 					// 01 02 03 04 05 06 07
 					// server will be stored with keys 0x07060504 & 0x03020100
 					var address = currentNode.EndPoint.ToString();
+					// Other libketama-comaptible clients (libmemcached, node, pylibmc) ignore the port number
+					// when calculating the hash if the default port (11211) is used.
+					// If using a non-standard port, we use the full hostname:port
+					// Examples:
+					// libmemcached: https://bazaar.launchpad.net/~tangent-trunk/libmemcached/1.2/view/head:/libmemcached/hosts.cc#L293
+					// node-hashring: https://github.com/3rd-Eden/node-hashring/blob/master/index.js#L138
+					if (((IPEndPoint)currentNode.EndPoint).Port == MemcachedDefaultPort)
+					{
+					    address = ((IPEndPoint)currentNode.EndPoint).Address.ToString();
+					}
 					for (var mutation = 0; mutation < KetamaNodeLocator.ServerAddressMutations / partCount; mutation++)
 					{
 						var data = hashAlgorithm.ComputeHash(Encoding.ASCII.GetBytes(address + "-" + mutation));
