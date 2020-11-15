@@ -1,5 +1,4 @@
 using System;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -77,7 +76,7 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 			catch (Exception ex)
 			{
 				this._logger.LogError(ex, "Read: Error occurred while reading socket");
-				throw ex;
+				throw;
 			}
 		}
 
@@ -118,7 +117,7 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 			catch (Exception ex)
 			{
 				this._logger.LogError(ex, "ReadAsync: Error occurred while reading socket");
-				throw ex;
+				throw;
 			}
 		}
 

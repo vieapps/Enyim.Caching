@@ -3,13 +3,11 @@ using System;
 using System.IO;
 using System.Text;
 using System.Linq;
-using System.Numerics;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using System.Runtime.Serialization.Formatters.Binary;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.DependencyInjection;
 using Enyim.Caching;
@@ -300,7 +298,13 @@ namespace CacheUtils
 						if (value.GetType().IsSerializable)
 							using (var stream = Helper.CreateMemoryStream())
 							{
+#if NET5_0
+#pragma warning disable SYSLIB0011
+								new BinaryFormatter { Binder = new SerializationBinder() }.Serialize(stream, value);
+#pragma warning restore SYSLIB0011
+#else
 								new BinaryFormatter().Serialize(stream, value);
+#endif
 								data = stream.ToBytes();
 							}
 						else
@@ -405,7 +409,13 @@ namespace CacheUtils
 				default:
 					using (var stream = Helper.CreateMemoryStream(data, start, count))
 					{
+#if NET5_0
+#pragma warning disable SYSLIB0011
+						return new BinaryFormatter { Binder = new SerializationBinder() }.Deserialize(stream);
+#pragma warning restore SYSLIB0011
+#else
 						return new BinaryFormatter().Deserialize(stream);
+#endif
 					}
 			}
 		}
@@ -450,6 +460,14 @@ namespace CacheUtils
 		#endregion
 
 	}
+
+#if NET5_0
+	public class SerializationBinder : System.Runtime.Serialization.SerializationBinder
+	{
+		public override Type BindToType(string assemblyName, string typeName) => null;
+	}
+#endif
+
 }
 
 namespace Microsoft.Extensions.DependencyInjection

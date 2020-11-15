@@ -9,13 +9,13 @@
 		<RootNamespace>Enyim</RootNamespace>
 		<AssemblyName>Enyim.Caching</AssemblyName>
 		<AssemblyTitle>Enyim Memcached</AssemblyTitle>
-		<AssemblyVersion>1.7$(ReleaseVersion)</AssemblyVersion>
-		<FileVersion>1.7$(ReleaseVersion)</FileVersion>
-		<InformationalVersion>1.7.$([System.DateTime]::Now.Year).$([System.DateTime]::Now.Month).$([System.DateTime]::Now.Day)@$(TargetFramework)#sn:$(Sign)#$(ReleaseRevision)</InformationalVersion>
-		<Version>1.7$(ReleaseVersion)$(ReleaseSuffix)</Version>
+		<AssemblyVersion>1.8$(ReleaseVersion)</AssemblyVersion>
+		<FileVersion>1.8$(ReleaseVersion)</FileVersion>
+		<InformationalVersion>1.8.$([System.DateTime]::Now.Year).$([System.DateTime]::Now.Month).$([System.DateTime]::Now.Day)@$(TargetFramework)#sn:$(Sign)#$(ReleaseRevision)</InformationalVersion>
+		<Version>1.8$(ReleaseVersion)$(ReleaseSuffix)</Version>
 		<Product>Enyim Memcached</Product>
 		<Title>Enyim Memcached</Title>
-		<Description>High performance Memcached client on .NET Standard 2.x/.NET Core 2.x+, incorporating both synchronous and asynchronous with various transcoders (Binary, BSON, ProtoBuf, MsgPack)</Description>
+		<Description>High performance Memcached client on .NET Standard 2.x/.NET Core 2.x+/.NET 5.x+, incorporating both synchronous and asynchronous with various transcoders (Binary, BSON, ProtoBuf, MsgPack)</Description>
 		<Copyright>© 2010 Attila Kiskó, © 2016 CNBlogs, © 2020 VIEApps.net</Copyright>
 		<Authors>VIEApps.net</Authors>
 		<Company>VIEApps.net</Company>
@@ -33,7 +33,7 @@
 		<PackageIcon>Icon.png</PackageIcon>
 		<PackageOutputPath>../</PackageOutputPath>
 		<PackageTags>cache;caching;distributed;distributed-cache;memcached;enyim;enyim-memcached;enyim-caching;vieapps;vieapps.components</PackageTags>
-		<PackageReleaseNotes>Upgrade to latest components</PackageReleaseNotes>
+		<PackageReleaseNotes>Add support of .NET 5 with BinaryFormatter serialization</PackageReleaseNotes>
 		<PackageProjectUrl>https://vieapps.net</PackageProjectUrl>
 		<RepositoryUrl>https://github.com/vieapps/Enyim.Caching</RepositoryUrl>
 		<RepositoryType>git</RepositoryType>

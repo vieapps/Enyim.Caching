@@ -231,7 +231,7 @@ namespace Enyim.Caching
 				catch (Exception ex)
 				{
 					this._logger.LogError(ex, $"Cannot serialize the value of '{key}'");
-					throw ex;
+					throw;
 				}
 
 				var command = this.Pool.OperationFactory.Store(mode, hashedKey, item, expires, cas);

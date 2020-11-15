@@ -1,16 +1,13 @@
 #region Related components
 using System;
-using System.IO;
 using System.Net;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
-
 using Enyim.Collections;
 using Enyim.Caching.Configuration;
 using Enyim.Caching.Memcached.Results;
-
 using Microsoft.Extensions.Logging;
 #endregion
 
@@ -155,7 +152,7 @@ namespace Enyim.Caching.Memcached
 			catch (Exception ex)
 			{
 				this._logger.LogError(ex, $"Cannot create socket ({this.EndPoint})");
-				throw ex;
+				throw;
 			}
 		}
 
