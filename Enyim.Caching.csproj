@@ -10,12 +10,12 @@
 		<AssemblyName>Enyim.Caching</AssemblyName>
 		<AssemblyTitle>Enyim Memcached</AssemblyTitle>
 		<AssemblyVersion>1.8$(ReleaseVersion)</AssemblyVersion>
-		<FileVersion>1.8$(ReleaseVersion)</FileVersion>
-		<InformationalVersion>1.8.$([System.DateTime]::Now.Year).$([System.DateTime]::Now.Month).$([System.DateTime]::Now.Day)@$(TargetFramework)#sn:$(Sign)#$(ReleaseRevision)</InformationalVersion>
-		<Version>1.8$(ReleaseVersion)$(ReleaseSuffix)</Version>
+		<FileVersion>2.0$(ReleaseVersion)</FileVersion>
+		<InformationalVersion>2.0.$([System.DateTime]::Now.Year).$([System.DateTime]::Now.Month).$([System.DateTime]::Now.Day)@$(TargetFramework)#sn:$(Sign)#$(ReleaseRevision)</InformationalVersion>
+		<Version>2.0$(ReleaseVersion)$(ReleaseSuffix)</Version>
 		<Product>Enyim Memcached</Product>
 		<Title>Enyim Memcached</Title>
-		<Description>High performance Memcached client on .NET Standard 2.x/.NET Core 2.x+/.NET 5.x+, incorporating both synchronous and asynchronous with various transcoders (Binary, BSON, ProtoBuf, MsgPack)</Description>
+		<Description>High performance Memcached client on .NET, incorporating both synchronous and asynchronous with various transcoders (Json.NET BSON, ProtoBuf, MsgPack)</Description>
 		<Copyright>© 2010 Attila Kiskó, © 2016 CNBlogs, © 2020 VIEApps.net</Copyright>
 		<Authors>VIEApps.net</Authors>
 		<Company>VIEApps.net</Company>
@@ -33,7 +33,7 @@
 		<PackageIcon>Icon.png</PackageIcon>
 		<PackageOutputPath>../</PackageOutputPath>
 		<PackageTags>cache;caching;distributed;distributed-cache;memcached;enyim;enyim-memcached;enyim-caching;vieapps;vieapps.components</PackageTags>
-		<PackageReleaseNotes>Add support of .NET 5 with BinaryFormatter serialization</PackageReleaseNotes>
+		<PackageReleaseNotes>Use Json.NET Bson Serialization to avoid BinaryFormatter</PackageReleaseNotes>
 		<PackageProjectUrl>https://vieapps.net</PackageProjectUrl>
 		<RepositoryUrl>https://github.com/vieapps/Enyim.Caching</RepositoryUrl>
 		<RepositoryType>git</RepositoryType>
@@ -56,7 +56,9 @@
 		<PackageReference Include="Microsoft.Extensions.DependencyModel" Version="5.0.0" />
 		<PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="5.0.0" />
 		<PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="5.0.0" />
-		<PackageReference Include="Microsoft.IO.RecyclableMemoryStream" Version="1.3.5" />
+		<PackageReference Include="Microsoft.IO.RecyclableMemoryStream" Version="1.3.6" />
+		<PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
+		<PackageReference Include="Newtonsoft.Json.Bson" Version="1.0.2" />
 		<PackageReference Include="System.Configuration.ConfigurationManager" Version="5.0.0" />
 		<PackageReference Include="System.Runtime.Loader" Version="4.3.0" />
 	</ItemGroup>

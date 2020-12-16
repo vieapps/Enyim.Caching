@@ -10,6 +10,8 @@ using System.Runtime.Serialization.Formatters.Binary;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.DependencyInjection;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Bson;
 using Enyim.Caching;
 using Enyim.Caching.Configuration;
 #endregion
@@ -282,30 +284,27 @@ namespace CacheUtils
 					break;
 
 				default:
-					if (value is byte[] || value is ArraySegment<byte>)
+					if (value is byte[])
 					{
 						typeFlag = Helper.FlagOfRawData;
-						if (value is byte[])
-							data = value as byte[];
-						else
-						{
-							data = new byte[((ArraySegment<byte>)value).Count];
-							Buffer.BlockCopy(((ArraySegment<byte>)value).Array, ((ArraySegment<byte>)value).Offset, data, 0, ((ArraySegment<byte>)value).Count);
-						}
+						data = value as byte[];
+					}
+					else if (value is ArraySegment<byte> segment)
+					{
+						typeFlag = Helper.FlagOfRawData;
+						data = new byte[segment.Count];
+						Buffer.BlockCopy(segment.Array, segment.Offset, data, 0, segment.Count);
 					}
 					else
 					{
 						if (value.GetType().IsSerializable)
 							using (var stream = Helper.CreateMemoryStream())
 							{
-#if NET5_0
-#pragma warning disable SYSLIB0011
-								new BinaryFormatter { Binder = new SerializationBinder() }.Serialize(stream, value);
-#pragma warning restore SYSLIB0011
-#else
-								new BinaryFormatter().Serialize(stream, value);
-#endif
-								data = stream.ToBytes();
+								using (var writer = new BsonDataWriter(stream))
+								{
+									new JsonSerializer().Serialize(writer, value);
+									data = stream.ToBytes();
+								}
 							}
 						else
 							throw new ArgumentException($"The type '{value.GetType()}' of '{nameof(value)}' must have Serializable attribute");
@@ -340,8 +339,7 @@ namespace CacheUtils
 					Buffer.BlockCopy(data, start, temp, 0, count);
 					return temp;
 				}
-				else
-					return data;
+				return data;
 			}
 
 			var bytes = new byte[0];
@@ -368,7 +366,7 @@ namespace CacheUtils
 					return BitConverter.ToChar(bytes, 0);
 
 				case TypeCode.String:
-					return Encoding.UTF8.GetString(bytes, 0, bytes.Length);
+					return Encoding.UTF8.GetString(bytes);
 
 				case TypeCode.Byte:
 					return bytes[0];
@@ -409,13 +407,10 @@ namespace CacheUtils
 				default:
 					using (var stream = Helper.CreateMemoryStream(data, start, count))
 					{
-#if NET5_0
-#pragma warning disable SYSLIB0011
-						return new BinaryFormatter { Binder = new SerializationBinder() }.Deserialize(stream);
-#pragma warning restore SYSLIB0011
-#else
-						return new BinaryFormatter().Deserialize(stream);
-#endif
+						using (var reader = new BsonDataReader(stream))
+						{
+							return new JsonSerializer().Deserialize(reader);
+						}
 					}
 			}
 		}
@@ -460,14 +455,6 @@ namespace CacheUtils
 		#endregion
 
 	}
-
-#if NET5_0
-	public class SerializationBinder : System.Runtime.Serialization.SerializationBinder
-	{
-		public override Type BindToType(string assemblyName, string typeName) => null;
-	}
-#endif
-
 }
 
 namespace Microsoft.Extensions.DependencyInjection

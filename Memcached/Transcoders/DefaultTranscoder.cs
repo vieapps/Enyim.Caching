@@ -15,12 +15,12 @@ namespace Enyim.Caching.Memcached
 		{
 			// ArraySegment<byte> is only passed in when a part of buffer is being serialized,
 			// usually from a MemoryStream (to avoid duplicating arrays, the byte[] returned by MemoryStream.GetBuffer is placed into an ArraySegment)
-			if (value != null && value is ArraySegment<byte>)
-				return new CacheItem(flags: CacheUtils.Helper.FlagOfRawData, data: (ArraySegment<byte>)value);
+			if (value != null && value is ArraySegment<byte> segment)
+				return new CacheItem(flags: CacheUtils.Helper.FlagOfRawData, data: segment);
 
 			// or we just received a byte[], means no further processing is needed
-			if (value != null && value is byte[])
-				return new CacheItem(flags: CacheUtils.Helper.FlagOfRawData, data: new ArraySegment<byte>(value as byte[]));
+			if (value != null && value is byte[] bytes)
+				return new CacheItem(flags: CacheUtils.Helper.FlagOfRawData, data: new ArraySegment<byte>(bytes));
 
 			// prepare type code
 			var typeCode = value == null
@@ -85,8 +85,8 @@ namespace Enyim.Caching.Memcached
 		T ITranscoder.Deserialize<T>(CacheItem item)
 		{
 			var @object = this.Deserialize(item);
-			return @object != null && @object is T
-				? (T)@object
+			return @object != null && @object is T instance
+				? instance
 				: default;
 		}
 	}

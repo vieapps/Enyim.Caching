@@ -4,7 +4,7 @@ The memcached client library on .NET Standard 2.x/.NET Core 2.x+:
 - 100% compatible with [EnyimMemcached 2.x](https://github.com/enyim/EnyimMemcached)
 - Fully async (EnyimMemcached still blocks threads while reading from sockets/response)
 - Multiple nodes supported with Ketama for better distribution
-- Object serialization by various transcoders: Binary, Protocol Buffers, Json.NET Bson, MessagePack
+- Object serialization by various transcoders: Json.NET Bson, Protocol Buffers, MessagePack
 - Ready with .NET Core 2.x+/.NET Framework 4.6.1+ with more useful methods (Set, Add, Replace, Refresh, Exists)
 
 ### NuGet
