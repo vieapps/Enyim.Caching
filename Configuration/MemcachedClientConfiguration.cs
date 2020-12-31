@@ -1,15 +1,12 @@
 #region Related components
 using System;
-using System.Linq;
 using System.Net;
 using System.Xml;
 using System.Configuration;
 using System.Collections.Generic;
-
 using Enyim.Caching.Memcached;
 using Enyim.Caching.Memcached.Protocol.Text;
 using Enyim.Caching.Memcached.Protocol.Binary;
-
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 #endregion
@@ -382,7 +379,7 @@ namespace Enyim.Caching.Configuration
 #region [ License information          ]
 /* ************************************************************
  * 
- *    © 2010 Attila Kiskó (aka Enyim), © 2016 CNBlogs, © 2020 VIEApps.net
+ *    © 2010 Attila Kiskó (aka Enyim), © 2016 CNBlogs, © 2021 VIEApps.net
  *    
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
