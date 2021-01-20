@@ -143,7 +143,12 @@ namespace Enyim.Caching.Memcached
 			}
 		}
 
-		public async Task<IPooledSocketResult> AcquireAsync()
+		/// <summary>
+		/// Acquires a new item from the pool
+		/// </summary>
+		/// <param name="cancellationToken">The cancellation token</param>
+		/// <returns>An <see cref="PooledSocket"/> instance which is connected to the memcached server, or <value>null</value> if the pool is dead.</returns>
+		public async Task<IPooledSocketResult> AcquireAsync(CancellationToken cancellationToken = default)
 		{
 			if (!this._isInitialized)
 				lock (this._internalPoolImpl)
@@ -160,7 +165,7 @@ namespace Enyim.Caching.Memcached
 
 			try
 			{
-				return await this._internalPoolImpl.AcquireAsync().ConfigureAwait(false);
+				return await this._internalPoolImpl.AcquireAsync(cancellationToken).ConfigureAwait(false);
 			}
 			catch (Exception e)
 			{
@@ -324,7 +329,7 @@ namespace Enyim.Caching.Memcached
 				}
 
 				// do we have free items?
-				if (this._freeItems.TryPop(out PooledSocket socket))
+				if (this._freeItems.TryPop(out var socket))
 					try
 					{
 						socket.Reset();
@@ -376,7 +381,12 @@ namespace Enyim.Caching.Memcached
 				return result;
 			}
 
-			public async Task<IPooledSocketResult> AcquireAsync()
+			/// <summary>
+			/// Acquires a new item from the pool
+			/// </summary>
+			/// <param name="cancellationToken">Then cancellation token</param>
+			/// <returns>An <see cref="PooledSocket"/> instance which is connected to the memcached server, or <value>null</value> if the pool is dead.</returns>
+			public async Task<IPooledSocketResult> AcquireAsync(CancellationToken cancellationToken = default)
 			{
 				var result = new PooledSocketResult();
 				if (this._logger.IsEnabled(LogLevel.Trace))
@@ -392,7 +402,7 @@ namespace Enyim.Caching.Memcached
 				}
 
 				// everyone is so busy
-				if (!await this._semaphore.WaitAsync(this._queueTimeout).ConfigureAwait(false))
+				if (!await this._semaphore.WaitAsync(this._queueTimeout, cancellationToken).ConfigureAwait(false))
 				{
 					var message = $"Pool is full, timeouting ({this._endpoint})";
 					result.Fail(message, new TimeoutException());
@@ -412,7 +422,7 @@ namespace Enyim.Caching.Memcached
 				}
 
 				// do we have free items?
-				if (this._freeItems.TryPop(out PooledSocket socket))
+				if (this._freeItems.TryPop(out var socket))
 					try
 					{
 						socket.Reset();
@@ -549,7 +559,7 @@ namespace Enyim.Caching.Memcached
 					this.IsAlive = false;
 					this._isDisposed = true;
 
-					while (this._freeItems.TryPop(out PooledSocket socket))
+					while (this._freeItems.TryPop(out var socket))
 						try
 						{
 							socket.Destroy();
@@ -564,7 +574,10 @@ namespace Enyim.Caching.Memcached
 			}
 
 			void IDisposable.Dispose()
-				=> this.Dispose();
+			{
+				GC.SuppressFinalize(this);
+				this.Dispose();
+			}
 		}
 		#endregion
 
@@ -617,7 +630,7 @@ namespace Enyim.Caching.Memcached
 
 		protected async virtual Task<IPooledSocketResult> ExecuteOperationAsync(IOperation op, CancellationToken cancellationToken = default)
 		{
-			var result = await this.AcquireAsync().ConfigureAwait(false);
+			var result = await this.AcquireAsync(cancellationToken).ConfigureAwait(false);
 			if (result.Success && result.HasValue)
 				try
 				{
