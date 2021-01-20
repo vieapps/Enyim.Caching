@@ -143,6 +143,36 @@ namespace Enyim.Caching.Memcached
 			}
 		}
 
+		public async Task<IPooledSocketResult> AcquireAsync()
+		{
+			if (!this._isInitialized)
+				lock (this._internalPoolImpl)
+				{
+					if (!this._isInitialized)
+					{
+						var startTime = DateTime.Now;
+						this._internalPoolImpl.InitPool();
+						this._isInitialized = true;
+						if (this._logger.IsEnabled(LogLevel.Trace))
+							this._logger.LogInformation($"Cost for initiaizing pool: {(DateTime.Now - startTime).TotalMilliseconds}ms");
+					}
+				}
+
+			try
+			{
+				return await this._internalPoolImpl.AcquireAsync().ConfigureAwait(false);
+			}
+			catch (Exception e)
+			{
+				var message = "Acquire failed. Maybe we're already disposed?";
+				this._logger.LogError(e, message);
+
+				var result = new PooledSocketResult();
+				result.Fail(message, e);
+				return result;
+			}
+		}
+
 		protected internal virtual PooledSocket CreateSocket()
 		{
 			try
@@ -197,7 +227,7 @@ namespace Enyim.Caching.Memcached
 			MemcachedNode _ownerNode;
 			readonly EndPoint _endpoint;
 			readonly TimeSpan _queueTimeout;
-			Semaphore _semaphore;
+			SemaphoreSlim _semaphore;
 			readonly ILogger _logger;
 
 			internal InternalPoolImpl(MemcachedNode ownerNode, ISocketPoolConfiguration config)
@@ -216,7 +246,7 @@ namespace Enyim.Caching.Memcached
 				this._minItems = config.MinPoolSize;
 				this._maxItems = config.MaxPoolSize;
 
-				this._semaphore = new Semaphore(this._maxItems, this._maxItems);
+				this._semaphore = new SemaphoreSlim(this._maxItems, this._maxItems);
 				this._freeItems = new InterlockedStack<PooledSocket>();
 
 				this._logger = Logger.CreateLogger<InternalPoolImpl>();
@@ -274,7 +304,95 @@ namespace Enyim.Caching.Memcached
 				}
 
 				// everyone is so busy
-				if (!this._semaphore.WaitOne(this._queueTimeout))
+				if (!this._semaphore.Wait(this._queueTimeout))
+				{
+					var message = $"Pool is full, timeouting ({this._endpoint})";
+					result.Fail(message, new TimeoutException());
+					if (this._logger.IsEnabled(LogLevel.Trace))
+						this._logger.LogWarning(message);
+					return result;
+				}
+
+				// maybe we died while waiting
+				if (!this.IsAlive)
+				{
+					var message = $"Pool is dead, returning null ({this._endpoint})";
+					result.Fail(message);
+					if (this._logger.IsEnabled(LogLevel.Trace))
+						this._logger.LogWarning(message);
+					return result;
+				}
+
+				// do we have free items?
+				if (this._freeItems.TryPop(out PooledSocket socket))
+					try
+					{
+						socket.Reset();
+						result.Pass();
+						result.Value = socket;
+						if (this._logger.IsEnabled(LogLevel.Trace))
+							this._logger.LogDebug($"Socket is ready to use ({socket.InstanceID})");
+						return result;
+					}
+					catch (Exception e)
+					{
+						this.MarkAsDead();
+						var message = "Failed to reset an acquired socket";
+						this._logger.LogError(e, message);
+						result.Fail(message, e);
+						return result;
+					}
+
+				// free item pool is empty
+				if (this._logger.IsEnabled(LogLevel.Trace))
+					this._logger.LogInformation($"Could not get a socket from the pool => create new ({this._endpoint})");
+
+				try
+				{
+					// okay, create the new item
+					var startTime = DateTime.Now;
+					socket = this.CreateSocket();
+					result.Value = socket;
+					result.Pass();
+					if (this._logger.IsEnabled(LogLevel.Trace))
+						this._logger.LogWarning($"A new socket is created ({socket.InstanceID}). Cost for creating socket when acquire: {(DateTime.Now - startTime).TotalMilliseconds}ms");
+				}
+				catch (Exception e)
+				{
+					var message = $"Failed to create a new socket ({this._endpoint})";
+					this._logger.LogError(message, e);
+
+					// eventhough this item failed the failure policy may keep the pool alive
+					// so we need to make sure to release the semaphore, so new connections can be
+					// acquired or created (otherwise dead conenctions would "fill up" the pool
+					// while the FP pretends that the pool is healthy)
+					this._semaphore.Release();
+
+					this.MarkAsDead();
+					result.Fail(message);
+					return result;
+				}
+
+				return result;
+			}
+
+			public async Task<IPooledSocketResult> AcquireAsync()
+			{
+				var result = new PooledSocketResult();
+				if (this._logger.IsEnabled(LogLevel.Trace))
+					this._logger.LogDebug($"Acquire a socket from pool ({this._endpoint})");
+
+				if (!this.IsAlive || this._isDisposed)
+				{
+					var message = $"Pool is dead or disposed, returning null ({this._endpoint})";
+					result.Fail(message);
+					if (this._logger.IsEnabled(LogLevel.Trace))
+						this._logger.LogWarning(message);
+					return result;
+				}
+
+				// everyone is so busy
+				if (!await this._semaphore.WaitAsync(this._queueTimeout).ConfigureAwait(false))
 				{
 					var message = $"Pool is full, timeouting ({this._endpoint})";
 					result.Fail(message, new TimeoutException());
@@ -499,7 +617,7 @@ namespace Enyim.Caching.Memcached
 
 		protected async virtual Task<IPooledSocketResult> ExecuteOperationAsync(IOperation op, CancellationToken cancellationToken = default)
 		{
-			var result = this.Acquire();
+			var result = await this.AcquireAsync().ConfigureAwait(false);
 			if (result.Success && result.HasValue)
 				try
 				{
