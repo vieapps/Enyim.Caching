@@ -264,10 +264,14 @@ namespace Enyim.Caching.Memcached
 					{
 						for (int index = 0; index < this._minItems; index++)
 						{
+							// create new add add into pool
 							this._freeItems.Push(this.CreateSocket());
-							if (!this.IsAlive) // cannot connect to the server
+
+							// cannot connect to the server
+							if (!this.IsAlive)
 								break;
 						}
+
 						if (this.IsAlive && this._logger.IsEnabled(LogLevel.Debug))
 							this._logger.LogDebug($"Pool has been initialized for {this._endpoint} with {this._minItems} sockets");
 					}
@@ -425,7 +429,7 @@ namespace Enyim.Caching.Memcached
 				if (this._freeItems.TryPop(out var socket))
 					try
 					{
-						socket.Reset();
+						await socket.ResetAsync(cancellationToken).ConfigureAwait(false);
 						result.Pass();
 						result.Value = socket;
 						if (this._logger.IsEnabled(LogLevel.Trace))
@@ -694,13 +698,14 @@ namespace Enyim.Caching.Memcached
 
 		bool IMemcachedNode.IsAlive => this.IsAlive;
 
-		bool IMemcachedNode.Ping() => this.Ping();
+		bool IMemcachedNode.Ping()
+			=> this.Ping();
 
 		IOperationResult IMemcachedNode.Execute(IOperation op)
 			=> this.ExecuteOperation(op);
 
 		async Task<IOperationResult> IMemcachedNode.ExecuteAsync(IOperation op, CancellationToken cancellationToken = default)
-			=> await this.ExecuteOperationAsync(op).ConfigureAwait(false);
+			=> await this.ExecuteOperationAsync(op, cancellationToken).ConfigureAwait(false);
 
 		bool IMemcachedNode.ExecuteAsync(IOperation op, Action<bool> next)
 			=> this.ExecuteOperationAsync(op, next);

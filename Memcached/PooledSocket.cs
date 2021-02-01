@@ -91,6 +91,20 @@ namespace Enyim.Caching.Memcached
 			}
 		}
 
+		public async Task ResetAsync(CancellationToken cancellationToken = default)
+		{
+			this._asyncHelper?.DiscardBuffer();
+			var available = this._socket.Available;
+			if (available > 0)
+			{
+				this._logger.LogWarning($"Socket bound to {this._endpoint} has {available} unread data! This is probably a bug in the code (ID: {this.InstanceID}).");
+				var data = new byte[available];
+				await this.ReceiveAsync(data, 0, available, cancellationToken).ConfigureAwait(false);
+				if (this._logger.IsEnabled(LogLevel.Debug))
+					this._logger.LogWarning(Encoding.UTF8.GetString(data.Length > 255 ? data.Take(255).ToArray() : data));
+			}
+		}
+
 		/// <summary>
 		/// The identity of this instance. Used by the <see cref="IServerPool"/> to identify the instance in its inner lists.
 		/// </summary>
@@ -130,6 +144,7 @@ namespace Enyim.Caching.Memcached
 		/// <param name="buffer"></param>
 		/// <param name="offset"></param>
 		/// <param name="size"></param>
+		/// <param name="cancellationToken">The cancellation token.</param>
 		/// <returns></returns>
 		public async Task SendAsync(byte[] buffer, int offset, int size, CancellationToken cancellationToken = default)
 		{
@@ -142,16 +157,11 @@ namespace Enyim.Caching.Memcached
 			{
 				throw;
 			}
-			catch (IOException)
-			{
-				this._isAlive = false;
-				throw;
-			}
 			catch (Exception ex)
 			{
 				this._isAlive = false;
 				this._logger.LogError(ex, $"Failed to write to the socket \"{this._endpoint}\"");
-				throw new IOException($"Failed to write to the socket \"{this._endpoint}\"", ex);
+				throw ex is IOException ? ex : new IOException($"Failed to write to the socket \"{this._endpoint}\"", ex);
 			}
 		}
 
@@ -174,6 +184,7 @@ namespace Enyim.Caching.Memcached
 		/// Sends data to socket
 		/// </summary>
 		/// <param name="buffers"></param>
+		/// <param name="cancellationToken">The cancellation token.</param>
 		/// <returns></returns>
 		public async Task SendAsync(IList<ArraySegment<byte>> buffers, CancellationToken cancellationToken = default)
 		{
@@ -186,16 +197,11 @@ namespace Enyim.Caching.Memcached
 			{
 				throw;
 			}
-			catch (IOException)
-			{
-				this._isAlive = false;
-				throw;
-			}
 			catch (Exception ex)
 			{
 				this._isAlive = false;
 				this._logger.LogError(ex, $"Failed to write to the socket \"{this._endpoint}\"");
-				throw new IOException($"Failed to write to the socket \"{this._endpoint}\"", ex);
+				throw ex is IOException ? ex : new IOException($"Failed to write to the socket \"{this._endpoint}\"", ex);
 			}
 		}
 
@@ -222,16 +228,11 @@ namespace Enyim.Caching.Memcached
 					offset += read;
 					should -= read;
 				}
-				catch (IOException)
-				{
-					this._isAlive = false;
-					throw;
-				}
 				catch (Exception ex)
 				{
 					this._isAlive = false;
 					this._logger.LogError(ex, $"Failed to read from the socket \"{this._endpoint}\"");
-					throw new IOException($"Failed to read from the socket \"{this._endpoint}\"");
+					throw ex is IOException ? ex: new IOException($"Failed to read from the socket \"{this._endpoint}\"");
 				}
 			return total;
 		}
@@ -242,6 +243,7 @@ namespace Enyim.Caching.Memcached
 		/// <param name="buffer">An array of <see cref="System.Byte"/> that is the storage location for the received data.</param>
 		/// <param name="offset">The location in buffer to store the received data.</param>
 		/// <param name="count">The number of bytes to read.</param>
+		/// <param name="cancellationToken">The cancellation token.</param>
 		/// <returns>The number of read bytes</returns>
 		public async Task<int> ReceiveAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken = default)
 		{
@@ -263,16 +265,11 @@ namespace Enyim.Caching.Memcached
 				{
 					throw;
 				}
-				catch (IOException)
-				{
-					this._isAlive = false;
-					throw;
-				}
 				catch (Exception ex)
 				{
 					this._isAlive = false;
 					this._logger.LogError(ex, $"Failed to read from the socket \"{this._endpoint}\"");
-					throw new IOException($"Failed to read from the socket \"{this._endpoint}\"", ex);
+					throw ex is IOException ? ex : new IOException($"Failed to read from the socket \"{this._endpoint}\"");
 				}
 			return total;
 		}
@@ -328,16 +325,15 @@ namespace Enyim.Caching.Memcached
 		{
 			if (disposing)
 			{
-				GC.SuppressFinalize(this);
 				try
 				{
 					this._socket?.Dispose();
 					this._socket = null;
 					this.CleanupCallback = null;
 				}
-				catch (Exception e)
+				catch (Exception ex)
 				{
-					this._logger.LogError(e, "Error occurred while disposing");
+					this._logger.LogError(ex, "Error occurred while disposing");
 				}
 			}
 			else
@@ -345,10 +341,13 @@ namespace Enyim.Caching.Memcached
 		}
 
 		public void Dispose()
-			=> this.Dispose(false);
+		{
+			GC.SuppressFinalize(this);
+			this.Dispose(false);
+		}
 
 		~PooledSocket()
-				=> this.Dispose(true);
+			=> this.Dispose(true);
 	}
 
 	#region Helpers of Async I/O Socket 

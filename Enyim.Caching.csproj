@@ -1,20 +1,20 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFrameworks>net5.0;netcoreapp3.1;netcoreapp2.1;netstandard2.1;netstandard2.0</TargetFrameworks>
+		<TargetFrameworks>net5.0;netstandard2.0</TargetFrameworks>
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 		<WarningLevel>3</WarningLevel>
 		<NoWarn>1701,1702,1705,1066,0067,1573,1591</NoWarn>
-		<DocumentationFile>bin/$(Configuration)/$(TargetFramework)/Enyim.Caching.xml</DocumentationFile>
+		<DocumentationFile>bin/$(Configuration)/$(TargetFramework)/VIEApps.Components.Enyim.Caching.xml</DocumentationFile>
 		<RootNamespace>Enyim</RootNamespace>
-		<AssemblyName>Enyim.Caching</AssemblyName>
+		<AssemblyName>VIEApps.Components.Enyim.Caching</AssemblyName>
 		<AssemblyTitle>Enyim Memcached</AssemblyTitle>
-		<AssemblyVersion>3.1$(ReleaseVersion)</AssemblyVersion>
-		<FileVersion>3.1$(ReleaseVersion)</FileVersion>
-		<InformationalVersion>3.1.$([System.DateTime]::Now.Year).$([System.DateTime]::Now.Month).$([System.DateTime]::Now.Day)@$(TargetFramework)#sn:$(Sign)#$(ReleaseRevision)</InformationalVersion>
-		<Version>3.1$(ReleaseVersion)$(ReleaseSuffix)</Version>
-		<Product>Enyim Memcached</Product>
-		<Title>Enyim Memcached</Title>
+		<AssemblyVersion>4.0$(ReleaseVersion)</AssemblyVersion>
+		<FileVersion>4.0$(ReleaseVersion)</FileVersion>
+		<InformationalVersion>4.0.$([System.DateTime]::Now.Year).$([System.DateTime]::Now.Month).$([System.DateTime]::Now.Day)@$(TargetFramework)#sn:$(Sign)#$(ReleaseRevision)</InformationalVersion>
+		<Version>4.0$(ReleaseVersion)$(ReleaseSuffix)</Version>
+		<Product>VIEApps NGX </Product>
+		<Title>VIEApps NGX Caching</Title>
 		<Description>High performance Memcached client on .NET, incorporating both synchronous and asynchronous</Description>
 		<Copyright>© 2010 Attila Kiskó, © 2016 CNBlogs, © 2021 VIEApps.net</Copyright>
 		<Authors>VIEApps.net</Authors>
@@ -33,7 +33,7 @@
 		<PackageIcon>Icon.png</PackageIcon>
 		<PackageOutputPath>../</PackageOutputPath>
 		<PackageTags>cache;caching;distributed;distributed-cache;memcached;enyim;enyim-memcached;enyim-caching;vieapps;vieapps.components</PackageTags>
-		<PackageReleaseNotes>Improv: add AcquireAsync to avoid thread blocking</PackageReleaseNotes>
+		<PackageReleaseNotes>Breaking changes: change the assembly name, only support .NET 5 and .NET Standard 2.0</PackageReleaseNotes>
 		<PackageProjectUrl>https://vieapps.net</PackageProjectUrl>
 		<RepositoryUrl>https://github.com/vieapps/Enyim.Caching</RepositoryUrl>
 		<RepositoryType>git</RepositoryType>
