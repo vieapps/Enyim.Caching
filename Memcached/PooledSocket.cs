@@ -250,16 +250,19 @@ namespace Enyim.Caching.Memcached
 			this.CheckDisposed();
 			var total = 0;
 			var should = count;
+			var into = new ArraySegment<byte>(buffer, 0, should);
 			while (total < count)
 				try
 				{
-					var into = new ArraySegment<byte>(new byte[should], 0, should);
-					var read = await this._socket.ReceiveAsync(into, SocketFlags.None).WithCancellationToken(cancellationToken).ConfigureAwait(false);
-					if (read > 0)
-						Buffer.BlockCopy(into.Array, 0, buffer, offset, read);
+					var read = await this._socket.ReceiveAsync(into, SocketFlags.None)
+												 .WithCancellationToken(cancellationToken)
+												 .ConfigureAwait(false);
+
 					total += read;
 					offset += read;
 					should -= read;
+
+					into = new ArraySegment<byte>(buffer, offset, should);
 				}
 				catch (OperationCanceledException)
 				{
