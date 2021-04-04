@@ -63,7 +63,7 @@ namespace Enyim.Caching
 		public MemcachedClient(ILoggerFactory loggerFactory, IMemcachedClientConfiguration configuration)
 		{
 			if (configuration == null)
-				throw new ArgumentNullException(nameof(configuration), "Configuration is invalid");
+				throw new ArgumentNullException(nameof(configuration), "The configuration is invalid");
 
 			Logger.AssignLoggerFactory(loggerFactory);
 			this._logger = Logger.CreateLogger<MemcachedClient>();
@@ -91,8 +91,8 @@ namespace Enyim.Caching
 		#region Get instance (singleton)
 		static MemcachedClient _Instance = null;
 
-		internal static MemcachedClient GetInstance(IServiceProvider svcProvider)
-			=> MemcachedClient._Instance ?? (MemcachedClient._Instance = new MemcachedClient(svcProvider.GetService<ILoggerFactory>(), svcProvider.GetService<IMemcachedClientConfiguration>()));
+		internal static MemcachedClient GetInstance(IServiceProvider serviceProvider)
+			=> MemcachedClient._Instance ?? (MemcachedClient._Instance = new MemcachedClient(serviceProvider.GetService<ILoggerFactory>(), serviceProvider.GetService<IMemcachedClientConfiguration>()));
 		#endregion
 
 		#region Store

@@ -28,7 +28,7 @@ namespace CacheUtils
 		/// <summary>
 		/// Gets the Unix epoch
 		/// </summary>
-		public static readonly DateTime UnixEpoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+		public static DateTime UnixEpoch { get; }  = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
 
 		/// <summary>
 		/// Converts this date-time to time-span with Unix epoch
@@ -162,10 +162,14 @@ namespace CacheUtils
 		public const int FlagOfRawData = 0xfa52;
 
 		static Microsoft.IO.RecyclableMemoryStreamManager RecyclableMemoryStreamManager { get; } = new Microsoft.IO.RecyclableMemoryStreamManager();
-		static readonly Regex MsgPackTypeRegex = new Regex(@", Version=\d+.\d+.\d+.\d+, Culture=\w+, PublicKeyToken=\w+", RegexOptions.Compiled);
-		static readonly ConcurrentDictionary<string, Type> MsgPackReadTypes = new ConcurrentDictionary<string, Type>();
-		static readonly ConcurrentDictionary<Type, string> MsgPackWriteTypes = new ConcurrentDictionary<Type, string>();
-		static readonly SerializationContext MsgPackSerializationContext = new SerializationContext(PackerCompatibilityOptions.ProhibitExtendedTypeObjects)
+
+		static Regex MsgPackTypeRegex { get; } = new Regex(@", Version=\d+.\d+.\d+.\d+, Culture=\w+, PublicKeyToken=\w+", RegexOptions.Compiled);
+
+		static ConcurrentDictionary<string, Type> MsgPackReadTypes { get; } = new ConcurrentDictionary<string, Type>();
+
+		static ConcurrentDictionary<Type, string> MsgPackWriteTypes { get; } = new ConcurrentDictionary<Type, string>();
+
+		static SerializationContext MsgPackSerializationContext { get; } = new SerializationContext(PackerCompatibilityOptions.ProhibitExtendedTypeObjects)
 		{
 			SerializationMethod = SerializationMethod.Map,
 			DefaultDateTimeConversionMethod = DateTimeConversionMethod.Native
