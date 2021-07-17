@@ -11,6 +11,7 @@ using System.Collections.Concurrent;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.IO;
 using MsgPack;
 using MsgPack.Serialization;
 using Newtonsoft.Json;
@@ -28,7 +29,7 @@ namespace CacheUtils
 		/// <summary>
 		/// Gets the Unix epoch
 		/// </summary>
-		public static DateTime UnixEpoch { get; }  = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+		public static DateTime UnixEpoch { get; } = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
 
 		/// <summary>
 		/// Converts this date-time to time-span with Unix epoch
@@ -161,7 +162,7 @@ namespace CacheUtils
 		/// </summary>
 		public const int FlagOfRawData = 0xfa52;
 
-		static Microsoft.IO.RecyclableMemoryStreamManager RecyclableMemoryStreamManager { get; } = new Microsoft.IO.RecyclableMemoryStreamManager();
+		static RecyclableMemoryStreamManager RecyclableMemoryStreamManager { get; } = new RecyclableMemoryStreamManager();
 
 		static Regex MsgPackTypeRegex { get; } = new Regex(@", Version=\d+.\d+.\d+.\d+, Culture=\w+, PublicKeyToken=\w+", RegexOptions.Compiled);
 
@@ -175,6 +176,8 @@ namespace CacheUtils
 			DefaultDateTimeConversionMethod = DateTimeConversionMethod.Native
 		};
 
+		static JsonSerializer JSONSerializer { get; } = new JsonSerializer();
+
 		/// <summary>
 		/// Creates a recyclable memory stream
 		/// </summary>
@@ -184,15 +187,22 @@ namespace CacheUtils
 		/// <returns></returns>
 		public static MemoryStream CreateMemoryStream(byte[] buffer = null, int index = 0, int count = 0)
 		{
-			var stream = Helper.RecyclableMemoryStreamManager.GetStream();
-			if (buffer == null || buffer.Length < 1)
-				return stream;
-
-			index = index > -1 && index < buffer.Length ? index : 0;
-			count = count > 0 && count < buffer.Length - index ? count : buffer.Length - index;
-
-			stream.Write(buffer, index, count);
-			stream.Seek(0, SeekOrigin.Begin);
+			MemoryStream stream;
+			try
+			{
+				stream = Helper.RecyclableMemoryStreamManager.GetStream();
+			}
+			catch
+			{
+				stream = new MemoryStream();
+			}
+			if (buffer != null && buffer.Any())
+			{
+				index = index > -1 && index < buffer.Length ? index : 0;
+				count = count > 0 && count < buffer.Length - index ? count : buffer.Length - index;
+				stream.Write(buffer, index, count);
+				stream.Seek(0, SeekOrigin.Begin);
+			}
 			return stream;
 		}
 
@@ -381,7 +391,7 @@ namespace CacheUtils
 			{
 				using (var writer = new BsonDataWriter(stream))
 				{
-					new JsonSerializer().Serialize(writer, value);
+					Helper.JSONSerializer.Serialize(writer, value);
 					return stream.ToBytes();
 				}
 			}
@@ -561,7 +571,7 @@ namespace CacheUtils
 			{
 				using (var reader = new BsonDataReader(stream))
 				{
-					return new JsonSerializer().Deserialize(reader);
+					return Helper.JSONSerializer.Deserialize(reader);
 				}
 			}
 		}
@@ -578,7 +588,7 @@ namespace CacheUtils
 			{
 				using (var reader = new BsonDataReader(stream))
 				{
-					return new JsonSerializer().Deserialize<T>(reader);
+					return Helper.JSONSerializer.Deserialize<T>(reader);
 				}
 			}
 		}
