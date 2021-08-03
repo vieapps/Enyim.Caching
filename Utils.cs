@@ -110,7 +110,7 @@ namespace CacheUtils
 		public static byte[] Concat(IEnumerable<byte[]> arrays)
 		{
 			if (arrays == null || !arrays.Any())
-				return new byte[0];
+				return Array.Empty<byte>();
 
 			var offset = 0;
 			var data = arrays.Where(array => array != null).ToList();
@@ -187,15 +187,7 @@ namespace CacheUtils
 		/// <returns></returns>
 		public static MemoryStream CreateMemoryStream(byte[] buffer = null, int index = 0, int count = 0)
 		{
-			MemoryStream stream;
-			try
-			{
-				stream = Helper.RecyclableMemoryStreamManager.GetStream();
-			}
-			catch
-			{
-				stream = new MemoryStream();
-			}
+			var stream = Helper.RecyclableMemoryStreamManager.GetStream();
 			if (buffer != null && buffer.Any())
 			{
 				index = index > -1 && index < buffer.Length ? index : 0;

@@ -4,7 +4,7 @@
 		<TargetFrameworks>net5.0;netstandard2.0</TargetFrameworks>
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 		<WarningLevel>3</WarningLevel>
-		<NoWarn>1701,1702,1705,1066,0067,1573,1591</NoWarn>
+		<NoWarn>1701,1702,1705,CS1066,CS1573,CS1591,IDE0063</NoWarn>
 		<DocumentationFile>bin/$(Configuration)/$(TargetFramework)/VIEApps.Components.Enyim.Caching.xml</DocumentationFile>
 		<RootNamespace>Enyim</RootNamespace>
 		<AssemblyName>VIEApps.Components.Enyim.Caching</AssemblyName>
