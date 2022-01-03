@@ -45,14 +45,14 @@ namespace Enyim.Caching
 		protected ITranscoder Transcoder { get; private set; }
 
 		public event Action<IMemcachedNode> NodeFailed;
-		#endregion
+        #endregion
 
-		/// <summary>
-		/// Initializes a new instance of Memcached client (using configuration section of app.config/web.config file)
-		/// </summary>
-		/// <param name="configuration"></param>
-		/// <param name="loggerFactory"></param>
-		public MemcachedClient(MemcachedClientConfigurationSectionHandler configuration, ILoggerFactory loggerFactory = null)
+        /// <summary>
+        /// Initializes a new instance of Memcached client (using configuration section of app.config/web.config file)
+        /// </summary>
+        /// <param name="configuration"></param>
+        /// <param name="loggerFactory"></param>
+        public MemcachedClient(MemcachedClientConfigurationSectionHandler configuration, ILoggerFactory loggerFactory = null)
 			: this(loggerFactory, configuration == null ? null : new MemcachedClientConfiguration(loggerFactory, configuration)) { }
 
 		/// <summary>
@@ -1622,7 +1622,7 @@ namespace Enyim.Caching
 		/// <returns>Returns a boolean value indicating if the object that associates with the key is cached or not</returns>
 		public bool Exists(string key)
 		{
-			if (!this.Append(key, new ArraySegment<byte>(new byte[0])))
+			if (!this.Append(key, new ArraySegment<byte>(Array.Empty<byte>())))
 			{
 				this.Remove(key);
 				return false;
@@ -1637,7 +1637,7 @@ namespace Enyim.Caching
 		/// <returns>Returns a boolean value indicating if the object that associates with the key is cached or not</returns>
 		public async Task<bool> ExistsAsync(string key, CancellationToken cancellationToken = default)
 		{
-			if (!await this.AppendAsync(key, new ArraySegment<byte>(new byte[0])).ConfigureAwait(false))
+			if (!await this.AppendAsync(key, new ArraySegment<byte>(Array.Empty<byte>()), cancellationToken).ConfigureAwait(false))
 			{
 				await this.RemoveAsync(key, cancellationToken).ConfigureAwait(false);
 				return false;
@@ -1753,8 +1753,8 @@ namespace Enyim.Caching
 			var expires = options == null
 				? TimeSpan.Zero
 				: options.GetExpiration();
-			var validFor = expires is TimeSpan
-				? (TimeSpan)expires
+			var validFor = expires is TimeSpan exp
+				? exp
 				: Helper.UnixEpoch.AddSeconds((long)expires).ToTimeSpan();
 
 			if (this.Store(StoreMode.Set, key, value, validFor) && expires is TimeSpan && validFor != TimeSpan.Zero)
@@ -1769,8 +1769,8 @@ namespace Enyim.Caching
 			var expires = options == null
 				? TimeSpan.Zero
 				: options.GetExpiration();
-			var validFor = expires is TimeSpan
-				? (TimeSpan)expires
+			var validFor = expires is TimeSpan exp
+				? exp
 				: Helper.UnixEpoch.AddSeconds((long)expires).ToTimeSpan();
 
 			if (await this.StoreAsync(StoreMode.Set, key, value, validFor, cancellationToken).ConfigureAwait(false) && expires is TimeSpan && validFor != TimeSpan.Zero)
@@ -1797,8 +1797,8 @@ namespace Enyim.Caching
 				? this.Get(key.GetIDistributedCacheExpirationKey())
 				: null;
 
-			if (value != null && expires != null && expires is TimeSpan && this.Store(StoreMode.Replace, key, value, (TimeSpan)expires))
-				this.Store(StoreMode.Replace, key.GetIDistributedCacheExpirationKey(), expires, (TimeSpan)expires);
+			if (value != null && expires != null && expires is TimeSpan exp && this.Store(StoreMode.Replace, key, value, exp))
+				this.Store(StoreMode.Replace, key.GetIDistributedCacheExpirationKey(), expires, exp);
 		}
 
 		async Task IDistributedCache.RefreshAsync(string key, CancellationToken cancellationToken = default)
@@ -1811,8 +1811,8 @@ namespace Enyim.Caching
 				? await this.GetAsync(key.GetIDistributedCacheExpirationKey(), cancellationToken).ConfigureAwait(false)
 				: null;
 
-			if (value != null && expires != null && expires is TimeSpan && await this.StoreAsync(StoreMode.Replace, key, value, (TimeSpan)expires, cancellationToken).ConfigureAwait(false))
-				await this.StoreAsync(StoreMode.Replace, key.GetIDistributedCacheExpirationKey(), expires, (TimeSpan)expires, cancellationToken).ConfigureAwait(false);
+			if (value != null && expires != null && expires is TimeSpan exp && await this.StoreAsync(StoreMode.Replace, key, value, exp, cancellationToken).ConfigureAwait(false))
+				await this.StoreAsync(StoreMode.Replace, key.GetIDistributedCacheExpirationKey(), expires, exp, cancellationToken).ConfigureAwait(false);
 		}
 
 		void IDistributedCache.Remove(string key)
@@ -1836,13 +1836,13 @@ namespace Enyim.Caching
 #region [ License information          ]
 /* ************************************************************
  * 
- *    © 2010 Attila Kiskó (aka Enyim), © 2016 CNBlogs, © 2021 VIEApps.net
+ *    © 2010 Attila Kiskó (aka Enyim), © 2016 CNBlogs, © 2022 VIEApps.net
  *    
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
  *    You may obtain a copy of the License at
  *    
- *        http://www.apache.org/licenses/LICENSE-2.0
+ *		http://www.apache.org/licenses/LICENSE-2.0
  *    
  *    Unless required by applicable law or agreed to in writing, software
  *    distributed under the License is distributed on an "AS IS" BASIS,

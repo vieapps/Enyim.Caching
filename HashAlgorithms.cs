@@ -213,17 +213,11 @@ namespace Enyim
 		private bool shouldReset;
 		private uint currentHash;
 
-		public HashkitCrc32()
-		{
-			this.shouldReset = true;
-		}
+        public HashkitCrc32()
+			=> this.shouldReset = true;
 
-		public override void Initialize()
-		{
-			// ComputeHash calls Initialize
-			// so this way we keep the CurrentValue until the next hash calculation
-			this.shouldReset = true;
-		}
+        public override void Initialize()
+			=> this.shouldReset = true; // computeHash calls Initialize so this way we keep the CurrentValue until the next hash calculation
 
 		protected override void HashCore(byte[] array, int ibStart, int cbSize)
 		{
@@ -245,17 +239,12 @@ namespace Enyim
 			this.UnsafeHashCore(array, ibStart, cbSize);
 		}
 
-		private void FinalizeHash()
-		{
-			// strangely libhaskit truncates CRC-32 to 15 bits. we'll do the same to be on the safe side.
-			this.currentHash = ((~this.currentHash) >> 16) & 0x7fff;
-			//this.currentHash = (~this.currentHash);
-		}
+        private void FinalizeHash()
+			=> this.currentHash = ((~this.currentHash) >> 16) & 0x7fff; // strangely libhaskit truncates CRC-32 to 15 bits. we'll do the same to be on the safe side.
 
 		protected override byte[] HashFinal()
 		{
 			this.FinalizeHash();
-
 			return BitConverter.GetBytes((uint)currentHash);
 		}
 
@@ -554,8 +543,7 @@ namespace Enyim
 	#region Tiger hash
 	/// <summary>
 	/// Implements the Tiger hash. (http://www.cs.technion.ac.il/~biham/Reports/Tiger/)
-	/// 
-	/// Ported (and cleaned&amp;sped up) from the Tiger.NET VB code. (http://www.hotpixel.net/software.html)
+	/// Ported (and cleaned&amp;speed up) from the Tiger.NET VB code. (http://www.hotpixel.net/software.html)
 	/// </summary>
 	public sealed class TigerHash : HashAlgorithm
 	{
@@ -1114,13 +1102,13 @@ namespace Enyim
 #region [ License information          ]
 /* ************************************************************
  * 
- *    © 2010 Attila Kiskó (aka Enyim), © 2016 CNBlogs, © 2021 VIEApps.net
+ *    © 2010 Attila Kiskó (aka Enyim), © 2016 CNBlogs, © 2022 VIEApps.net
  *    
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
  *    You may obtain a copy of the License at
  *    
- *        http://www.apache.org/licenses/LICENSE-2.0
+ *		http://www.apache.org/licenses/LICENSE-2.0
  *    
  *    Unless required by applicable law or agreed to in writing, software
  *    distributed under the License is distributed on an "AS IS" BASIS,
