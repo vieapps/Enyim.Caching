@@ -16,7 +16,7 @@
 		<Product>VIEApps NGX </Product>
 		<Title>VIEApps NGX Caching</Title>
 		<Description>High performance Memcached client on .NET, incorporating both synchronous and asynchronous</Description>
-		<Copyright>© 2010 Attila Kiskó, © 2016 CNBlogs, © 2022 VIEApps.net</Copyright>
+		<Copyright>© 2010 Attila Kiskó, © 2016 CNBlogs, © $([System.DateTime]::Now.Year) VIEApps.net</Copyright>
 		<Authors>VIEApps.net</Authors>
 		<Company>VIEApps.net</Company>
 	</PropertyGroup>
