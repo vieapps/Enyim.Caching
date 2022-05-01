@@ -81,10 +81,8 @@ namespace Enyim.Caching.Memcached
 
 					// try to connect to the server
 					using (var socket = this.CreateSocket())
-					{
 						if (this._logger.IsEnabled(LogLevel.Debug))
 							this._logger.LogDebug($"Try to connect to the memcached server: {this.EndPoint}");
-					}
 
 					if (this.IsAlive)
 						return true;

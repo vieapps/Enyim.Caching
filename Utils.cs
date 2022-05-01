@@ -338,15 +338,13 @@ namespace CacheUtils
 		public static byte[] SerializeByMsgPackCLI(object value, SerializationContext serializationContext = null)
 		{
 			using (var stream = Helper.CreateMemoryStream())
+			using (var packer = Packer.Create(stream))
 			{
-				using (var packer = Packer.Create(stream))
-				{
-					var type = value.GetType();
-					packer.PackArrayHeader(2);
-					packer.PackString(Helper.MsgPackWriteTypes.GetOrAdd(type, Helper.MsgPackTypeRegex.Replace(type.AssemblyQualifiedName, "")));
-					MessagePackSerializer.Get(type, serializationContext ?? Helper.MsgPackSerializationContext).PackTo(packer, value);
-					return stream.ToBytes();
-				}
+				var type = value.GetType();
+				packer.PackArrayHeader(2);
+				packer.PackString(Helper.MsgPackWriteTypes.GetOrAdd(type, Helper.MsgPackTypeRegex.Replace(type.AssemblyQualifiedName, "")));
+				MessagePackSerializer.Get(type, serializationContext ?? Helper.MsgPackSerializationContext).PackTo(packer, value);
+				return stream.ToBytes();
 			}
 		}
 
@@ -360,15 +358,13 @@ namespace CacheUtils
 		public static async Task<byte[]> SerializeByMsgPackCLIAsync(object value, SerializationContext serializationContext = null, CancellationToken cancellationToken = default)
 		{
 			using (var stream = Helper.CreateMemoryStream())
+			using (var packer = Packer.Create(stream))
 			{
-				using (var packer = Packer.Create(stream))
-				{
-					var type = value.GetType();
-					await packer.PackArrayHeaderAsync(2, cancellationToken).ConfigureAwait(false);
-					await packer.PackStringAsync(Helper.MsgPackWriteTypes.GetOrAdd(type, Helper.MsgPackTypeRegex.Replace(type.AssemblyQualifiedName, "")), cancellationToken).ConfigureAwait(false);
-					await MessagePackSerializer.Get(type, serializationContext ?? Helper.MsgPackSerializationContext).PackToAsync(packer, value, cancellationToken).ConfigureAwait(false);
-					return stream.ToBytes();
-				}
+				var type = value.GetType();
+				await packer.PackArrayHeaderAsync(2, cancellationToken).ConfigureAwait(false);
+				await packer.PackStringAsync(Helper.MsgPackWriteTypes.GetOrAdd(type, Helper.MsgPackTypeRegex.Replace(type.AssemblyQualifiedName, "")), cancellationToken).ConfigureAwait(false);
+				await MessagePackSerializer.Get(type, serializationContext ?? Helper.MsgPackSerializationContext).PackToAsync(packer, value, cancellationToken).ConfigureAwait(false);
+				return stream.ToBytes();
 			}
 		}
 
@@ -380,12 +376,10 @@ namespace CacheUtils
 		public static byte[] SerializeByBson(object value)
 		{
 			using (var stream = Helper.CreateMemoryStream())
+			using (var writer = new BsonDataWriter(stream))
 			{
-				using (var writer = new BsonDataWriter(stream))
-				{
-					Helper.JSONSerializer.Serialize(writer, value);
-					return stream.ToBytes();
-				}
+				Helper.JSONSerializer.Serialize(writer, value);
+				return stream.ToBytes();
 			}
 		}
 
@@ -508,20 +502,18 @@ namespace CacheUtils
 		public static object DeserializeByMsgPackCLI(byte[] value, SerializationContext serializationContext = null)
 		{
 			using (var stream = Helper.CreateMemoryStream(value))
+			using (var unpacker = Unpacker.Create(stream))
 			{
-				using (var unpacker = Unpacker.Create(stream))
+				unpacker.Read();
+				if (unpacker.IsArrayHeader)
 				{
 					unpacker.Read();
-					if (unpacker.IsArrayHeader)
-					{
-						unpacker.Read();
-						var type = Helper.MsgPackReadTypes.GetOrAdd((string)unpacker.LastReadData, typeName => Type.GetType(typeName, true));
-						unpacker.Read();
-						return MessagePackSerializer.Get(type, serializationContext ?? Helper.MsgPackSerializationContext).UnpackFrom(unpacker);
-					}
-					else
-						throw new InvalidDataException("Invalid headers");
+					var type = Helper.MsgPackReadTypes.GetOrAdd((string)unpacker.LastReadData, typeName => Type.GetType(typeName, true));
+					unpacker.Read();
+					return MessagePackSerializer.Get(type, serializationContext ?? Helper.MsgPackSerializationContext).UnpackFrom(unpacker);
 				}
+				else
+					throw new InvalidDataException("Invalid headers");
 			}
 		}
 
@@ -535,20 +527,18 @@ namespace CacheUtils
 		public static async Task<object> DeserializeByMsgPackCLIAsync(byte[] value, SerializationContext serializationContext = null, CancellationToken cancellationToken = default)
 		{
 			using (var stream = Helper.CreateMemoryStream(value))
+			using (var unpacker = Unpacker.Create(stream))
 			{
-				using (var unpacker = Unpacker.Create(stream))
+				await unpacker.ReadAsync(cancellationToken).ConfigureAwait(false);
+				if (unpacker.IsArrayHeader)
 				{
 					await unpacker.ReadAsync(cancellationToken).ConfigureAwait(false);
-					if (unpacker.IsArrayHeader)
-					{
-						await unpacker.ReadAsync(cancellationToken).ConfigureAwait(false);
-						var type = Helper.MsgPackReadTypes.GetOrAdd((string)unpacker.LastReadData, typeName => Type.GetType(typeName, throwOnError: true));
-						await unpacker.ReadAsync(cancellationToken).ConfigureAwait(false);
-						return await MessagePackSerializer.Get(type, serializationContext ?? Helper.MsgPackSerializationContext).UnpackFromAsync(unpacker, cancellationToken).ConfigureAwait(false);
-					}
-					else
-						throw new InvalidDataException("Invalid headers");
+					var type = Helper.MsgPackReadTypes.GetOrAdd((string)unpacker.LastReadData, typeName => Type.GetType(typeName, throwOnError: true));
+					await unpacker.ReadAsync(cancellationToken).ConfigureAwait(false);
+					return await MessagePackSerializer.Get(type, serializationContext ?? Helper.MsgPackSerializationContext).UnpackFromAsync(unpacker, cancellationToken).ConfigureAwait(false);
 				}
+				else
+					throw new InvalidDataException("Invalid headers");
 			}
 		}
 
@@ -560,12 +550,8 @@ namespace CacheUtils
 		public static object DeserializeByBson(byte[] value)
 		{
 			using (var stream = Helper.CreateMemoryStream(value))
-			{
-				using (var reader = new BsonDataReader(stream))
-				{
-					return Helper.JSONSerializer.Deserialize(reader);
-				}
-			}
+			using (var reader = new BsonDataReader(stream))
+				return Helper.JSONSerializer.Deserialize(reader);
 		}
 
 		/// <summary>
@@ -577,12 +563,8 @@ namespace CacheUtils
 		public static T DeserializeByBson<T>(byte[] value)
 		{
 			using (var stream = Helper.CreateMemoryStream(value))
-			{
-				using (var reader = new BsonDataReader(stream))
-				{
-					return Helper.JSONSerializer.Deserialize<T>(reader);
-				}
-			}
+			using (var reader = new BsonDataReader(stream))
+				return Helper.JSONSerializer.Deserialize<T>(reader);
 		}
 		#endregion
 

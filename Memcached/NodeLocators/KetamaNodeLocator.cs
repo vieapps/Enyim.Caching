@@ -93,9 +93,7 @@ namespace Enyim.Caching.Memcached
 					// libmemcached: https://bazaar.launchpad.net/~tangent-trunk/libmemcached/1.2/view/head:/libmemcached/hosts.cc#L293
 					// node-hashring: https://github.com/3rd-Eden/node-hashring/blob/master/index.js#L138
 					if (((IPEndPoint)currentNode.EndPoint).Port == MemcachedDefaultPort)
-					{
-					    address = ((IPEndPoint)currentNode.EndPoint).Address.ToString();
-					}
+						address = ((IPEndPoint)currentNode.EndPoint).Address.ToString();
 					for (var mutation = 0; mutation < KetamaNodeLocator.ServerAddressMutations / partCount; mutation++)
 					{
 						var data = hashAlgorithm.ComputeHash(Encoding.ASCII.GetBytes(address + "-" + mutation));
@@ -161,7 +159,6 @@ namespace Enyim.Caching.Memcached
 			// time a node dies/comes back
 			// (DefaultServerPool will resurrect the nodes in the background without affecting the hashring)
 			if (!node.IsAlive)
-			{
 				for (var i = 0; i < id.Servers.Length; i++)
 				{
 					// -- this is from spymemcached so we select the same node for the same items
@@ -175,7 +172,6 @@ namespace Enyim.Caching.Memcached
 					if (node.IsAlive)
 						return node;
 				}
-			}
 
 			return node.IsAlive ? node : null;
 		}

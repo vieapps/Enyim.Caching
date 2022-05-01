@@ -224,9 +224,7 @@ namespace Enyim.Caching.Memcached
 				// stop the timer
 				if (this._resurrectTimer != null)
 					using (this._resurrectTimer)
-					{
 						this._resurrectTimer.Change(Timeout.Infinite, Timeout.Infinite);
-					}
 
 				this._nodes = null;
 				this._resurrectTimer = null;

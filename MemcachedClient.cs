@@ -45,14 +45,14 @@ namespace Enyim.Caching
 		protected ITranscoder Transcoder { get; private set; }
 
 		public event Action<IMemcachedNode> NodeFailed;
-        #endregion
+		#endregion
 
-        /// <summary>
-        /// Initializes a new instance of Memcached client (using configuration section of app.config/web.config file)
-        /// </summary>
-        /// <param name="configuration"></param>
-        /// <param name="loggerFactory"></param>
-        public MemcachedClient(MemcachedClientConfigurationSectionHandler configuration, ILoggerFactory loggerFactory = null)
+		/// <summary>
+		/// Initializes a new instance of Memcached client (using configuration section of app.config/web.config file)
+		/// </summary>
+		/// <param name="configuration"></param>
+		/// <param name="loggerFactory"></param>
+		public MemcachedClient(MemcachedClientConfigurationSectionHandler configuration, ILoggerFactory loggerFactory = null)
 			: this(loggerFactory, configuration == null ? null : new MemcachedClientConfiguration(loggerFactory, configuration)) { }
 
 		/// <summary>
