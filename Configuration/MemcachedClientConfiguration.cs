@@ -20,6 +20,12 @@ namespace Enyim.Caching.Configuration
 		IKeyTransformer _keyTransformer;
 		ILogger _logger;
 
+		internal static MemcachedClientConfiguration Create(ILoggerFactory loggerFactory, IOptions<MemcachedClientOptions> options)
+			=> options == null ? null : new MemcachedClientConfiguration(loggerFactory, options);
+
+		internal static MemcachedClientConfiguration Create(ILoggerFactory loggerFactory, MemcachedClientConfigurationSectionHandler configuration)
+			=> configuration == null ? null : new MemcachedClientConfiguration(loggerFactory, configuration);
+
 		/// <summary>
 		/// Initializes a new instance of the <see cref="MemcachedClientConfiguration"/> class.
 		/// </summary>

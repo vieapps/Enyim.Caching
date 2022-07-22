@@ -53,7 +53,7 @@ namespace Enyim.Caching
 		/// <param name="configuration"></param>
 		/// <param name="loggerFactory"></param>
 		public MemcachedClient(MemcachedClientConfigurationSectionHandler configuration, ILoggerFactory loggerFactory = null)
-			: this(loggerFactory, configuration == null ? null : new MemcachedClientConfiguration(loggerFactory, configuration)) { }
+			: this(loggerFactory, MemcachedClientConfiguration.Create(loggerFactory, configuration)) { }
 
 		/// <summary>
 		/// Initializes a new instance of Memcached client (using configuration section of appsettings.json file)
