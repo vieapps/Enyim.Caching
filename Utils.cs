@@ -265,18 +265,12 @@ namespace CacheUtils
 					data = Encoding.UTF8.GetBytes((string)value);
 					break;
 
-				case TypeCode.Byte:
-					data = BitConverter.GetBytes((byte)value);
-					break;
-
-				case TypeCode.SByte:
-					data = BitConverter.GetBytes((sbyte)value);
-					break;
-
 				case TypeCode.Int16:
+				case TypeCode.SByte:
 					data = BitConverter.GetBytes((short)value);
 					break;
 
+				case TypeCode.Byte:
 				case TypeCode.UInt16:
 					data = BitConverter.GetBytes((ushort)value);
 					break;
