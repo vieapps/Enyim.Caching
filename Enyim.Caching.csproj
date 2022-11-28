@@ -9,10 +9,10 @@
 		<RootNamespace>Enyim</RootNamespace>
 		<AssemblyName>VIEApps.Components.Enyim.Caching</AssemblyName>
 		<AssemblyTitle>Enyim Memcached</AssemblyTitle>
-		<AssemblyVersion>6.0$(ReleaseVersion)</AssemblyVersion>
-		<FileVersion>6.0$(ReleaseVersion)</FileVersion>
-		<InformationalVersion>6.0.$([System.DateTime]::Now.Year).$([System.DateTime]::Now.Month).$([System.DateTime]::Now.Day)@$(TargetFramework)#sn:$(Sign)#$(ReleaseRevision)</InformationalVersion>
-		<Version>6.0$(ReleaseVersion)$(ReleaseSuffix)</Version>
+		<AssemblyVersion>7.0$(ReleaseVersion)</AssemblyVersion>
+		<FileVersion>7.0$(ReleaseVersion)</FileVersion>
+		<InformationalVersion>7.0.$([System.DateTime]::Now.Year).$([System.DateTime]::Now.Month).$([System.DateTime]::Now.Day)@$(TargetFramework)#sn:$(Sign)#$(ReleaseRevision)</InformationalVersion>
+		<Version>7.0$(ReleaseVersion)$(ReleaseSuffix)</Version>
 		<Product>VIEApps NGX </Product>
 		<Title>VIEApps NGX Caching</Title>
 		<Description>High performance Memcached client on .NET, incorporating both synchronous and asynchronous</Description>
@@ -33,7 +33,7 @@
 		<PackageIcon>Icon.png</PackageIcon>
 		<PackageOutputPath>../</PackageOutputPath>
 		<PackageTags>cache;caching;distributed;distributed-cache;memcached;enyim;enyim-memcached;enyim-caching;vieapps;vieapps.components</PackageTags>
-		<PackageReleaseNotes>Add supports of .NET 7</PackageReleaseNotes>
+		<PackageReleaseNotes>Add supports of .NET 7 with better serializations</PackageReleaseNotes>
 		<PackageProjectUrl>https://vieapps.net</PackageProjectUrl>
 		<RepositoryUrl>https://github.com/vieapps/Enyim.Caching</RepositoryUrl>
 		<RepositoryType>git</RepositoryType>
@@ -83,7 +83,7 @@
 		<PackageReference Include="Microsoft.AspNetCore.Http.Abstractions" Version="2.2.0" />
 		<PackageReference Include="Microsoft.IO.RecyclableMemoryStream" Version="2.2.1" />
 		<PackageReference Include="MsgPack.Cli" Version="1.0.1" />
-		<PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
+		<PackageReference Include="Newtonsoft.Json" Version="13.0.2" />
 		<PackageReference Include="Newtonsoft.Json.Bson" Version="1.0.2" />
 	</ItemGroup>
 
