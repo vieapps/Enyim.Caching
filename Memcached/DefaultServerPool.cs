@@ -207,7 +207,7 @@ namespace Enyim.Caching.Memcached
 					}
 					catch (Exception e)
 					{
-						this._logger.LogError(nameof(DefaultServerPool), e);
+						this._logger.LogError("DefaultServerPool:{1}", e);
 					}
 				this._nodeLocator = null;
 
@@ -218,7 +218,7 @@ namespace Enyim.Caching.Memcached
 					}
 					catch (Exception e)
 					{
-						this._logger.LogError(nameof(DefaultServerPool), e);
+						this._logger.LogError("DefaultServerPool:{1}", e);
 					}
 
 				// stop the timer

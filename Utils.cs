@@ -188,7 +188,7 @@ namespace CacheUtils
 		public static MemoryStream CreateMemoryStream(byte[] buffer = null, int index = 0, int count = 0)
 		{
 			var stream = Helper.RecyclableMemoryStreamManager.GetStream();
-			if (buffer != null && buffer.Any())
+			if (buffer != null && buffer.Length > 0)
 			{
 				index = index > -1 && index < buffer.Length ? index : 0;
 				count = count > 0 && count < buffer.Length - index ? count : buffer.Length - index;
@@ -203,7 +203,7 @@ namespace CacheUtils
 		/// </summary>
 		/// <param name="buffer">The buffer to initialize data of the stream</param>
 		/// <returns></returns>
-		public static MemoryStream CreateMemoryStream(ArraySegment<byte> buffer)
+		public static MemoryStream CreateMemoryStream(this ArraySegment<byte> buffer)
 			=> Helper.CreateMemoryStream(buffer.Array, buffer.Offset, buffer.Count);
 
 		/// <summary>
@@ -238,7 +238,7 @@ namespace CacheUtils
 		/// <param name="value"></param>
 		/// <param name="serializationContext"></param>
 		/// <returns></returns>
-		public static Tuple<int, byte[]> Serialize(object value, SerializationContext serializationContext = null)
+		public static (int TypeFlag, byte[] Data) Serialize(object value, SerializationContext serializationContext = null)
 		{
 			var data = Array.Empty<byte>();
 			var typeCode = value == null ? TypeCode.DBNull : Type.GetTypeCode(value.GetType());
@@ -323,7 +323,7 @@ namespace CacheUtils
 					break;
 			}
 
-			return new Tuple<int, byte[]>(typeFlag, data);
+			return (typeFlag, data);
 		}
 
 		/// <summary>
