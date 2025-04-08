@@ -223,16 +223,6 @@ namespace CacheUtils
 		}
 
 		/// <summary>
-		/// Gets the array segment of this stream with TryGetBuffer first, then ToArray if not success
-		/// </summary>
-		/// <param name="stream"></param>
-		/// <returns></returns>
-		public static ArraySegment<byte> ToArraySegment(this MemoryStream stream)
-			=> stream.TryGetBuffer(out var buffer)
-				? buffer
-				: new ArraySegment<byte>(stream.ToArray());
-
-		/// <summary>
 		/// Serializes an object to array of bytes
 		/// </summary>
 		/// <param name="value"></param>
