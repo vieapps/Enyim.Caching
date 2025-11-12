@@ -165,7 +165,7 @@ public class CreativeService
 <?xml version="1.0" encoding="utf-8"?>
 <configuration>
 	<configSections>
-		<section name="memcached" type="Enyim.Caching.Configuration.MemcachedClientConfigurationSectionHandler, Enyim.Caching" />
+		<section name="memcached" type="Enyim.Caching.Configuration.MemcachedClientConfigurationSectionHandler, VIEApps.Components.Enyim.Caching" />
 	</configSections>
 	<memcached>
 		<servers>
@@ -182,7 +182,7 @@ public class CreativeService
 <?xml version="1.0" encoding="utf-8"?>
 <configuration>
 	<configSections>
-		<section name="memcached" type="Enyim.Caching.Configuration.MemcachedClientConfigurationSectionHandler, Enyim.Caching" />
+		<section name="memcached" type="Enyim.Caching.Configuration.MemcachedClientConfigurationSectionHandler, VIEApps.Components.Enyim.Caching" />
 	</configSections>
 	<memcached>
 		<servers>
@@ -190,7 +190,7 @@ public class CreativeService
 			<add address="192.168.0.3" port="11211" />
 		</servers>
 		<socketPool minPoolSize="10" maxPoolSize="100" deadTimeout="00:01:00" connectionTimeout="00:00:05" receiveTimeout="00:00:01" />
-		<authentication type="Enyim.Caching.Memcached.PlainTextAuthenticator, Enyim.Caching" zone="" userName="username" password="password" />
+		<authentication type="Enyim.Caching.Memcached.PlainTextAuthenticator, VIEApps.Components.Enyim.Caching" zone="" userName="username" password="password" />
 	</memcached>
 </configuration>
 ```
