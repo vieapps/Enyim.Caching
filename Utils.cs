@@ -213,10 +213,13 @@ namespace CacheUtils
 		/// <returns></returns>
 		public static byte[] ToBytes(this MemoryStream stream)
 		{
-			if (stream.TryGetBuffer(out var buffer))
+			if (stream.TryGetBuffer(out var buffer) && buffer.Array != null)
 			{
-				var array = new byte[buffer.Count];
-				Buffer.BlockCopy(buffer.Array, buffer.Offset, array, 0, buffer.Count);
+				var length = (int)stream.Length;
+				if (buffer.Offset == 0 && length == buffer.Array.Length)
+					return buffer.Array;
+				var array = new byte[length];
+				Buffer.BlockCopy(buffer.Array, buffer.Offset, array, 0, length);
 				return array;
 			}
 			return stream.ToArray();
