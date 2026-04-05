@@ -3,7 +3,7 @@ using System.Security.Cryptography;
 
 namespace Enyim
 {
-	internal interface IUIntHashAlgorithm
+	public interface IUIntHashAlgorithm
 	{
 		uint ComputeHash(byte[] data);
 	}
@@ -208,7 +208,7 @@ namespace Enyim
 	/// <summary>
 	/// CRC-32 implementation. Compatible with libhashkit.
 	/// </summary>
-	internal class HashkitCrc32 : HashAlgorithm, IUIntHashAlgorithm
+	public class HashkitCrc32 : HashAlgorithm, IUIntHashAlgorithm
 	{
 		private bool shouldReset;
 		private uint currentHash;
@@ -350,7 +350,7 @@ namespace Enyim
 	/// Murmur hash. Uses the same seed values as libhashkit.
 	/// </summary>
 	/// <remarks>Does not support block based hashing.</remarks>
-	internal class HashkitMurmur : HashAlgorithm, IUIntHashAlgorithm
+	public class HashkitMurmur : HashAlgorithm, IUIntHashAlgorithm
 	{
 		public HashkitMurmur() { }
 
@@ -467,7 +467,7 @@ namespace Enyim
 	///	Coming from libhashkit.
 	/// </summary>
 	/// <remarks>Does not support block based hashing.</remarks>
-	internal class HashkitOneAtATime : HashAlgorithm, IUIntHashAlgorithm
+	public class HashkitOneAtATime : HashAlgorithm, IUIntHashAlgorithm
 	{
 		public HashkitOneAtATime() { }
 
